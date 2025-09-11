@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SharePoint Authentifizierung</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f9fafb;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .error {
+            color: #dc2626;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="spinner"></div>
+        <h2>SharePoint Authentifizierung</h2>
+        <p>Verarbeite Anmeldedaten...</p>
+        <div id="error" class="error" style="display: none;"></div>
+    </div>
+
+    <script>
+        (function() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const code = urlParams.get('code');
+                const error = urlParams.get('error');
+                const errorDescription = urlParams.get('error_description');
+
+                if (error) {
+                    document.getElementById('error').style.display = 'block';
+                    document.getElementById('error').textContent = `Fehler: ${error} - ${errorDescription}`;
+                    
+                    // Fehler an Parent-Window senden
+                    if (window.opener) {
+                        window.opener.postMessage({
+                            type: 'sharepoint-auth-error',
+                            error: `${error}: ${errorDescription}`
+                        }, window.location.origin);
+                    }
+                    
+                    setTimeout(() => window.close(), 3000);
+                    return;
+                }
+
+                if (code) {
+                    // Erfolg an Parent-Window senden
+                    if (window.opener) {
+                        window.opener.postMessage({
+                            type: 'sharepoint-auth-success',
+                            code: code
+                        }, window.location.origin);
+                    }
+                    
+                    // Fenster schließen
+                    setTimeout(() => window.close(), 1000);
+                } else {
+                    throw new Error('Kein Authorization Code erhalten');
+                }
+            } catch (err) {
+                console.error('Auth callback error:', err);
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error').textContent = 'Unbekannter Fehler bei der Authentifizierung';
+                
+                if (window.opener) {
+                    window.opener.postMessage({
+                        type: 'sharepoint-auth-error',
+                        error: err.message || 'Unbekannter Fehler'
+                    }, window.location.origin);
+                }
+                
+                setTimeout(() => window.close(), 3000);
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+/Contents 4 0 R
+/Resources <<
+/Font <<
+/F1 5 0 R
+>>
+>>
+>>
+endobj
+
+4 0 obj
+<<
+/Length 890
+>>
+stream
+BT
+/F1 12 Tf
+50 750 Td
+(Klient:innendaten - Beispiel-PDF) Tj
+0 -30 Td
+(========================================) Tj
+0 -40 Td
+(Fall 1:) Tj
+0 -20 Td
+(AMS-ID: A12345) Tj
+0 -15 Td
+(Name: Max Mustermann) Tj
+0 -15 Td
+(Geburtsdatum: 15.03.1985) Tj
+0 -15 Td
+(Telefon: +43 664 1234567) Tj
+0 -15 Td
+(E-Mail: max.mustermann@example.com) Tj
+0 -15 Td
+(Adresse: Hauptstraße 12, 1010 Wien) Tj
+0 -40 Td
+(Fall 2:) Tj
+0 -20 Td
+(AMS-ID: A67890) Tj
+0 -15 Td
+(Name: Anna Schmidt) Tj
+0 -15 Td
+(Geburtsdatum: 22.07.1992) Tj
+0 -15 Td
+(Telefon: +43 699 9876543) Tj
+0 -15 Td
+(E-Mail: anna.schmidt@test.at) Tj
+0 -15 Td
+(Adresse: Mariahilfer Straße 45, 1060 Wien) Tj
+0 -40 Td
+(Fall 3:) Tj
+0 -20 Td
+(AMS-ID: A11111) Tj
+0 -15 Td
+(Name: Thomas Weber) Tj
+0 -15 Td
+(Geburtsdatum: 08.12.1978) Tj
+0 -15 Td
+(Telefon: 01 5551234) Tj
+0 -15 Td
+(E-Mail: t.weber@gmail.com) Tj
+0 -15 Td
+(Adresse: Praterstraße 88, 1020 Wien) Tj
+ET
+endstream
+endobj
+
+5 0 obj
+<<
+/Type /Font
+/Subtype /Type1
+/BaseFont /Helvetica
+>>
+endobj
+
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000274 00000 n 
+0000001216 00000 n 
+trailer
+<<
+/Size 6
+/Root 1 0 R
+>>
+startxref
+1315
+%%EOF
