@@ -1,5 +1,5 @@
-// Barrel to provide a named export `Board` for consumers doing:
-//   import { Board } from './features/board/Board';
-// It re-exports the default component from the TSX file.
-export { default as Board } from './Board.tsx';
-export { default } from './Board.tsx';
+// Barrel that adapts named export to default export.
+// Works when `src/features/board/Board.tsx` has: `export function Board(...) {}` or `export const Board = ...`.
+export { Board } from './Board.tsx';
+import { Board as BoardComponent } from './Board.tsx';
+export default BoardComponent;
