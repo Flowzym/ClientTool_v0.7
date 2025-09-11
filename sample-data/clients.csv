@@ -1,0 +1,4 @@
+firstName,lastName,title,email,phone,status,angebot,isPinned,followUp,amsAdvisor,amsAgentFirstName,amsAgentLastName,note
+Anna,Muster,Dr.,anna.muster@example.com,+43 1 234 5678,inBearbeitung,BAM,TRUE,,,Max,Berater,Erstkontakt notiert
+Bernd,Beispiel,,bernd@example.com,+43 699 1234567,terminVereinbart,LL/B+,FALSE,2025-09-25T09:00:00Z,Claudia Schmitt,,,
+Clara,Kunden,Mag.,clara.kunden@example.com,+43 660 111222333,offen,NB,FALSE,,,,,Notiz aus Altbestand
