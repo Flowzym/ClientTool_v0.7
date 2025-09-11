@@ -24,7 +24,7 @@ import { configManager } from '../../data/config';
 type ImportMode = 'select' | 'excel' | 'pdf' | 'sharepoint';
 
 export function Import() {
-  const navigate = useNavigate(); {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<ImportMode>('select');
   const [sharepointEnabled, setSharepointEnabled] = useState(false);
 
