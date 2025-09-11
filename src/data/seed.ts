@@ -4,8 +4,8 @@ import type { Role } from '../domain/auth';
 import { nowISO } from '../utils/date';
 
 /**
- * Bestehende Funktion: in DEV drei Demo-User anlegen.
- * (Belassen für bisherige Nutzung.)
+ * DEV-Helfer (bestehendes Verhalten beibehalten):
+ * Legt in Development drei Demo-User an (admin/editor/user), wenn noch keine existieren.
  */
 export async function ensureDemoUsersTrio(): Promise<number> {
   if (import.meta.env.MODE !== 'development') return 0;
@@ -17,8 +17,8 @@ export async function ensureDemoUsersTrio(): Promise<number> {
 }
 
 /**
- * NEU: Legt die drei Demo-User an, wenn noch keine User existieren –
- * unabhängig von der Umgebung. Idempotent.
+ * NEU: Legt die drei Demo-User an, wenn noch keine User existieren – unabhängig von der Umgebung.
+ * Idempotent. Wird beim App-Start und vom UserSwitcher verwendet.
  */
 export async function ensureDemoUsersIfEmpty(): Promise<number> {
   const count = await db.users.count();
@@ -28,7 +28,7 @@ export async function ensureDemoUsersIfEmpty(): Promise<number> {
   return demo.length;
 }
 
-/** Demo-User-Liste (einheitlich) */
+/** Gemeinsamer Demo-User-Baukasten */
 export function buildDemoUsers(): User[] {
   const demoUsers: User[] = [
     { id: 'admin@local',  name: 'Admin (Demo)',  role: 'admin' as Role,  active: true },
@@ -38,43 +38,32 @@ export function buildDemoUsers(): User[] {
   return demoUsers;
 }
 
-/** (Optional) Beispiel-Clients – hier unverändert lassen */
+/**
+ * OPTIONALER Platzhalter – bleibt erhalten, damit existierende Aufrufer nicht brechen.
+ * Passe bei Bedarf an deinen Client-Seed an.
+ */
 export async function ensureDemoClients(mode: 'skip' | 'replace' | 'newIds' = 'skip'): Promise<number> {
-  // no-op placeholder – belasse bestehende Implementierung falls vorhanden
   return 0;
 }
 
-// --- Added: Testdaten-Seeding für Clients ---
+/** Testdaten-Seeding für Clients – wird u. a. in PassphraseGate genutzt */
 export type SeedMode = 'skip' | 'replace' | 'newIds';
 
 export async function seedTestData(mode: SeedMode = 'skip'): Promise<{ clients: number; users: number }> {
-  // Stelle Demo-User in DEV sicher (no-op in PROD)
+  // In DEV ggf. zusätzliche Demo-User anlegen (no-op außerhalb DEV)
   let usersCreated = 0;
   try {
-    if (typeof ensureDemoUsersTrio === 'function') {
-      usersCreated = await ensureDemoUsersTrio();
-    }
+    usersCreated = await ensureDemoUsersTrio();
   } catch {}
 
-  // Bei 'replace' nur zuvor gesäte Datensätze entfernen (sourceId='seed')
   if (mode === 'replace') {
-    try {
-      await db.clients.where('sourceId').equals('seed').delete();
-    } catch {
-      // Fallback: alles löschen (nur wenn wirklich notwendig)
-      // await db.clients.clear();
-    }
+    try { await db.clients.where('sourceId').equals('seed').delete(); } catch {}
   }
-
-  // Bei 'skip': wenn bereits Seed-Datensätze existieren → nichts tun
   if (mode === 'skip') {
     const existing = await db.clients.where('sourceId').equals('seed').count();
-    if (existing > 0) {
-      return { clients: 0, users: usersCreated };
-    }
+    if (existing > 0) return { clients: 0, users: usersCreated };
   }
 
-  // Erzeuge 16 Beispiel-Clients
   const statuses = [
     'offen','inBearbeitung','terminVereinbart','wartetRueckmeldung','dokumenteOffen',
     'foerderAbklaerung','zugewiesenExtern','ruht','erledigt','nichtErreichbar','abgebrochen'
@@ -87,14 +76,11 @@ export async function seedTestData(mode: SeedMode = 'skip'): Promise<{ clients: 
   const now = new Date();
   const toISO = (d: Date) => new Date(d).toISOString();
 
-  const plainClients = Array.from({ length: 16 }).map((_, i) => {
+  const rows: Partial<Client & { sourceId?: string; rowKey?: string; source?: any }>[] = Array.from({ length: 16 }).map((_, i) => {
     const fn = firstNames[i % firstNames.length];
     const ln = lastNames[i % lastNames.length];
     const id = mode === 'newIds' ? `seed-${Date.now()}-${i}` : `seed-${i+1}`;
-
-    // Optional: Follow-up für jeden 3. Datensatz in der Zukunft
     const fu = (i % 3 === 0) ? toISO(new Date(now.getTime() + (i+1) * 24*3600*1000)) : undefined;
-
     const angebot = (['BAM','LL/B+','BwB','NB'] as const)[i % 4];
 
     return {
@@ -104,9 +90,8 @@ export async function seedTestData(mode: SeedMode = 'skip'): Promise<{ clients: 
       title: (i % 5 === 0) ? 'Mag.' : undefined,
       email: `${fn.toLowerCase()}.${ln.toLowerCase()}@example.com`,
       phone: `+43 660 ${String(100000 + i).padStart(6,'0')}`,
-      priority: priorities[i % priorities.length],
-      status: i % 5 === 0 ? 'terminVereinbart' : (i % 4 === 0 ? 'inBearbeitung' : 'offen'),
-      result: undefined,
+      priority: priorities[i % priorities.length] as any,
+      status: (i % 5 === 0) ? 'terminVereinbart' as any : ((i % 4 === 0) ? 'inBearbeitung' as any : 'offen' as any),
       angebot,
       followUp: fu,
       lastActivity: toISO(now),
@@ -122,30 +107,21 @@ export async function seedTestData(mode: SeedMode = 'skip'): Promise<{ clients: 
       pinnedAt: i % 7 === 0 ? toISO(now) : undefined,
       sourceId: 'seed',
       rowKey: `seed-row-${i+1}`,
-      source: {
-        fileName: 'seedTestData',
-        importedAt: toISO(now),
-        mappingPreset: 'demo'
-      }
-    } as any;
+      source: { fileName: 'seedTestData', importedAt: toISO(now), mappingPreset: 'demo' }
+    };
   });
 
-  // Einfügen (Dexie 'creating' Hook verschlüsselt das Plain automatisch)
   let inserted = 0;
   try {
-    await db.clients.bulkPut(plainClients as any);
-    inserted = plainClients.length;
+    await db.clients.bulkPut(rows as any);
+    inserted = rows.length;
   } catch (e) {
-    console.warn('seedTestData: bulkPut failed, fallback to put loop', e);
-    for (const c of plainClients) {
-      try {
-        await db.clients.put(c as any);
-        inserted++;
-      } catch {}
+    console.warn('seedTestData: bulkPut failed; fallback to put loop', e);
+    for (const c of rows) {
+      try { await db.clients.put(c as any); inserted++; } catch {}
     }
   }
 
-  // Seed-Flag setzen (optional)
   try {
     await db.setKV('seeded.v1', new TextEncoder().encode(new Date().toISOString()));
   } catch {}
