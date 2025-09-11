@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 /**
  * Unified Import-Seite mit Excel, PDF und SharePoint-Optionen
  */
@@ -23,6 +24,7 @@ import { configManager } from '../../data/config';
 type ImportMode = 'select' | 'excel' | 'pdf' | 'sharepoint';
 
 export function Import() {
+  const navigate = useNavigate(); {
   const [mode, setMode] = useState<ImportMode>('select');
   const [sharepointEnabled, setSharepointEnabled] = useState(false);
 
@@ -115,7 +117,7 @@ export function Import() {
           </CardContent>
           <div 
             className="absolute inset-0 cursor-pointer" 
-            onClick={() => setMode('excel')}
+            onClick={() => navigate('/import/excel')}
             aria-label="Excel/CSV Import auswählen"
           />
         </Card>
@@ -149,7 +151,7 @@ export function Import() {
               </Button>
               <div 
                 className="absolute inset-0 cursor-pointer" 
-                onClick={() => setMode('pdf')}
+                onClick={() => navigate('/import/pdf')}
                 aria-label="PDF Import auswählen"
               />
             </div>
