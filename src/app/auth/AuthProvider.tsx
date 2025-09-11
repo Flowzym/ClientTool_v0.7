@@ -2,15 +2,15 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { db } from '../../data/db';
 import { ensureDemoUsersIfEmpty } from '../../data/seed';
 import { hasPerm, hasAny, type Role, type Permission } from '../../domain/auth';
-import type { User } from '../../domain/models';
 
 type AuthUser = { id: string; name: string; role: Role };
 
 type AuthContextType = {
   currentUser: AuthUser | null;
   currentUserId: string | null;
-  setCurrentUser: (u: AuthUser | null) => void;
+  setCurrentUser: (u: AuthUser | null) => Promise<void>;
   switchUserById: (id: string) => Promise<void>;
+  impersonateRole: (role: Role) => Promise<void>;
   role: Role;
   can: (perm: Permission) => boolean;
   canAny: (perms: Permission[]) => boolean;
@@ -28,12 +28,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUserState] = useState<AuthUser | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
-  // Seed: sorge dafür, dass überhaupt User existieren (admin/editor/user)
   useEffect(() => {
     ensureDemoUsersIfEmpty().catch(() => {});
   }, []);
 
-  // Initial load of current user + optional URL impersonation (?as=admin|editor|user or ?user=<id>)
   useEffect(() => {
     let disposed = false;
     (async () => {
@@ -41,39 +39,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const params = new URLSearchParams(window.location.search);
         const asRole = params.get('as');
         const asUser = params.get('user');
-        if (asRole && (asRole === 'admin' || asRole === 'editor' || asRole === 'user')) {
-          const found = await db.users.where('role').equals(asRole as Role).first();
-          if (found) {
-            await setCurrentUser({ id: (found as any).id, name: (found as any).name, role: (found as any).role as Role });
-            return;
-          }
+        if (asRole === 'admin' || asRole === 'editor' || asRole === 'user') {
+          await impersonateRole(asRole as Role);
+          return;
         }
         if (asUser) {
-          const found = await db.users.get(asUser);
-          if (found) {
-            await setCurrentUser({ id: (found as any).id, name: (found as any).name, role: (found as any).role as Role });
+          await switchUserById(asUser);
+          return;
+        }
+
+        const saved = (await db.getKV('auth:currentUserId')) as any as string | null;
+        if (saved) {
+          const u = await db.users.get(saved).catch(() => null);
+          if (u && !disposed) {
+            const p = u as any;
+            await setCurrentUser({ id: p.id, name: p.name, role: p.role as Role });
             return;
           }
         }
-        // Fallback: persistierter User oder erster verfügbarer
-        const id = (await db.getKV('auth:currentUserId')) as any as string | null;
-        let user: any = null;
-        if (id) {
-          user = await db.users.get(id).catch(() => null);
-        }
-        if (!user) {
-          const all = await db.users.toArray();
-          user = all?.[0] ?? null;
-        }
-        if (!disposed && user) {
-          setCurrentUserState({ id: user.id, name: user.name, role: (user.role as Role) });
-          setCurrentUserId(user.id);
+
+        const all = await db.users.toArray().catch(() => []);
+        if (all && all.length > 0) {
+          const first = all[0] as any;
+          if (!disposed) await setCurrentUser({ id: first.id, name: first.name, role: first.role as Role });
+        } else {
+          if (!disposed) await setCurrentUser({ id: 'admin@local', name: 'Admin (Demo)', role: 'admin' as Role });
         }
       } catch (e) {
-        console.warn('AuthProvider: init failed', e);
+        console.warn('AuthProvider init failed', e);
+        await setCurrentUser({ id: 'admin@local', name: 'Admin (Demo)', role: 'admin' as Role });
       }
     })();
     return () => { disposed = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function setCurrentUser(u: AuthUser | null) {
@@ -83,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await db.setKV('auth:currentUserId', u ? new TextEncoder().encode(u.id) : null);
       document.dispatchEvent(new CustomEvent('auth:user-changed'));
     } catch (e) {
-      console.warn('AuthProvider: failed to persist current user', e);
+      console.warn('AuthProvider: persist failed', e);
     }
   }
 
@@ -91,11 +89,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const u = await db.users.get(id);
       if (u) {
-        await setCurrentUser({ id: (u as any).id, name: (u as any).name, role: (u as any).role as Role });
+        const p = u as any;
+        await setCurrentUser({ id: p.id, name: p.name, role: p.role as Role });
+      } else {
+        await ensureDemoUsersIfEmpty().catch(() => {});
+        const again = await db.users.get(id);
+        if (again) {
+          const p = again as any;
+          await setCurrentUser({ id: p.id, name: p.name, role: p.role as Role });
+        }
       }
     } catch (e) {
       console.warn('AuthProvider: switchUserById failed', e);
     }
+  };
+
+  const impersonateRole = async (role: Role) => {
+    try {
+      const found = await db.users.where('role').equals(role).first();
+      if (found) {
+        const p = found as any;
+        await setCurrentUser({ id: p.id, name: p.name, role: p.role as Role });
+        return;
+      }
+      await ensureDemoUsersIfEmpty().catch(() => {});
+      const again = await db.users.where('role').equals(role).first();
+      if (again) {
+        const p = again as any;
+        await setCurrentUser({ id: p.id, name: p.name, role: p.role as Role });
+        return;
+      }
+    } catch (e) {
+      console.warn('AuthProvider: impersonateRole failed', e);
+    }
+    const name = role === 'admin' ? 'Admin (Demo)' : role === 'editor' ? 'Editor (Demo)' : 'User (Demo)';
+    await setCurrentUser({ id: `${role}@local`, name, role });
   };
 
   const role: Role = currentUser?.role ?? 'user';
@@ -103,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const canAny = (perms: Permission[]) => hasAny(role, perms);
 
   return (
-    <AuthContext.Provider value={{ currentUser, currentUserId, setCurrentUser, switchUserById, role, can, canAny }}>
+    <AuthContext.Provider value={{ currentUser, currentUserId, setCurrentUser, switchUserById, impersonateRole, role, can, canAny }}>
       {children}
     </AuthContext.Provider>
   );
