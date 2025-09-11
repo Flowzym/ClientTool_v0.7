@@ -109,17 +109,12 @@ export function Import() {
                 <div>✅ Validierung & Dubletten-Check</div>
               </div>
               
-              <Button variant="primary" size="sm" className="w-full">
+              <Button variant="primary" size="sm" className="w-full" onClick={() => navigate('/import/excel')}>
                 <Upload className="w-4 h-4 mr-2" />
                 Excel/CSV auswählen
               </Button>
             </div>
           </CardContent>
-          <div 
-            className="absolute inset-0 cursor-pointer" 
-            onClick={() => navigate('/import/excel')}
-            aria-label="Excel/CSV Import auswählen"
-          />
         </Card>
 
         {/* PDF Import */}
@@ -145,15 +140,10 @@ export function Import() {
                 <div>✅ Manuelles Mapping</div>
               </div>
               
-              <Button variant="primary" size="sm" className="w-full">
+              <Button variant="primary" size="sm" className="w-full" onClick={() => navigate('/import/pdf')}>
                 <Upload className="w-4 h-4 mr-2" />
                 PDF auswählen
               </Button>
-              <div 
-                className="absolute inset-0 cursor-pointer" 
-                onClick={() => navigate('/import/pdf')}
-                aria-label="PDF Import auswählen"
-              />
             </div>
           </CardContent>
         </Card>
@@ -194,11 +184,6 @@ export function Import() {
                     <Building className="w-4 h-4 mr-2" />
                     SharePoint öffnen
                   </Button>
-                  <div 
-                    className="absolute inset-0 cursor-pointer" 
-                    onClick={() => setMode('sharepoint')}
-                    aria-label="SharePoint Import auswählen"
-                  />
                 </>
               ) : (
                 <>
