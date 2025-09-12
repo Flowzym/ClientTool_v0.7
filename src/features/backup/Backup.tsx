@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card'
 import { Button } from '../../components/Button';
 import { db } from '../../data/db';
 import { getEncryptionMode, supportsFSAccess } from '../../utils/env';
+import { exportService } from '../../services/ExportService';
 
 type BackupPayload = {
   meta: {
@@ -29,40 +30,33 @@ export function Backup() {
   const doExport = React.useCallback(async () => {
     setBusy(true); setMessage('');
     try {
-      const [clients, users, kv] = await Promise.all([
-        db.clients.toArray(),
-        db.users.toArray(),
-        db.kv.toArray()
-      ]);
-
-      const payload: BackupPayload = {
-        meta: { version: 1, exportedAt: new Date().toISOString(), encryptionMode: getEncryptionMode() },
-        tables: { clients, users, kv }
-      };
-
-      const jsonStr = JSON.stringify(payload, null, 2);
-      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const result = await exportService.createBackup();
+      
+      if (!result.success) {
+        setMessage('Export fehlgeschlagen: ' + result.errors.join(', '));
+        return;
+      }
 
       if (supportsFSAccess()) {
         // @ts-ignore
         const handle = await window.showSaveFilePicker({
-          suggestedName: `clienttool-backup-${Date.now()}.json`,
+          suggestedName: result.fileName,
           types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
         });
         // @ts-ignore
         const stream = await handle.createWritable();
-        await stream.write(blob);
+        await stream.write(result.blob);
         await stream.close();
       } else {
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `clienttool-backup-${Date.now()}.json`;
+        a.href = URL.createObjectURL(result.blob!);
+        a.download = result.fileName!;
         document.body.appendChild(a);
         a.click();
         a.remove();
         URL.revokeObjectURL(a.href);
       }
-      setMessage('Backup exportiert.');
+      setMessage(`Backup exportiert (${result.exported} Datensätze).`);
     } catch (e) {
       console.error(e);
       setMessage('Export fehlgeschlagen.');

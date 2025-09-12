@@ -31,6 +31,7 @@ import { cryptoManager } from '../../data/crypto';
 import { supportsFSAccess, isEmbedded, isBoltHost } from '../../utils/env';
 import type { Client, ImportSession } from '../../domain/models';
 import { syncManager } from '../sync/SyncManager';
+import { importService } from '../../services/ImportService';
 
 type WizardStep = 'file' | 'mapping' | 'validation' | 'preview' | 'result';
 
@@ -102,6 +103,11 @@ export function ImportExcel() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [importSummary, setImportSummary] = useState<{
+    imported: number;
+    skipped: number;
+    warnings: string[];
+  } | null>(null);
   
   // Optionen
   const [onlyEmptyFields, setOnlyEmptyFields] = useState(false);
@@ -679,6 +685,11 @@ return mapped;
       
     } catch (error) {
       console.error('Import error:', error);
+      setImportSummary({
+        imported: 0,
+        skipped: 0,
+        warnings: [error instanceof Error ? error.message : 'Unbekannter Fehler']
+      });
       setResult({
         success: false,
         error: error instanceof Error ? error.message : 'Unbekannter Fehler'
@@ -794,6 +805,42 @@ return mapped;
             )}
           </div>
         </CardContent>
+        
+        {/* Import-Summary */}
+        {importSummary && (
+          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+            <h4 className="font-medium text-sm mb-2">Import-Zusammenfassung</h4>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <div className="text-gray-500">Importiert</div>
+                <div className="font-semibold text-success-500">{importSummary.imported}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Übersprungen</div>
+                <div className="font-semibold text-warning-500">{importSummary.skipped}</div>
+              </div>
+              <div>
+                <div className="text-gray-500">Warnungen</div>
+                <div className="font-semibold text-error-500">{importSummary.warnings.length}</div>
+              </div>
+            </div>
+            {importSummary.warnings.length > 0 && (
+              <div className="mt-2 text-xs text-gray-600">
+                <details>
+                  <summary className="cursor-pointer">Warnungen anzeigen</summary>
+                  <ul className="mt-1 list-disc ml-4">
+                    {importSummary.warnings.slice(0, 10).map((warning, index) => (
+                      <li key={index}>{warning}</li>
+                    ))}
+                    {importSummary.warnings.length > 10 && (
+                      <li>... und {importSummary.warnings.length - 10} weitere</li>
+                    )}
+                  </ul>
+                </details>
+              </div>
+            )}
+          </div>
+        )}
       </Card>
     </div>
   );

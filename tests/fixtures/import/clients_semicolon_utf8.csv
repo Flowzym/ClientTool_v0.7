@@ -1,0 +1,4 @@
+AMS-ID;Nachname;Vorname;Titel;Geburtsdatum;Telefon;E-Mail;Status;Angebot;Termin;AMS Berater;Notiz
+A12345;Mustermann;Max;Dr.;15.03.1985;+43 1 234 5678;max.mustermann@example.com;offen;BAM;25.12.2024;Claudia Schmitt;Erstkontakt erfolgreich
+A67890;Schmidt;Anna;;22.07.1992;+43 699 987 6543;anna.schmidt@test.at;inBearbeitung;LL/B+;;Max Berater;Termin vereinbart
+A11111;Weber;Thomas;;08.12.1978;01 555 1234;t.weber@gmail.com;erledigt;BwB;01.01.2025;;Maßnahme abgeschlossen
