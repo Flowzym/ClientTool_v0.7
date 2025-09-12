@@ -3,7 +3,7 @@ import { useBoardData } from './useBoardData';
 import { useBoardActions } from './hooks/useBoardActions';
 import { ClientRow } from './components/ClientRow';
 
-export default function Board() {
+function Board() {
   const { clients, isLoading } = useBoardData();
   const actions = useBoardActions();
 
@@ -15,9 +15,9 @@ export default function Board() {
     <div className="p-4">
       <div className="text-sm text-gray-600 mb-3">Board geladen — {clients.length} Einträge</div>
 
-      {/* Kopfzeile */}
       <div className="border rounded-lg overflow-hidden">
-        <div className="grid grid-cols-[minmax(240px,1fr)_120px_140px_180px_100px_80px] gap-2 bg-gray-50 border-b px-3 py-2 text-xs font-medium text-gray-600">
+        {/* Kopfzeile */}
+        <div className="grid grid-cols-[minmax(240px,1fr)_120px_140px_180px_160px_80px] gap-2 bg-gray-50 border-b px-3 py-2 text-xs font-medium text-gray-600">
           <div>Kunde</div>
           <div>Offer</div>
           <div>Status</div>
@@ -39,3 +39,6 @@ export default function Board() {
     </div>
   );
 }
+
+export { Board };
+export default Board;
