@@ -28,11 +28,29 @@ type Actions = {
   togglePin?: (id: string) => Promise<void> | void;
 };
 
-export function ClientRow({ client, users, actions }: { client: any; users: any[]; actions: Actions }) {
+export function ClientRow({
+  client, users, actions, selected, onToggleSelect, index
+}: {
+  client: any;
+  users: any[];
+  actions: Actions;
+  selected?: boolean;
+  onToggleSelect?: (withShift: boolean) => void;
+  index?: number;
+}) {
   const { id } = client ?? {};
 
   return (
-    <div className="grid grid-cols-[minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px_64px] gap-2 items-center px-3 py-2 hover:bg-gray-50">
+    <div className="grid grid-cols-[36px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px_64px] gap-2 items-center px-3 py-2 hover:bg-gray-50">
+      <div className="flex items-center justify-center">
+        <input
+          type="checkbox"
+          checked={!!selected}
+          onChange={(e) => onToggleSelect?.(e.shiftKey)}
+          aria-label="select row"
+        />
+      </div>
+
       <NameCell
         client={{
           id,
