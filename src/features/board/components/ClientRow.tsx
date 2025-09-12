@@ -1,4 +1,5 @@
 import React from 'react';
+import { Pin } from 'lucide-react';
 import NameCell from './cells/NameCell';
 import OfferCell from './cells/OfferCell';
 import StatusCell from './cells/StatusCell';
@@ -11,7 +12,6 @@ import BookingDateCell from './cells/BookingDateCell';
 import PriorityCell from './cells/PriorityCell';
 import ActivityCell from './cells/ActivityCell';
 import ArchiveCell from './cells/ArchiveCell';
-import PinCell from './cells/PinCell';
 
 type Actions = {
   update: (id: string, changes: any) => Promise<void> | void;
@@ -45,9 +45,15 @@ export function ClientRow({
   const email = client.contactEmail || 0;
   const proxy = client.contactProxy || 0;
 
+  const onOpenNotes = (cid: string) => {
+    // Bind an vorhandenen Dialog via CustomEvent
+    window.dispatchEvent(new CustomEvent('board:open-notes', { detail: { id: cid } }));
+  };
+
   return (
-    <div className="grid grid-cols-[36px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px_64px] gap-2 items-center px-3 py-2 hover:bg-gray-50">
-      <div className="flex items-center justify-center">
+    <div className="grid grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px] gap-2 items-center px-3 py-2 hover:bg-gray-50">
+      {/* Auswahl + Pin */}
+      <div className="flex items-center gap-1">
         <input
           type="checkbox"
           checked={!!selected}
@@ -61,6 +67,13 @@ export function ClientRow({
           onChange={() => {}}
           aria-label="select row"
         />
+        <button
+          className={`p-1 rounded hover:bg-gray-50 ${client.isPinned ? 'text-blue-600' : 'text-gray-400'}`}
+          title="Pin toggeln"
+          onClick={() => (actions.togglePin ? actions.togglePin(id) : actions.update(id, { isPinned: !client.isPinned }))}
+        >
+          <Pin size={14} />
+        </button>
       </div>
 
       <NameCell
@@ -73,7 +86,7 @@ export function ClientRow({
           contactLog: client.contactLog,
           note: client.note,
         }}
-        onOpenNotes={() => {}}
+        onOpenNotes={onOpenNotes}
       />
 
       <OfferCell
@@ -108,8 +121,6 @@ export function ClientRow({
       <ActivityCell value={client.lastActivity} />
 
       <ArchiveCell id={id} isArchived={!!client.isArchived} onArchive={() => actions.archive?.(id)} onUnarchive={() => actions.unarchive?.(id)} />
-
-      <PinCell id={id} pinned={!!client.isPinned} onToggle={() => (actions.togglePin ? actions.togglePin(id) : actions.update(id, { isPinned: !client.isPinned }))} />
     </div>
   );
 }
