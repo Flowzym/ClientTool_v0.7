@@ -1,23 +1,38 @@
 import React from 'react';
 import NameCell from './cells/NameCell';
-import FollowupCell from './cells/FollowupCell';
-import AdvisorCell from './cells/AdvisorCell';
-import StatusCell from './cells/StatusCell';
 import OfferCell from './cells/OfferCell';
+import StatusCell from './cells/StatusCell';
+import ResultCell from './cells/ResultCell';
+import FollowupCell from './cells/FollowupCell';
+import AssignCell from './cells/AssignCell';
+import ContactAttemptsCell from './cells/ContactAttemptsCell';
+import NoteTextCell from './cells/NoteTextCell';
+import BookingDateCell from './cells/BookingDateCell';
+import PriorityCell from './cells/PriorityCell';
+import ActivityCell from './cells/ActivityCell';
+import ArchiveCell from './cells/ArchiveCell';
 import PinCell from './cells/PinCell';
 
 type Actions = {
   update: (id: string, changes: any) => Promise<void> | void;
+  bulkUpdate: (ids: string[], changes: any) => Promise<void> | void;
   setOffer?: (id: string, v?: string) => Promise<void> | void;
   setFollowup?: (id: string, date?: string) => Promise<void> | void;
+  setAssignedTo?: (id: string, userId?: string) => Promise<void> | void;
+  setStatus?: (id: string, status?: string) => Promise<void> | void;
+  setResult?: (id: string, result?: string) => Promise<void> | void;
+  cyclePriority?: (id: string) => Promise<void> | void;
+  addContactAttempt?: (id: string, channel: 'phone'|'sms'|'email'|'proxy') => Promise<void> | void;
+  archive?: (id: string) => Promise<void> | void;
+  unarchive?: (id: string) => Promise<void> | void;
   togglePin?: (id: string) => Promise<void> | void;
 };
 
-export function ClientRow({ client, actions }: { client: any; actions: Actions }) {
+export function ClientRow({ client, users, actions }: { client: any; users: any[]; actions: Actions }) {
   const { id } = client ?? {};
 
   return (
-    <div className="grid grid-cols-[minmax(240px,1fr)_120px_140px_180px_160px_80px] gap-2 items-center px-3 py-2 hover:bg-gray-50">
+    <div className="grid grid-cols-[minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px_64px] gap-2 items-center px-3 py-2 hover:bg-gray-50">
       <NameCell
         client={{
           id,
@@ -37,16 +52,32 @@ export function ClientRow({ client, actions }: { client: any; actions: Actions }
         onChange={(v?: string) => (actions.setOffer ? actions.setOffer(id, v) : actions.update(id, { angebot: v }))}
       />
 
-      <StatusCell id={id} value={client.status} />
+      <StatusCell id={id} value={client.status} onChange={(s?: string) => actions.setStatus?.(id, s)} />
+
+      <ResultCell id={id} value={client.result} onChange={(r?: string) => actions.setResult?.(id, r)} />
 
       <FollowupCell id={id} followUp={client.followUp} onChange={(d?: string) => (actions.setFollowup ? actions.setFollowup(id, d) : actions.update(id, { followUp: d }))} />
 
-      <AdvisorCell
+      <AssignCell id={id} value={client.assignedTo} users={users} onChange={(u?: string) => actions.setAssignedTo?.(id, u)} />
+
+      <ContactAttemptsCell
         id={id}
-        amsAdvisor={client.amsAdvisor}
-        amsAgentFirstName={client.amsAgentFirstName}
-        amsAgentLastName={client.amsAgentLastName}
+        phone={client.contactPhone || 0}
+        sms={client.contactSms || 0}
+        email={client.contactEmail || 0}
+        proxy={client.contactProxy || 0}
+        onAdd={(ch) => actions.addContactAttempt?.(id, ch)}
       />
+
+      <NoteTextCell id={id} text={client.note} />
+
+      <BookingDateCell id={id} value={client.amsBookingDate} />
+
+      <PriorityCell id={id} value={client.priority} onCycle={() => actions.cyclePriority?.(id)} />
+
+      <ActivityCell value={client.lastActivity} />
+
+      <ArchiveCell id={id} isArchived={!!client.isArchived} onArchive={() => actions.archive?.(id)} onUnarchive={() => actions.unarchive?.(id)} />
 
       <PinCell id={id} pinned={!!client.isPinned} onToggle={() => (actions.togglePin ? actions.togglePin(id) : actions.update(id, { isPinned: !client.isPinned }))} />
     </div>
