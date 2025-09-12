@@ -1,4 +1,66 @@
-# Geänderte Dateien - Phase 0
+# Geänderte Dateien - Phase 3
+
+## Neue Dateien
+
+| Datei | Beschreibung |
+|-------|--------------|
+| `src/data/envelope.ts` | Envelope v1 Format, Base64url Utils, Validierung |
+| `tests/crypto/envelope.test.ts` | Deterministische Crypto-Tests mit fixen Vektoren |
+| `tests/crypto/roundtrip.test.ts` | Cross-Mode Roundtrip-Tests |
+
+## Modifizierte Dateien
+
+| Datei | Änderung | Grund |
+|-------|----------|-------|
+| `src/data/crypto.ts` | Envelope v1 Support, KDF-Methoden | Einheitliche Verschlüsselung |
+| `src/data/codec.ts` | Vereinheitlichter Codec für alle Modi | Envelope v1 Integration |
+| `src/utils/devKey.ts` | Base64url statt Base64 | RFC 4648 Section 5 Konformität |
+| `src/features/auth/PassphraseGate.tsx` | EnvelopeError Support | Robuste Fehlerbehandlung |
+| `src/data/db.ts` | Envelope v1 Validierung | Strukturvalidierung |
+| `docs/SECURITY.md` | Crypto-Parameter dokumentiert | Transparenz |
+| `CHANGELOG.md` | Phase 3 Eintrag | Dokumentation |
+| `RUNLOG.md` | Phase 3 Logs | Dokumentation |
+
+## Build-Status Phase 3
+- ✅ ESLint: Keine Fehler
+- ✅ TypeScript: Keine Fehler  
+- ✅ Vite Build: Erfolgreich
+- ✅ Tests: 32 passed (12 neue Crypto-Tests)
+- ✅ Envelope v1 implementiert
+- ✅ Plain/Dev-enc/Prod-enc Roundtrip grün
+- ✅ Negative Pfade definiert
+
+---
+
+# Geänderte Dateien - Phase 2
+
+## Neue Dateien
+
+| Datei | Beschreibung |
+|-------|--------------|
+| `src/features/board/hooks/useUndoRedo.ts` | Zentraler Undo/Redo Hook mit Keyboard-Support |
+| `src/features/board/components/UndoRedoButtons.tsx` | UI-Komponente für Undo/Redo |
+| `src/features/board/hooks/useUndoRedo.test.ts` | Unit-Tests für useUndoRedo |
+
+## Modifizierte Dateien
+
+| Datei | Änderung | Grund |
+|-------|----------|-------|
+| `src/features/board/components/BoardHeader.tsx` | UndoRedoButtons Integration | UI-Integration |
+| `src/features/board/hooks/useBoardActions.ts` | useUndoRedo Integration | Zentraler Undo/Redo |
+| `src/services/MutationService.ts` | Keyboard-Event Support | Undo/Redo Shortcuts |
+| `CHANGELOG.md` | Phase 2 Eintrag | Dokumentation |
+| `RUNLOG.md` | Phase 2 Logs | Dokumentation |
+
+## Build-Status Phase 2
+- ✅ ESLint: Keine Fehler
+- ✅ TypeScript: Keine Fehler  
+- ✅ Vite Build: Erfolgreich
+- ✅ Tests: 15 passed (3 neue Tests)
+- ✅ Undo/Redo UI implementiert
+- ✅ Keyboard-Shortcuts (Ctrl+Z/Y) funktional
+
+---
 
 # Geänderte Dateien - Phase 1
 

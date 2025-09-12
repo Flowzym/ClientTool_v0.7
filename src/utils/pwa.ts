@@ -188,7 +188,7 @@ export async function initializePWA(): Promise<PWARegistrationResult> {
       }
     }
     
-    console.log(`✅ PWA: Initialization complete (Status: ${result.status})`);
+    console.log(`✅ PWA: Initialization complete (Status: ${result.status}, Version: v0.8-pwa-1)`);
     return result;
     
   } catch (error) {

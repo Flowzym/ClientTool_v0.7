@@ -106,27 +106,42 @@ Jeder Modus verwendet eine separate IndexedDB:
 
 ## Envelope-Format v1
 
-Alle Daten werden in einheitlichen Envelopes gespeichert:
+Alle Daten werden in einheitlichen Envelope v1 gespeichert:
 
 ```typescript
 interface EnvelopeV1 {
-  // Meta-Daten (unverschlüsselt für Indizes)
-  id?: string;
-  amsId?: string;
-  rowKey?: string;
-  
-  // Envelope-Info
-  envelopeVersion: 'v1';
-  mode: 'plain' | 'enc';
-  createdAt: number;
-  updatedAt: number;
-  
-  // Payload (je nach Modus)
-  data?: any;           // plain
-  nonce?: string;       // enc
-  ciphertext?: string;  // enc
+  v: 1;                                // Version
+  mode: 'plain' | 'dev-enc' | 'prod-enc';
+  alg: 'AES-256-GCM';
+  kdf?: {                              // nur prod-enc
+    name: 'argon2id'; 
+    t: number;        // timeCost=3
+    m: number;        // memoryCost=65536 (64MB)
+    p: number;        // parallelism=1
+    salt: string;     // Base64url, 16 bytes
+  };
+  iv?: string;                         // 12 Byte Base64url (dev-enc/prod-enc)
+  ct?: string;                         // Ciphertext+Tag Base64url (dev-enc/prod-enc)
+  ts: number;                          // Unix timestamp
+  meta?: { schema?: string; table?: string; id?: string };
+  plain?: string;                      // Base64url (nur plain)
 }
 ```
+
+### Kryptographische Parameter
+
+- **AES-GCM**: 256-bit Schlüssel, 96-bit IV, authentifizierte Verschlüsselung
+- **Argon2id**: timeCost=3, memoryCost=64MB, parallelism=1, 32-byte Output
+- **Salt**: 16 zufällige Bytes pro Installation, persistent in IndexedDB
+- **IV**: 12 zufällige Bytes pro Verschlüsselungsvorgang
+- **Encoding**: Base64url (RFC 4648 Section 5) für alle binären Daten
+
+### Negative Pfade
+
+- **Falsche Passphrase**: `DECRYPT_AUTH_FAILED` ohne Crash
+- **Manipulierte Daten**: GCM-Tag-Verifikation schlägt fehl → `DECRYPT_AUTH_FAILED`
+- **Fehlender DEV-Key**: `MISSING_DEV_KEY` mit klarer Anleitung
+- **Malformed Envelope**: `MALFORMED_ENVELOPE` bei Struktur-/Validierungsfehlern
 
 ## Best Practices
 

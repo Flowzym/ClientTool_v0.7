@@ -1,5 +1,45 @@
 # Changelog
 
+## [Phase 3] - 2025-01-27
+
+### Added
+- feat(crypto): Envelope v1 implementiert mit AES-256-GCM und Argon2id-KDF
+- Einheitliche Verschlüsselung für plain/dev-enc/prod-enc Modi
+- Base64url-Encoding für alle binären Daten (RFC 4648 Section 5)
+- Deterministische Crypto-Tests mit fixen Test-Vektoren
+- Robuste Fehlerbehandlung für negative Pfade (falsche Passphrase, manipulierte Daten)
+
+### Changed
+- CryptoManager nutzt Envelope v1 Format
+- Codec-Layer vereinheitlicht für alle Encryption-Modi
+- PassphraseGate verwendet EnvelopeError für bessere Fehlerbehandlung
+
+### Technical
+- KDF-Parameter: Argon2id (t=3, m=64MB, p=1, 32-byte Output)
+- AES-GCM: 256-bit Key, 96-bit IV, authentifizierte Verschlüsselung
+- Keine API-Brüche: Legacy-Methoden bleiben kompatibel
+- Roundtrip-Tests für alle Modi erfolgreich
+
+## [Phase 2] - 2025-01-27
+
+### Added
+- feat(crypto): Envelope v1 implementiert mit AES-256-GCM und Argon2id-KDF
+- Einheitliche Verschlüsselung für plain/dev-enc/prod-enc Modi
+- Base64url-Encoding für alle binären Daten (RFC 4648 Section 5)
+- Deterministische Crypto-Tests mit fixen Test-Vektoren
+- Robuste Fehlerbehandlung für negative Pfade (falsche Passphrase, manipulierte Daten)
+
+### Changed
+- CryptoManager nutzt Envelope v1 Format
+- Codec-Layer vereinheitlicht für alle Encryption-Modi
+- PassphraseGate verwendet EnvelopeError für bessere Fehlerbehandlung
+
+### Technical
+- KDF-Parameter: Argon2id (t=3, m=64MB, p=1, 32-byte Output)
+- AES-GCM: 256-bit Key, 96-bit IV, authentifizierte Verschlüsselung
+- Keine API-Brüche: Legacy-Methoden bleiben kompatibel
+- Roundtrip-Tests für alle Modi erfolgreich
+
 ## [Phase 1] - 2025-01-27
 
 ### Added

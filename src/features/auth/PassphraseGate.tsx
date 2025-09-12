@@ -97,7 +97,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return false; // Invalid passphrase
       }
       throw error;
-  };;
+    }
+  };
 
   const logout = () => {
     cryptoManager.clearKey();
