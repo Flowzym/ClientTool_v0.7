@@ -3,23 +3,44 @@ import { bulkApply, updateById, queueUndo, undoLast, redoLast } from '../service
 import { build } from '../services/PatchBuilder';
 import { isValidISO } from '../utils/date';
 
-/**
- * Zentrale Mutationen mit korrektem Undo/Redo.
- * WICHTIG: queueUndo muss awaited werden, damit die inversen Patches
- * vor der eigentlichen Änderung berechnet werden.
- */
+function emit(name: string, detail: any) {
+  window.dispatchEvent(new CustomEvent(name, { detail }));
+}
+
 export function useBoardActions() {
-  const update = useCallback(async (id: string, changes: any) => {
-    const p = build<any>(id, changes);
-    await queueUndo([p]);
-    await updateById<any>(id, changes);
+  const applyOptimistic = useCallback((ids: string[], changes: any) => {
+    const patches = ids.map((id) => build<any>(id, changes));
+    emit('board:optimistic-apply', { patches });
+    return patches;
   }, []);
 
-  const bulkUpdate = useCallback(async (ids: string[], changes: any) => {
-    const patches = ids.map((id) => build<any>(id, changes));
-    await queueUndo(patches);
-    await bulkApply<any>(patches);
+  const commitOptimistic = useCallback((patches: any[]) => {
+    emit('board:optimistic-commit', { patches });
   }, []);
+
+  const update = useCallback(async (id: string, changes: any) => {
+    const patches = applyOptimistic([id], changes);
+    await queueUndo(patches);
+    try {
+      await updateById<any>(id, changes);
+      commitOptimistic(patches);
+    } catch (e) {
+      emit('board:optimistic-clear', {});
+      throw e;
+    }
+  }, [applyOptimistic, commitOptimistic]);
+
+  const bulkUpdate = useCallback(async (ids: string[], changes: any) => {
+    const patches = applyOptimistic(ids, changes);
+    await queueUndo(patches);
+    try {
+      await bulkApply<any>(patches);
+      commitOptimistic(patches);
+    } catch (e) {
+      emit('board:optimistic-clear', {});
+      throw e;
+    }
+  }, [applyOptimistic, commitOptimistic]);
 
   const setOffer = useCallback(async (id: string, offer?: string) => {
     await update(id, { angebot: offer });
@@ -48,7 +69,6 @@ export function useBoardActions() {
   }, [update]);
 
   const cyclePriority = useCallback(async (id: string) => {
-    // Placeholder: echtes Cycle benötigt aktuellen Wert; dazu BoardService um read erweitern oder Wert als Param übergeben.
     await update(id, { priority: 'hoch' });
   }, [update]);
 
@@ -68,6 +88,14 @@ export function useBoardActions() {
     }
   }, [update]);
 
+  const bulkPin = useCallback(async (ids: string[]) => {
+    await bulkUpdate(ids, { isPinned: true });
+  }, [bulkUpdate]);
+
+  const bulkUnpin = useCallback(async (ids: string[]) => {
+    await bulkUpdate(ids, { isPinned: false });
+  }, [bulkUpdate]);
+
   const archive = useCallback(async (id: string) => {
     await update(id, { isArchived: true, archivedAt: new Date().toISOString() });
   }, [update]);
@@ -78,15 +106,18 @@ export function useBoardActions() {
 
   const undo = useCallback(async () => {
     await undoLast();
+    emit('board:optimistic-clear', {});
   }, []);
 
   const redo = useCallback(async () => {
     await redoLast();
+    emit('board:optimistic-clear', {});
   }, []);
 
   return {
     update,
     bulkUpdate,
+    applyOptimistic,
     setOffer,
     setFollowup,
     setAssignedTo,
@@ -95,6 +126,8 @@ export function useBoardActions() {
     cyclePriority,
     addContactAttempt,
     togglePin,
+    bulkPin,
+    bulkUnpin,
     archive,
     unarchive,
     undo,
