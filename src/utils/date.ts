@@ -1,31 +1,20 @@
 /**
- * Board-spezifische Datums-Utils (für Cells)
- * Pfad: src/features/board/utils/date.ts
+ * App-weite Datums-Utilities
+ * Wird von ImportExcel, ImportPdf und Sync genutzt.
  */
-export function isValidISO(v?: string | null): boolean {
-  if (!v) return false;
-  const t = Date.parse(v as string);
-  return Number.isFinite(t);
-}
 
-export function toEpoch(v: string): number {
-  const t = Date.parse(v);
-  return Number.isFinite(t) ? t : 0;
-}
-
-export function formatDDMMYYYY(v?: string): string | undefined {
-  if (!v) return undefined;
-  const d = new Date(v);
-  if (!Number.isFinite(d.getTime())) return undefined;
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  /**
- * App-weite Datums-Utils (von Import/Sync verwendet)
- */
 export function nowISO(): string {
   return new Date().toISOString();
 }
 
+/**
+ * Akzeptiert u.a.:
+ *  - "dd.mm.yyyy"
+ *  - "yyyy-mm-dd" (mit/ohne Zeitteil)
+ *  - ISO-Strings
+ *  - frei parsebare Datumstexte
+ * Liefert ein ISO-String (UTC).
+ */
 export function parseToISO(input: string): string {
   if (!input) throw new Error('parseToISO: empty');
   const s = String(input).trim();
@@ -33,16 +22,16 @@ export function parseToISO(input: string): string {
   // dd.mm.yyyy
   let m = /^\s*(\d{2})\.(\d{2})\.(\d{4})\s*$/.exec(s);
   if (m) {
-    const [_, dd, mm, yyyy] = m;
+    const [, dd, mm, yyyy] = m;
     const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
     if (!Number.isFinite(d.getTime())) throw new Error('parseToISO: invalid dd.mm.yyyy');
     return d.toISOString();
   }
 
-  // yyyy-mm-dd
+  // yyyy-mm-dd (mit optionalem Zeitteil)
   m = /^\s*(\d{4})-(\d{2})-(\d{2})(?:\s|T|$)/.exec(s);
   if (m) {
-    const [_, yyyy, mm, dd] = m;
+    const [, yyyy, mm, dd] = m;
     const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
     if (!Number.isFinite(d.getTime())) throw new Error('parseToISO: invalid yyyy-mm-dd');
     return d.toISOString();
@@ -59,6 +48,7 @@ export function isValidISO(v?: string | null): boolean {
   const t = Date.parse(v as string);
   return Number.isFinite(t);
 }
+
 export function formatDDMMYYYY(v?: string): string | undefined {
   if (!v) return undefined;
   const d = new Date(v);
@@ -68,10 +58,8 @@ export function formatDDMMYYYY(v?: string): string | undefined {
   const yyyy = d.getFullYear();
   return `${dd}.${mm}.${yyyy}`;
 }
+
 export function toEpoch(v: string): number {
   const t = Date.parse(v);
   return Number.isFinite(t) ? t : 0;
-}
-const yyyy = d.getFullYear();
-  return `${dd}.${mm}.${yyyy}`;
 }
