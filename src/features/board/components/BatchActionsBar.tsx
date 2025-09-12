@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { ExportCsvDialog } from './ExportCsvDialog';
 
 type Props = {
   selectedCount: number;
@@ -10,15 +11,19 @@ type Props = {
   onSetFollowup: (date?: string) => void;
   onArchive: () => void;
   onUnarchive: () => void;
+  onPin?: () => void;
+  onUnpin?: () => void;
+  selectedRowsProvider?: () => any[];
 };
 
 export function BatchActionsBar({
-  selectedCount, users, onClear, onSetStatus, onSetResult, onSetAssign, onSetFollowup, onArchive, onUnarchive
+  selectedCount, users, onClear, onSetStatus, onSetResult, onSetAssign, onSetFollowup, onArchive, onUnarchive, onPin, onUnpin, selectedRowsProvider
 }: Props) {
   const [status, setStatus] = useState<string>('');
   const [result, setResult] = useState<string>('');
   const [assign, setAssign] = useState<string>('');
   const [followup, setFollowup] = useState<string>('');
+  const [openCsv, setOpenCsv] = useState(false);
 
   return (
     <div className="mb-3 p-2 border rounded bg-white shadow-sm flex items-center gap-2 text-sm">
@@ -65,8 +70,17 @@ export function BatchActionsBar({
         <button className="px-2 py-1 border rounded hover:bg-gray-50" onClick={onUnarchive}>Entarchivieren</button>
       </div>
 
+      <div className="flex items-center gap-1 ml-2">
+        <button className="px-2 py-1 border rounded hover:bg-gray-50" onClick={onPin}>Pinnen</button>
+        <button className="px-2 py-1 border rounded hover:bg-gray-50" onClick={onUnpin}>Entpinnen</button>
+      </div>
+
       <div className="flex-1" />
+
+      <button className="px-2 py-1 border rounded hover:bg-gray-50" onClick={()=>setOpenCsv(true)}>CSV exportieren…</button>
       <button className="px-2 py-1 border rounded hover:bg-gray-50" onClick={onClear}>Auswahl aufheben</button>
+
+      <ExportCsvDialog open={openCsv} onClose={()=>setOpenCsv(false)} rows={selectedRowsProvider ? selectedRowsProvider() : []} />
     </div>
   );
 }
