@@ -113,7 +113,7 @@ export type Client = {
 
 export type Role = 'admin' | 'sb';
 
-// Update Role type to include editor
+// Role type erweitert um editor und user
 export type Role = 'admin' | 'editor' | 'user';
 
 export type User = {

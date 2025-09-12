@@ -55,6 +55,9 @@ export const ChannelSchema = z.enum([
   'dritt'
 ]) satisfies z.ZodType<Channel>;
 
+// Angebot Schema
+export const AngebotSchema = z.enum(['BAM', 'LL/B+', 'BwB', 'NB']);
+
 // ContactLog Schema
 export const ContactLogSchema = z.object({
   date: isoDateString,
