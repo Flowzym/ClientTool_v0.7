@@ -1,26 +1,29 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useBoardData } from './useBoardData';
 import { useBoardActions } from './hooks/useBoardActions';
+import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import { ClientRow } from './components/ClientRow';
 import { BatchActionsBar } from './components/BatchActionsBar';
+
+const ROW_HEIGHT = 44;
 
 function Board() {
   const { clients, users, isLoading } = useBoardData();
   const actions = useBoardActions();
 
+  const visibleClients = useOptimisticOverlay(clients);
+
   // Selection state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const lastIndexRef = useRef<number | null>(null);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-
-  const allIds = useMemo(() => clients.map(c => c.id as string), [clients]);
+  const allIds = useMemo(() => visibleClients.map((c:any) => c.id as string), [visibleClients]);
 
   const clearSelection = () => setSelectedIds([]);
   const selectAllVisible = () => setSelectedIds(allIds);
 
   const toggleAtIndex = (index: number, id: string, withShift: boolean) => {
     if (!withShift || lastIndexRef.current == null) {
-      // simple toggle
       setSelectedIds(prev => {
         const s = new Set(prev);
         if (s.has(id)) s.delete(id); else s.add(id);
@@ -29,7 +32,6 @@ function Board() {
       lastIndexRef.current = index;
       return;
     }
-    // shift range select
     const start = Math.min(lastIndexRef.current, index);
     const end = Math.max(lastIndexRef.current, index);
     const idsInRange = allIds.slice(start, end + 1);
@@ -66,13 +68,28 @@ function Board() {
     return () => window.removeEventListener('keydown', handler);
   }, [actions, allIds]);
 
+  // Virtualization: basic fixed-row-height virtualization
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop((e.target as HTMLDivElement).scrollTop);
+  };
+  const viewportHeight = 520; // approx (could be measured)
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 5);
+  const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT) + 10;
+  const endIndex = Math.min(visibleClients.length, startIndex + visibleCount);
+  const topPad = startIndex * ROW_HEIGHT;
+  const bottomPad = Math.max(0, (visibleClients.length - endIndex) * ROW_HEIGHT);
+
+  const selectedRowsProvider = () => visibleClients.filter((c:any) => selectedSet.has(c.id));
+
   if (isLoading) {
     return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;
   }
 
   return (
     <div className="p-4 overflow-auto">
-      <div className="text-sm text-gray-600 mb-3">Board geladen — {clients.length} Einträge</div>
+      <div className="text-sm text-gray-600 mb-3">Board geladen — {visibleClients.length} Einträge</div>
 
       {selectedIds.length > 0 && (
         <BatchActionsBar
@@ -85,6 +102,9 @@ function Board() {
           onSetFollowup={(date) => actions.bulkUpdate(selectedIds, { followUp: date ?? null, status: date ? 'terminVereinbart' : 'offen' })}
           onArchive={() => actions.bulkUpdate(selectedIds, { isArchived: true, archivedAt: new Date().toISOString() })}
           onUnarchive={() => actions.bulkUpdate(selectedIds, { isArchived: false, archivedAt: null })}
+          onPin={() => actions.bulkPin?.(selectedIds)}
+          onUnpin={() => actions.bulkUnpin?.(selectedIds)}
+          selectedRowsProvider={selectedRowsProvider}
         />
       )}
 
@@ -107,22 +127,29 @@ function Board() {
           <div>Pin</div>
         </div>
 
-        {/* Rows */}
-        <div className="divide-y">
-          {clients.map((c, idx) => (
-            <ClientRow
-              key={c.id}
-              client={c}
-              index={idx}
-              users={users}
-              actions={actions}
-              selected={selectedSet.has(c.id)}
-              onToggleSelect={(withShift: boolean) => toggleAtIndex(idx, c.id, withShift)}
-            />
-          ))}
-          {clients.length === 0 && (
-            <div className="px-3 py-6 text-sm text-gray-500">Keine Einträge für die aktuelle Ansicht.</div>
-          )}
+        {/* Virtualized rows container */}
+        <div ref={containerRef} onScroll={onScroll} style={{ maxHeight: viewportHeight, overflowY: 'auto' }}>
+          <div style={{ height: topPad }} />
+          <div className="divide-y">
+            {visibleClients.slice(startIndex, endIndex).map((c:any, idx:number) => {
+              const realIndex = startIndex + idx;
+              return (
+                <ClientRow
+                  key={c.id}
+                  client={c}
+                  index={realIndex}
+                  users={users}
+                  actions={actions}
+                  selected={selectedSet.has(c.id)}
+                  onToggleSelect={(withShift: boolean) => toggleAtIndex(realIndex, c.id, withShift)}
+                />
+              );
+            })}
+            {visibleClients.length === 0 && (
+              <div className="px-3 py-6 text-sm text-gray-500">Keine Einträge für die aktuelle Ansicht.</div>
+            )}
+          </div>
+          <div style={{ height: bottomPad }} />
         </div>
       </div>
     </div>
