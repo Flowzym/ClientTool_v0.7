@@ -1,11 +1,11 @@
 import React from 'react';
-import NameCell from '../components/cells/NameCell';
-import FollowupCell from '../components/cells/FollowupCell';
-import AdvisorCell from '../components/cells/AdvisorCell';
-// Einige Zellen sind im Repo bereits vorhanden; falls nicht, werden die Felder einfach leer dargestellt.
-import StatusCell from '../components/cells/StatusCell';
-import OfferCell from '../components/cells/OfferCell';
-import PinCell from '../components/cells/PinCell';
+import NameCell from './cells/NameCell';
+import FollowupCell from './cells/FollowupCell';
+import AdvisorCell from './cells/AdvisorCell';
+// Stub-Cells, falls im Repo noch nicht vorhanden:
+import StatusCell from './cells/StatusCell';
+import OfferCell from './cells/OfferCell';
+import PinCell from './cells/PinCell';
 
 type Actions = {
   update: (id: string, changes: any) => Promise<void> | void;
@@ -18,7 +18,7 @@ export function ClientRow({ client, actions }: { client: any; actions: Actions }
   const { id } = client ?? {};
 
   return (
-    <div className="grid grid-cols-[minmax(240px,1fr)_120px_140px_180px_100px_80px] gap-2 items-center px-3 py-2 hover:bg-gray-50">
+    <div className="grid grid-cols-[minmax(240px,1fr)_120px_140px_180px_160px_80px] gap-2 items-center px-3 py-2 hover:bg-gray-50">
       <NameCell
         client={{
           id,
