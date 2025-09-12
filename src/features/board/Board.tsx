@@ -10,11 +10,8 @@ const ROW_HEIGHT = 44;
 function Board() {
   const { clients, users, isLoading } = useBoardData();
   const actions = useBoardActions();
-
-  // Optimistic: Basisdaten mit Overlay gemerged
   const visibleClients = useOptimisticOverlay(clients);
 
-  // Selection state
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const lastIndexRef = useRef<number | null>(null);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
@@ -40,42 +37,22 @@ function Board() {
     lastIndexRef.current = index;
   };
 
-  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
-      if (meta && (e.key === 'z' || e.key === 'Z')) {
-        e.preventDefault();
-        actions.undo?.();
-        return;
-      }
-      if (meta && (e.key === 'y' || e.key === 'Y')) {
-        e.preventDefault();
-        actions.redo?.();
-        return;
-      }
-      if (e.key === 'Escape') {
-        e.preventDefault();
-        clearSelection();
-        return;
-      }
-      if (!meta && (e.key === 'a' || e.key === 'A')) {
-        e.preventDefault();
-        selectAllVisible();
-        return;
-      }
+      if (meta && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); actions.undo?.(); return; }
+      if (meta && (e.key === 'y' || e.key === 'Y')) { e.preventDefault(); actions.redo?.(); return; }
+      if (e.key === 'Escape') { e.preventDefault(); clearSelection(); return; }
+      if (!meta && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); selectAllVisible(); return; }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [actions, allIds]);
 
-  // Einfache Virtualisierung (fixed row height)
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
-  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    setScrollTop((e.target as HTMLDivElement).scrollTop);
-  };
-  const viewportHeight = 520; // kann bei Bedarf gemessen/angepasst werden
+  const onScroll = (e: React.UIEvent<HTMLDivElement>) => setScrollTop((e.target as HTMLDivElement).scrollTop);
+  const viewportHeight = 520;
   const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 5);
   const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT) + 10;
   const endIndex = Math.min(visibleClients.length, startIndex + visibleCount);
@@ -84,15 +61,11 @@ function Board() {
 
   const selectedRowsProvider = () => visibleClients.filter((c: any) => selectedSet.has(c.id));
 
-  if (isLoading) {
-    return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;
-  }
+  if (isLoading) return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;
 
   return (
     <div className="p-4 overflow-auto">
-      <div className="text-sm text-gray-600 mb-3">
-        Board geladen — {visibleClients.length} Einträge
-      </div>
+      <div className="text-sm text-gray-600 mb-3">Board geladen — {visibleClients.length} Einträge</div>
 
       {selectedIds.length > 0 && (
         <BatchActionsBar
@@ -103,20 +76,11 @@ function Board() {
           onSetResult={(result) => actions.bulkUpdate(selectedIds, { result })}
           onSetAssign={(userId) => actions.bulkUpdate(selectedIds, { assignedTo: userId ?? null })}
           onSetFollowup={(date) =>
-            actions.bulkUpdate(selectedIds, {
-              followUp: date ?? null,
-              status: date ? 'terminVereinbart' : 'offen',
-            })
-          }
+            actions.bulkUpdate(selectedIds, { followUp: date ?? null, status: date ? 'terminVereinbart' : 'offen' })}
           onArchive={() =>
-            actions.bulkUpdate(selectedIds, {
-              isArchived: true,
-              archivedAt: new Date().toISOString(),
-            })
-          }
+            actions.bulkUpdate(selectedIds, { isArchived: true, archivedAt: new Date().toISOString() })}
           onUnarchive={() =>
-            actions.bulkUpdate(selectedIds, { isArchived: false, archivedAt: null })
-          }
+            actions.bulkUpdate(selectedIds, { isArchived: false, archivedAt: null })}
           onPin={() => actions.bulkPin?.(selectedIds)}
           onUnpin={() => actions.bulkUnpin?.(selectedIds)}
           selectedRowsProvider={selectedRowsProvider}
@@ -124,25 +88,12 @@ function Board() {
       )}
 
       <div className="min-w-[1480px] border rounded-lg overflow-hidden">
-        {/* Header */}
         <div className="grid grid-cols-[36px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px_64px] gap-2 bg-gray-50 border-b px-3 py-2 text-xs font-medium text-gray-600">
-          <div>✓</div>
-          <div>Kunde</div>
-          <div>Offer</div>
-          <div>Status</div>
-          <div>Ergebnis</div>
-          <div>Follow-up</div>
-          <div>Zuständigkeit</div>
-          <div>Kontakt</div>
-          <div>Anmerkung</div>
-          <div>Zubuchung</div>
-          <div>Priorität</div>
-          <div>Aktivität</div>
-          <div>Aktionen</div>
-          <div>Pin</div>
+          <div>✓</div><div>Kunde</div><div>Offer</div><div>Status</div><div>Ergebnis</div>
+          <div>Follow-up</div><div>Zuständigkeit</div><div>Kontakt</div><div>Anmerkung</div>
+          <div>Zubuchung</div><div>Priorität</div><div>Aktivität</div><div>Aktionen</div><div>Pin</div>
         </div>
 
-        {/* Virtualized rows container */}
         <div ref={containerRef} onScroll={onScroll} style={{ maxHeight: viewportHeight, overflowY: 'auto' }}>
           <div style={{ height: topPad }} />
           <div className="divide-y">
@@ -161,9 +112,7 @@ function Board() {
               );
             })}
             {visibleClients.length === 0 && (
-              <div className="px-3 py-6 text-sm text-gray-500">
-                Keine Einträge für die aktuelle Ansicht.
-              </div>
+              <div className="px-3 py-6 text-sm text-gray-500">Keine Einträge für die aktuelle Ansicht.</div>
             )}
           </div>
           <div style={{ height: bottomPad }} />
