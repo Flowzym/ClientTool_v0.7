@@ -7,13 +7,14 @@
 import Dexie, { type Table } from 'dexie';
 import type { Client, User, ImportSession } from '../domain/models';
 import { codecFactory, type Envelope } from './codec';
+import { EnvelopeV1, validateEnvelope } from './envelope';
 import { getDbName } from '../utils/env';
 
 // Globaler Codec für diese DB-Instanz
 const codec = codecFactory();
 
-function isEnvelope(v: any): v is Envelope {
-  return !!v && typeof v === 'object' && v.envelopeVersion === 'v1';
+function isEnvelope(v: any): v is EnvelopeV1 {
+  return validateEnvelope(v);
 }
 
 /** Envelope dekodieren und Meta-Daten mergen */
@@ -382,14 +383,6 @@ class ClientWorkDB extends Dexie {
     console.log(`🔄 DB: Rewrapped ${rewrapped} client records`);
     return rewrapped;
   }
-}
-
-// Legacy-Support für alte Sealed-Objekte
-function isSealed(v: any): boolean {
-  return !!v && typeof v === 'object'
-    && typeof v.nonce === 'string'
-    && typeof v.ciphertext === 'string'
-    && !v.envelopeVersion; // Alte Sealed-Objekte haben keine envelopeVersion
 }
 
 // Singleton-Instanz

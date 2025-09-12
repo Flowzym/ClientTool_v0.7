@@ -3,7 +3,8 @@ import { Button } from '../../components/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card';
 import { Badge } from '../../components/Badge';
 import { Shield, Eye, EyeOff, AlertCircle } from 'lucide-react';
-import { cryptoManager, type CryptoError } from '../../data/crypto';
+import { cryptoManager } from '../../data/crypto';
+import { EnvelopeError } from '../../data/envelope';
 import { getEncryptionMode } from '../../utils/env';
 import { db } from '../../data/db';
 import { seedTestData } from '../../data/seed';
@@ -92,9 +93,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       return true;
     } catch (error) {
       console.error('❌ Auth: Login failed:', error);
-      cryptoManager.clearKey();
-      return false;
-    }
+      if (error instanceof EnvelopeError && error.code === 'DECRYPT_AUTH_FAILED') {
+        return false; // Invalid passphrase
+      }
+      throw error;
   };;
 
   const logout = () => {

@@ -3,10 +3,12 @@
  * Automatische Generierung und localStorage-Persistierung
  */
 
+import { base64urlEncode, base64urlDecode } from '../data/envelope';
+
 export function isValidDevKey(b64: string): boolean {
   try {
     if (!b64 || typeof b64 !== 'string') return false;
-    const decoded = atob(b64);
+    const decoded = base64urlDecode(b64);
     return decoded.length === 32;
   } catch {
     return false;
@@ -37,7 +39,7 @@ export function getOrCreateDevMasterKeyB64(): string {
   // 32 Random Bytes generieren
   const keyBytes = new Uint8Array(32);
   crypto.getRandomValues(keyBytes);
-  const keyB64 = btoa(String.fromCharCode(...keyBytes));
+  const keyB64 = base64urlEncode(keyBytes);
   
   // In localStorage speichern
   localStorage.setItem('dev_master_key_b64', keyB64);
@@ -58,7 +60,7 @@ export function generateNewDevKey(): string {
   
   const keyBytes = new Uint8Array(32);
   crypto.getRandomValues(keyBytes);
-  const keyB64 = btoa(String.fromCharCode(...keyBytes));
+  const keyB64 = base64urlEncode(keyBytes);
   
   localStorage.setItem('dev_master_key_b64', keyB64);
   
