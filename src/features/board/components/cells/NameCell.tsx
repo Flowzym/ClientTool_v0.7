@@ -1,50 +1,42 @@
 import React from 'react';
 import { PencilLine } from 'lucide-react';
-import { countNotes } from '../../utils/notes';
 
-type Props = {
-  client: {
-    id: string;
-    firstName?: string;
-    lastName?: string;
-    title?: string;
-    notes?: any[];
-    contactLog?: any[];
-    note?: string;
-  };
-  onOpenNotes?: (id: string) => void;
-};
+function countNotes(client: any): number {
+  // 1) notes array
+  if (Array.isArray(client?.notes)) return client.notes.length;
+  // 2) contactLog entries with type/kind === 'note'
+  if (Array.isArray(client?.contactLog)) {
+    const n = client.contactLog.filter((e:any) => (e?.type === 'note' || e?.kind === 'note')).length;
+    if (n > 0) return n;
+  }
+  // 3) fallback: note text
+  if (client?.note && String(client.note).trim().length > 0) return 1;
+  return 0;
+}
 
-/**
- * NameCell ohne Geschlechtersymbole.
- * Notiz-Icon: immer PencilLine; Badge mit echter Anzahl über countNotes(...).
- * Namensformat: "Nachname, Vorname (Titel)" – Titel nur wenn vorhanden.
- */
-export default function NameCell({ client, onOpenNotes }: Props) {
-  const { id, firstName, lastName, title } = client;
+export default function NameCell({ client, onOpenNotes }: { client: any; onOpenNotes: (id: string) => void; }) {
+  const name = [client?.lastName, client?.firstName].filter(Boolean).join(', ');
+  const title = client?.title ? ` (${client.title})` : '';
   const count = countNotes(client);
-
-  const nameParts = [lastName, firstName].filter(Boolean);
-  const main = nameParts.join(', ');
-  const titlePart = title ? ` (${title})` : '';
+  const muted = count === 0;
 
   return (
     <div className="flex items-center gap-2">
-      <button
-        className="relative inline-flex items-center justify-center w-7 h-7 rounded border border-gray-300 hover:bg-gray-50"
-        title={count > 0 ? `${count} Notizen` : 'Notizen'}
-        onClick={() => onOpenNotes?.(id)}
-      >
-        <PencilLine className={`w-4 h-4 ${count === 0 ? 'text-gray-400' : 'text-gray-700'}`} />
+      <div className="relative">
+        <button
+          className={`p-1 rounded hover:bg-gray-50 ${muted ? 'text-gray-400' : 'text-gray-700'}`}
+          title="Notizen öffnen"
+          onClick={() => onOpenNotes(client?.id)}
+        >
+          <PencilLine size={16} />
+        </button>
         {count > 0 && (
-          <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[10px] leading-none px-1.5 py-0.5 rounded-full">
+          <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 text-[10px] leading-[16px] text-gray-800 bg-white border border-gray-300 rounded-full text-center">
             {count}
           </span>
         )}
-      </button>
-      <div className="truncate">
-        <div className="font-medium text-sm truncate">{main}{titlePart}</div>
       </div>
+      <div className="truncate">{name}{title}</div>
     </div>
   );
 }
