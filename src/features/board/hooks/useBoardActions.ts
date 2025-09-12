@@ -68,24 +68,36 @@ export function useBoardActions() {
     await update(id, { result: result ?? null });
   }, [update]);
 
-  const cyclePriority = useCallback(async (id: string) => {
-    await update(id, { priority: 'hoch' });
+  /** Priority cycle: null -> 'niedrig' -> 'mittel' -> 'hoch' -> null */
+  const cyclePriority = useCallback(async (id: string, current?: string | null) => {
+    const order = [null, 'niedrig', 'mittel', 'hoch'] as const;
+    const idx = order.indexOf((current ?? null) as any);
+    const next = order[(idx + 1) % order.length];
+    await update(id, { priority: next });
   }, [update]);
 
-  const addContactAttempt = useCallback(async (id: string, channel: 'phone'|'sms'|'email'|'proxy') => {
-    const field = channel === 'phone' ? 'contactPhone' : channel === 'sms' ? 'contactSms' : channel === 'email' ? 'contactEmail' : 'contactProxy';
-    await update(id, { [field]: (1 as any), lastActivity: new Date().toISOString() });
+  /**
+   * Kontaktversuch inkrementieren.
+   * Wenn currentCounts übergeben wird, wird (current+1) geschrieben und ist Undo-fähig.
+   */
+  const addContactAttempt = useCallback(async (
+    id: string,
+    channel: 'phone'|'sms'|'email'|'proxy',
+    currentCounts?: { phone?: number; sms?: number; email?: number; proxy?: number }
+  ) => {
+    const field = channel === 'phone' ? 'contactPhone'
+               : channel === 'sms' ? 'contactSms'
+               : channel === 'email' ? 'contactEmail'
+               : 'contactProxy';
+    const prev = (currentCounts && (currentCounts as any)[channel]) ?? 0;
+    const next = prev + 1;
+    await update(id, { [field]: next, lastActivity: new Date().toISOString() });
   }, [update]);
 
   const togglePin = useCallback(async (id: string | string[]) => {
-    const setTrue = async (one: string) => {
-      await update(one, { isPinned: true });
-    };
-    if (Array.isArray(id)) {
-      for (const one of id) await setTrue(one);
-    } else {
-      await setTrue(id);
-    }
+    const setTrue = async (one: string) => { await update(one, { isPinned: true }); };
+    if (Array.isArray(id)) { for (const one of id) await setTrue(one); }
+    else { await setTrue(id); }
   }, [update]);
 
   const bulkPin = useCallback(async (ids: string[]) => {
@@ -117,7 +129,6 @@ export function useBoardActions() {
   return {
     update,
     bulkUpdate,
-    applyOptimistic,
     setOffer,
     setFollowup,
     setAssignedTo,
