@@ -10,6 +10,7 @@ const ROW_HEIGHT = 44;
 function Board() {
   const { clients, users, isLoading } = useBoardData();
   const actions = useBoardActions();
+
   const visibleClients = useOptimisticOverlay(clients);
 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -51,7 +52,9 @@ function Board() {
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
-  const onScroll = (e: React.UIEvent<HTMLDivElement>) => setScrollTop((e.target as HTMLDivElement).scrollTop);
+  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop((e.target as HTMLDivElement).scrollTop);
+  };
   const viewportHeight = 520;
   const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 5);
   const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT) + 10;
