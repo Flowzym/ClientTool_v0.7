@@ -46,7 +46,14 @@ export function ClientRow({
         <input
           type="checkbox"
           checked={!!selected}
-          onChange={(e) => onToggleSelect?.(e.shiftKey)}
+          onClick={(e) => onToggleSelect?.((e as React.MouseEvent<HTMLInputElement>).shiftKey)}
+          onKeyDown={(e) => {
+            if (e.key === ' ' || e.key === 'Spacebar') {
+              e.preventDefault();
+              onToggleSelect?.(e.shiftKey);
+            }
+          }}
+          onChange={() => {}}
           aria-label="select row"
         />
       </div>
