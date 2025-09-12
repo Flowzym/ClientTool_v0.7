@@ -1,6 +1,7 @@
 import { db } from '../../../data/db';
 import type { Patch } from './PatchBuilder';
 
+/** Wendet Patches auf die Clients-Tabelle an. */
 export async function bulkApply<T>(patches: Patch<T>[]): Promise<void> {
   for (const p of patches) {
     try {
@@ -16,6 +17,7 @@ export async function updateById<T>(id: string, changes: Partial<T>): Promise<vo
   await bulkApply([{ id, changes } as Patch<T>]);
 }
 
+/** Einfache Undo/Redo-Stacks (optional von useBoardActions genutzt) */
 const _undo: Patch<any>[][] = [];
 const _redo: Patch<any>[][] = [];
 
