@@ -1,4 +1,4 @@
-export type Patch<T> = { id: string; changes: Partial<T> };
+import type { Patch } from '../../../types/patch';
 
 export function build<T>(id: string, delta: Partial<T>): Patch<T> {
   return { id, changes: delta };

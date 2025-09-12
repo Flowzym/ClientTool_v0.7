@@ -1,5 +1,24 @@
 # Changelog
 
+## [Phase 1] - 2025-01-27
+
+### Added
+- feat(core): Patch-Flow vereinheitlicht, Undo/Redo konsolidiert
+- Zentrale Patch-Typen in src/types/patch.ts
+- MutationService als einziger Mutationspfad
+- Undo/Redo-Stack-Management mit automatischer Inverse-Patch-Generierung
+- Unit- und Integration-Tests für Patch-Flow
+
+### Changed
+- BoardService nutzt jetzt MutationService statt direkte DB-Zugriffe
+- useBoardActions verwendet einheitliche Patch-Typen
+- Alle UI-Mutationen laufen über zentralen Service
+
+### Technical
+- Keine API-Brüche: bestehende Signaturen bleiben kompatibel
+- UI-Verhalten unverändert
+- Encryption-Feature-Flags unverändert
+
 ## [Phase 0] - 2025-01-27
 
 ### Fixed

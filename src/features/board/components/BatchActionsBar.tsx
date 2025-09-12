@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { Patch } from '../../../types/patch';
 import { ExportCsvDialog } from './ExportCsvDialog';
 
 type Props = {

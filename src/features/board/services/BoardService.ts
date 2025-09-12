@@ -1,5 +1,5 @@
-import { db } from '../../../data/db';
-import type { Patch } from './PatchBuilder';
+import { mutationService } from '../../../services/MutationService';
+import type { Patch } from '../../../types/patch';
 
 /**
  * Robust BoardService:
@@ -68,14 +68,13 @@ async function computeInverse(forward: Patch<any>[]): Promise<Patch<any>[]> {
 }
 
 // ---- public API ----
+/** Wendet Patches über zentralen MutationService an */
 export async function bulkApply<T>(patches: Patch<T>[]): Promise<void> {
-  for (const p of patches) {
-    await applyOne(p);
-  }
+  await mutationService.applyPatches(patches);
 }
 
 export async function updateById<T>(id: string, changes: Partial<T>): Promise<void> {
-  await applyOne({ id, changes } as Patch<T>);
+  await mutationService.applyPatch({ id, changes });
 }
 
 export async function queueUndo(forward: Patch<any>[]): Promise<void> {
@@ -84,18 +83,17 @@ export async function queueUndo(forward: Patch<any>[]): Promise<void> {
   _redo.length = 0;
 }
 
+/** Undo/Redo über zentralen MutationService */
 export async function undoLast(): Promise<boolean> {
-  const entry = _undo.pop();
-  if (!entry) return false;
-  await bulkApply(entry.inverse);
-  _redo.push({ forward: entry.inverse, inverse: entry.forward });
-  return true;
+  const result = await mutationService.performUndo();
+  return result.success;
 }
 
 export async function redoLast(): Promise<boolean> {
-  const entry = _redo.pop();
-  if (!entry) return false;
-  await bulkApply(entry.inverse);
-  _undo.push({ forward: entry.inverse, inverse: entry.forward });
-  return true;
+  const result = await mutationService.performRedo();
+  return result.success;
+}
+
+export function getUndoRedoStatus() {
+  return mutationService.getStackStatus();
 }

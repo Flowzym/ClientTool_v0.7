@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
-import { bulkApply, updateById, queueUndo, undoLast, redoLast } from '../services/BoardService';
+import { bulkApply, updateById, undoLast, redoLast, getUndoRedoStatus } from '../services/BoardService';
 import { build } from '../services/PatchBuilder';
 import { isValidISO } from '../utils/date';
+import type { Patch } from '../../../types/patch';
 
 function emit(name: string, detail: any) {
   window.dispatchEvent(new CustomEvent(name, { detail }));
@@ -9,7 +10,7 @@ function emit(name: string, detail: any) {
 
 export function useBoardActions() {
   const applyOptimistic = useCallback((ids: string[], changes: any) => {
-    const patches = ids.map((id) => build<any>(id, changes));
+    const patches: Patch<any>[] = ids.map((id) => build<any>(id, changes));
     emit('board:optimistic-apply', { patches });
     return patches;
   }, []);
@@ -20,7 +21,6 @@ export function useBoardActions() {
 
   const update = useCallback(async (id: string, changes: any) => {
     const patches = applyOptimistic([id], changes);
-    await queueUndo(patches);
     try {
       await updateById<any>(id, changes);
       commitOptimistic(patches);
@@ -32,9 +32,8 @@ export function useBoardActions() {
 
   const bulkUpdate = useCallback(async (ids: string[], changes: any) => {
     const patches = applyOptimistic(ids, changes);
-    await queueUndo(patches);
     try {
-      await bulkApply<any>(patches);
+      await bulkApply(patches);
       commitOptimistic(patches);
     } catch (e) {
       emit('board:optimistic-clear', {});
@@ -117,15 +116,24 @@ export function useBoardActions() {
   }, [update]);
 
   const undo = useCallback(async () => {
-    await undoLast();
-    emit('board:optimistic-clear', {});
+    const success = await undoLast();
+    if (success) {
+      emit('board:optimistic-clear', {});
+    }
+    return success;
   }, []);
 
   const redo = useCallback(async () => {
-    await redoLast();
-    emit('board:optimistic-clear', {});
+    const success = await redoLast();
+    if (success) {
+      emit('board:optimistic-clear', {});
+    }
+    return success;
   }, []);
 
+  const getStackStatus = useCallback(() => {
+    return getUndoRedoStatus();
+  }, []);
   return {
     update,
     bulkUpdate,
@@ -143,5 +151,6 @@ export function useBoardActions() {
     unarchive,
     undo,
     redo,
+    getStackStatus,
   };
 }

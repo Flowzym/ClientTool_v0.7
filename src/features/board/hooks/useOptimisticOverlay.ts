@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-
-type Patch<T> = { id: string | number; changes: Partial<T> };
+import type { Patch } from '../../../types/patch';
 
 type Detail = { patches: Patch<any>[] };
 
