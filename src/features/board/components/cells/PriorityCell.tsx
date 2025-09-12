@@ -1,13 +1,20 @@
 import React from 'react';
 
-const ORDER = ['niedrig','normal','hoch','dringend'] as const;
+export default function PriorityCell({ id, value, onCycle }: {
+  id: string;
+  value?: string | null;
+  onCycle: () => void;
+}) {
+  const dot = (active: boolean, color: string) => (
+    <span className={`inline-block w-2.5 h-2.5 rounded-full ${active ? color : 'bg-gray-300'}`} />
+  );
 
-export default function PriorityCell({ id, value, onCycle }: { id: string; value?: string; onCycle?: ()=>void }) {
-  const color = value === 'dringend' ? 'bg-red-500' : value === 'hoch' ? 'bg-orange-500' : value === 'normal' ? 'bg-yellow-500' : 'bg-gray-300';
+  const v = value ?? null;
   return (
-    <button className="inline-flex items-center gap-2 text-xs px-2 py-1 border rounded hover:bg-gray-50" onClick={onCycle} title="Priorität wechseln">
-      <span className={`inline-block w-2.5 h-2.5 rounded-full ${color}`} />
-      <span>{value || '—'}</span>
+    <button className="flex items-center gap-1 px-2 py-1 rounded border hover:bg-gray-50" onClick={onCycle} title="Priorität wechseln">
+      {dot(v === 'niedrig', 'bg-green-500')}
+      {dot(v === 'mittel', 'bg-yellow-400')}
+      {dot(v === 'hoch', 'bg-red-500')}
     </button>
   );
 }
