@@ -2,7 +2,6 @@ import React from 'react';
 import NameCell from './cells/NameCell';
 import FollowupCell from './cells/FollowupCell';
 import AdvisorCell from './cells/AdvisorCell';
-// Stub-Cells, falls im Repo noch nicht vorhanden:
 import StatusCell from './cells/StatusCell';
 import OfferCell from './cells/OfferCell';
 import PinCell from './cells/PinCell';
