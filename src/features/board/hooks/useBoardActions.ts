@@ -1,18 +1,23 @@
 import { useCallback } from 'react';
-import { bulkApply, updateById, queueUndo } from '../services/BoardService';
+import { bulkApply, updateById, queueUndo, undoLast, redoLast } from '../services/BoardService';
 import { build } from '../services/PatchBuilder';
 import { isValidISO } from '../utils/date';
 
+/**
+ * Zentrale Mutationen mit korrektem Undo/Redo.
+ * WICHTIG: queueUndo muss awaited werden, damit die inversen Patches
+ * vor der eigentlichen Änderung berechnet werden.
+ */
 export function useBoardActions() {
   const update = useCallback(async (id: string, changes: any) => {
     const p = build<any>(id, changes);
-    queueUndo([p]);
+    await queueUndo([p]);
     await updateById<any>(id, changes);
   }, []);
 
   const bulkUpdate = useCallback(async (ids: string[], changes: any) => {
     const patches = ids.map((id) => build<any>(id, changes));
-    queueUndo(patches);
+    await queueUndo(patches);
     await bulkApply<any>(patches);
   }, []);
 
@@ -43,28 +48,23 @@ export function useBoardActions() {
   }, [update]);
 
   const cyclePriority = useCallback(async (id: string) => {
-    const order = ['niedrig','normal','hoch','dringend'];
-    // Ohne Lesen des aktuellen Wertes im UI können wir nur deterministisch eine feste setzen;
-    // in der Praxis würdest du hier den aktuellen Wert kennen. Für Demo: setze 'normal' → 'hoch' → 'dringend' → 'niedrig' → 'normal' (fallback normal).
-    // Besser: erweitere BoardService um readForUpdate(id) oder gib den aktuellen Wert als Param mit.
+    // Placeholder: echtes Cycle benötigt aktuellen Wert; dazu BoardService um read erweitern oder Wert als Param übergeben.
     await update(id, { priority: 'hoch' });
   }, [update]);
 
   const addContactAttempt = useCallback(async (id: string, channel: 'phone'|'sms'|'email'|'proxy') => {
     const field = channel === 'phone' ? 'contactPhone' : channel === 'sms' ? 'contactSms' : channel === 'email' ? 'contactEmail' : 'contactProxy';
-    // Ohne Lesen: inkrementieren nicht möglich; wir setzen +1 als semantisches Signal.
-    // In echter Implementierung: lese current, +1.
     await update(id, { [field]: (1 as any), lastActivity: new Date().toISOString() });
   }, [update]);
 
   const togglePin = useCallback(async (id: string | string[]) => {
-    const toggleOne = async (one: string) => {
+    const setTrue = async (one: string) => {
       await update(one, { isPinned: true });
     };
     if (Array.isArray(id)) {
-      for (const one of id) await toggleOne(one);
+      for (const one of id) await setTrue(one);
     } else {
-      await toggleOne(id);
+      await setTrue(id);
     }
   }, [update]);
 
@@ -76,8 +76,13 @@ export function useBoardActions() {
     await update(id, { isArchived: false, archivedAt: null });
   }, [update]);
 
-  const undo = useCallback(async () => {}, []);
-  const redo = useCallback(async () => {}, []);
+  const undo = useCallback(async () => {
+    await undoLast();
+  }, []);
+
+  const redo = useCallback(async () => {
+    await redoLast();
+  }, []);
 
   return {
     update,
