@@ -1017,3 +1017,68 @@ $ npm run build
 **✅ HF-20 abgeschlossen – Import-Excel Feature typisiert, any deutlich reduziert.**
 
 Zentrale Typdatei erstellt, konkrete Signaturen statt any, Build stabil, bereit für weitere Features.
+
+---
+
+# HF-21: Nicht-any-Fehler beseitigen (minimalinvasiv)
+
+## React-Hooks-Regel gefixt
+```bash
+# Shell.tsx: useAuth() Hook an Component-Top-Level gehoistet
+# - Callback-Aufruf entfernt, direkter Hook-Aufruf am Anfang
+```
+
+## SW-Ausdrücke neutralisiert
+```bash
+# sw.ts: no-unused-expressions mit void(...) gefixt
+# - self.skipWaiting && ... → void (self.skipWaiting && ...)
+# - self.clients.claim && ... → void (self.clients.claim && ...)
+```
+
+## Unbenutzte Imports entfernt
+```bash
+# Require.tsx: getEncryptionMode entfernt
+# SyncStatusBadge.tsx: error variable entfernt
+# ImportExcel.tsx: buildErrorCSV, ImportRawRow, ImportSummary, SniffResult entfernt
+# dedupe.ts: ISODateString entfernt
+# previewGrid.tsx: ImportIssue entfernt
+# validators.ts: ImportMappedRow, ImportIssue, err, _result entfernt
+# db.ts: Envelope entfernt
+# crypto.ts: salt variable entfernt
+```
+
+## Cell-Props umbenannt (unused parameters)
+```bash
+# NameCell.tsx: id → _id, onOpenNotes → _onOpenNotes
+# OfferCell.tsx: id → _id
+# AssignCell.tsx: id → _id
+# ResultCell.tsx: id → _id, onChange → _onChange
+# StatusCell.tsx: id → _id, onChange → _onChange
+# NoteTextCell.tsx: id → _id
+# BookingDateCell.tsx: id → _id
+# ArchiveCell.tsx: id → _id
+```
+
+## Leere Blöcke gefixt
+```bash
+# main.tsx: catch {} → catch { /* noop */ }
+```
+
+## Build-Ergebnis
+```bash
+$ npm run lint
+# ✅ Deutlich weniger Errors - hauptsächlich any-Typen bleiben
+
+$ npm run build
+# ✅ Build successful - keine React-Hooks/Syntax-Fehler mehr
+```
+
+## Status HF-21
+✅ **React-Hooks-Regel gefixt** - useAuth() an Component-Top-Level gehoistet
+✅ **SW-Ausdrücke neutralisiert** - void(...) für no-unused-expressions
+✅ **Unbenutzte Imports entfernt** - nur explizit gemeldete Symbole
+✅ **Cell-Props umbenannt** - id → _id, onChange → _onChange für unused parameters
+✅ **Leere Blöcke gefixt** - /* noop */ statt {}
+✅ **Build grün** - keine neuen Fehler eingeführt
+
+**✅ HF-21 abgeschlossen – Nicht-any-Fehler beseitigt, bereit für any-Reduktion Pass 2.**
