@@ -49,3 +49,33 @@ export function hashRow(row: ImportRawRow): string {
   const json = JSON.stringify(relevantFields, Object.keys(relevantFields).sort());
   return CryptoJS.SHA256(json).toString();
 }
+
+export function dedupeImport<T extends Record<string, unknown>>(rows: T[]): { 
+  dedupedRows: T[]; 
+  duplicates: Array<{ indices: number[]; key: string; reason: string }> 
+} {
+  // Simple deduplication by row key
+  const seen = new Map<string, number>();
+  const duplicates: Array<{ indices: number[]; key: string; reason: string }> = [];
+  const dedupedRows: T[] = [];
+  
+  rows.forEach((row, index) => {
+    const key = buildRowKey(row as any);
+    const firstIndex = seen.get(key);
+    
+    if (firstIndex !== undefined) {
+      // Find existing duplicate group or create new one
+      let duplicateGroup = duplicates.find(d => d.key === key);
+      if (!duplicateGroup) {
+        duplicateGroup = { indices: [firstIndex], key, reason: 'Same row key' };
+        duplicates.push(duplicateGroup);
+      }
+      duplicateGroup.indices.push(index);
+    } else {
+      seen.set(key, index);
+      dedupedRows.push(row);
+    }
+  });
+  
+  return { dedupedRows, duplicates };
+}

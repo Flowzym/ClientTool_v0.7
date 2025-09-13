@@ -4,8 +4,13 @@ import { safeParseToISO as _safeParseToISO } from "./dateSafe";
 
 export type ISODateString = string;
 
+/** Returns current timestamp as ISO string. */
+export function nowISO(): string {
+  return new Date().toISOString();
+}
+
 /** Returns today's date in YYYY-MM-DD (local time). */
-export function nowISO(): ISODateString {
+export function todayISO(): ISODateString {
   const d = new Date();
   // format as YYYY-MM-DD
   const y = d.getFullYear();
