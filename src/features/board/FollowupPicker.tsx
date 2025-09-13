@@ -35,9 +35,7 @@ export function FollowupPicker({ value, onChange, disabled }: FollowupPickerProp
   }, [isOpen]);
 
   const handleSave = () => {
-    if (!selectedChannel) {
-      return;
-    }
+    if (inputValue) {
       const date = new Date(inputValue);
       onChange(date.toISOString());
     } else {
