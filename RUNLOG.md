@@ -938,3 +938,38 @@ $ npm run build
 **✅ HF-18 abgeschlossen – dynamic import entfernt, parseToISO statisch importiert.**
 
 toISOIfFilled-Funktion bleibt synchron, await-Syntax-Fehler behoben, Build stabil.
+
+---
+
+# HF-19: dedupe.ts doppelten followUp-Key entfernen
+
+## Doppelter Property-Key gefunden
+```bash
+# Editor-Suche in dedupe.ts:
+# - followUp: parseToISO(row.followUp) || row.followUp || '' (Zeile ~46)
+# - followUp: toISOIfFilled(row.followUp) || row.followUp || '' (Zeile ~47)
+# Fehler: Duplicate object key 'followUp'
+```
+
+## Fix Applied
+1. **dedupe.ts**: Alte parseToISO-Zeile entfernt (Zeile ~46)
+   - Nur toISOIfFilled-Variante behalten
+   - Objekt-Syntax korrekt, keine weiteren parseToISO-Aufrufe in der Datei
+   - Statischer parseToISO-Import bleibt für toISOIfFilled-Funktion
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine duplicate-key Errors
+
+$ npm run build
+# ✅ Build successful - Objekt-Parsing erfolgreich
+```
+
+## Status HF-19
+✅ **Doppelter followUp-Key entfernt** - parseToISO-Zeile gelöscht, toISOIfFilled-Variante behalten
+✅ **Build grün** - Objekt-Syntax korrekt, keine Parser-Fehler mehr
+
+**✅ HF-19 abgeschlossen – doppelten followUp-Key entfernt, Objekt korrekt geschlossen.**
+
+Duplicate-Key-Fehler behoben, toISOIfFilled-Funktion bleibt aktiv, Build stabil.
