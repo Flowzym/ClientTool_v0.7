@@ -77,7 +77,7 @@ export function Navigation() {
   
   const visibleItems = navigationItems.filter(item => {
     if (!item.requiredPerms) return true;
-    return canAny(item.requiredPerms as any);
+    return canAny(item.requiredPerms);
   });
 
   return (
