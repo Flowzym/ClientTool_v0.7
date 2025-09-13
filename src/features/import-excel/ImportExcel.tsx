@@ -19,7 +19,6 @@ import {
   Download, 
   X, 
   Search,
-  FileSpreadsheet,
   Settings,
   FolderOpen
 } from 'lucide-react';
