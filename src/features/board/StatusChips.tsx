@@ -192,7 +192,7 @@ export function ResultChip({ value, onChange, disabled }: ResultChipProps) {
 }
 
 // Fallback export for Angebot chip (used by Board); simple pill rendering
-export const AngebotChip = ({ value }: { value?: string }) => {
+export function AngebotChip({ value }: { value?: string }) {
   if (!value) return null;
   return <span className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs">{value}</span>;
-};
+}

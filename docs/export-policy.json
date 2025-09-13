@@ -1,0 +1,263 @@
+{
+  "version": "1.0",
+  "description": "Export policy manifest for ClientTool components, hooks, services, and utilities",
+  "lastUpdated": "2025-01-27",
+  "entries": [
+    {
+      "path": "src/features/board/Board.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/ClientRow.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/BatchActionsBar.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/BoardHeader.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/ExportDialog.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/ContactDialog.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/ClientInfoDialog.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/NameCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/OfferCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/StatusCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/ResultCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/AssignCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/ArchiveCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/PriorityCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/ActivityCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/BookingDateCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/ContactAttemptsCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/FollowupCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/components/cells/NoteTextCell.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/components/cells/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/features/board/hooks/useBoardActions.ts",
+      "kind": "hook",
+      "barrel": "src/features/board/hooks/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/hooks/useBoardData.ts",
+      "kind": "hook",
+      "barrel": "src/features/board/hooks/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/hooks/useOptimisticOverlay.ts",
+      "kind": "hook",
+      "barrel": "src/features/board/hooks/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/services/BoardService.ts",
+      "kind": "service",
+      "barrel": "src/features/board/services/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/services/PatchBuilder.ts",
+      "kind": "service",
+      "barrel": "src/features/board/services/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/utils/csv.ts",
+      "kind": "util",
+      "barrel": "src/features/board/utils/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/utils/zip.ts",
+      "kind": "util",
+      "barrel": "src/features/board/utils/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/utils/date.ts",
+      "kind": "util",
+      "barrel": "src/features/board/utils/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/utils/notes.ts",
+      "kind": "util",
+      "barrel": "src/features/board/utils/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/utils/advisor.ts",
+      "kind": "util",
+      "barrel": "src/features/board/utils/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/StatusChips.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/AssignDropdown.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/features/board/FollowupPicker.tsx",
+      "kind": "component",
+      "barrel": "src/features/board/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/services/MutationService.ts",
+      "kind": "service",
+      "barrel": "src/services/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/services/ExportService.ts",
+      "kind": "service",
+      "barrel": "src/services/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/services/ImportService.ts",
+      "kind": "service",
+      "barrel": "src/services/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/types/patch.ts",
+      "kind": "type",
+      "barrel": "src/types/index.ts",
+      "exportType": "named"
+    },
+    {
+      "path": "src/components/Badge.tsx",
+      "kind": "component",
+      "barrel": "src/components/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/components/Button.tsx",
+      "kind": "component",
+      "barrel": "src/components/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    },
+    {
+      "path": "src/components/Card.tsx",
+      "kind": "component",
+      "barrel": "src/components/index.ts",
+      "exportType": "default",
+      "barrelExport": "named"
+    }
+  ]
+}

@@ -41,10 +41,6 @@ export function useBoardActions() {
     }
   }, [applyOptimistic, commitOptimistic]);
 
-  const setOffer = useCallback(async (id: string, offer?: string) => {
-    await update(id, { angebot: offer });
-  }, [update]);
-
   const setFollowup = useCallback(async (id: string, date?: string) => {
     const changes: any = { followUp: date ?? null };
     if (date && isValidISO(date)) {

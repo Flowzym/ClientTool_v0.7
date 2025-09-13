@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './app/auth/AuthProvider';
 import { Shell } from './components/Shell';
 
-import { Board } from './features/board/Board';
+import Board from './features/board/Board';
 import { Dashboard } from './features/dashboard/Dashboard';
 import { Statistik } from './features/statistik/Statistik';
 import { Import } from './features/import/Import';
