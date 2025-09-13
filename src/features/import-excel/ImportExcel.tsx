@@ -5,6 +5,7 @@ import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
+import * as XLSX from 'xlsx';
 import { 
   CheckCircle, 
   FolderOpen, 

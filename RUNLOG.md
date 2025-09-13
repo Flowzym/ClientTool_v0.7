@@ -467,6 +467,35 @@ $ npm run build
 
 ---
 
+# HF-10: XLSX Import konsolidieren
+
+## XLSX-Verwendung ermittelt
+```bash
+$ grep -n "XLSX\|xlsx" src/features/import-excel/ImportExcel.tsx
+# Gefunden: XLSX.read, XLSX.utils.sheet_to_json, XLSX.write (mehrere Stellen)
+# Kein bestehender Import gefunden
+```
+
+## Fix Applied
+1. **ImportExcel.tsx**: XLSX-Import hinzugefügt (import * as XLSX from 'xlsx')
+   - Einzige xlsx-Importzeile am Dateianfang
+   - Keine Namenskonflikte oder doppelte Imports
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine Import-Errors
+
+$ npm run build
+# ✅ Build successful - XLSX-Referenzen aufgelöst
+```
+
+## Status HF-10
+✅ **XLSX Import Fix** - import * as XLSX from 'xlsx' hinzugefügt, konsistent genutzt
+✅ **Build grün** - XLSX-Referenzen korrekt aufgelöst
+
+---
+
 # HF-8: Badge Import Fix
 
 ## Badge-Vorkommen gefunden
