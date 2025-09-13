@@ -166,9 +166,9 @@ describe('ZIP Export Utilities', () => {
 
   describe('content integrity', () => {
     it('should preserve exact content including special characters', () => {
-      const specialContent = 'Name,Note\n"Smith, John","Line 1\nLine 2\nSpecial: @#$%"\nMüller,Österreich 🚀';
+      const specialContent = 'Name,Note,Formula\n"Smith, John","Multi-line\nnote with ""quotes""","\'=SUM(A1:A10)"\nMüller,"Österreich 🚀","Normal text"';
       const entries: ZipEntry[] = [
-        { path: 'special.csv', content: specialContent }
+        { path: 'special-data.csv', content: specialContent }
       ];
       
       const zipData = buildZip(entries);
@@ -318,7 +318,7 @@ Müller,"Österreich 🚀","Normal text"`;
   });
 
   describe('ZIP structure integrity', () => {
-    it('should create valid ZIP with correct entry count', () => {
+    it('should create valid ZIP structure with correct entry count', () => {
       const entries: ZipEntry[] = [
         { path: 'file1.csv', content: 'Content 1' },
         { path: 'file2.csv', content: 'Content 2' },
