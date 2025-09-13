@@ -376,6 +376,35 @@ $ npm run build
 
 ---
 
+# HF-3: Import-Syntax reparieren
+
+## Import-Fixes
+```bash
+$ grep -n "from 'lucide-react'" src/features/import-excel/ImportExcel.tsx
+# Gefunden: Multi-line Import-Block (Zeile 14-28)
+
+$ grep -n "htmlTable" src/features/import-excel/ImportExcel.tsx
+# Gefunden: 2 identische Import-Zeilen (extractTablesFromHtml)
+```
+
+## Fixes Applied
+1. **ImportExcel.tsx**: lucide-react Import konsolidiert (eine Zeile), Doppelimport htmlTable entfernt
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ Erfolgreich - keine Import-Syntax-Errors
+
+$ npm run build  
+# ✅ Build erfolgreich - Import-Parsing läuft durch
+```
+
+## Status HF-3
+✅ **Import-Syntax repariert** - lucide-react konsolidiert, htmlTable Doppler entfernt
+✅ **Build grün** - Import-Parsing erfolgreich
+
+---
+
 ## Umgebung
 ```bash
 $ node -v

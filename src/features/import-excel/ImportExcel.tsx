@@ -4,20 +4,6 @@
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card';
 import { Button } from '../../components/Button';
-import { Badge } from '../../components/Badge';
-import { safeParseToISO, nowISO } from '../../utils/date';
-  FileSpreadsheet, 
-  Upload, 
-  ArrowRight, 
-  ArrowLeft, 
-  Settings, 
-  Eye,
-  Plus,
-  RefreshCw,
-  AlertCircle,
-  CheckCircle,
-  FolderOpen
-} from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { sniffBuffer, firstBytesHex } from '../../utils/fileSniff';
 import { extractTablesFromHtml } from '../../utils/htmlTable';
