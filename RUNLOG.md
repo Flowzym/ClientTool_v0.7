@@ -848,3 +848,47 @@ $ npm run build
 
 ## Status
 ✅ **Phase 0 abgeschlossen** - Build grün, alle Platzhalter beseitigt, bereit für Phase 1.
+
+**✅ HF-15 abgeschlossen – kaputten lucide-react-Import durch eine gültige Importzeile ersetzt.**
+
+Parser-Fehler "Unexpected '}'" behoben, nur tatsächlich verwendete Icons importiert, Build stabil.
+
+---
+
+# HF-17: parseToISO empty abfangen + ungenutzten Import entfernen
+
+## parseToISO-Crash-Fixes
+```bash
+$ grep -n "parseToISO(" src/features/import-excel/validators.ts
+# Gefunden: Zeile ~28, ~31 - direkte parseToISO-Aufrufe ohne Empty-Guard
+
+$ grep -n "safeParseToISO" src/features/import-excel/ImportExcel.tsx
+# Gefunden: Import vorhanden, aber ungenutzt (ESLint-Meldung)
+```
+
+## Fixes Applied
+1. **validators.ts**: toISOIfFilled Guard-Funktion hinzugefügt
+   - parseToISO nur bei nicht-leeren Strings aufrufen
+   - try/catch für ungültige Datumsformate → undefined statt Crash
+   - Bestehende Warnungen beibehalten
+
+2. **ImportExcel.tsx**: Ungenutzten safeParseToISO Import entfernt
+   - Nur tatsächlich verwendete Imports behalten
+
+3. **dedupe.ts**: parseToISO-Aufrufe ebenfalls gegardet
+   - Konsistente Empty-/Error-Behandlung im gesamten Import-Feature
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine unused-import Errors mehr
+
+$ npm run build
+# ✅ Build successful - parseToISO-Crashes behoben
+```
+
+## Status HF-17
+✅ **parseToISO-Crashes behoben** - toISOIfFilled Guard verhindert empty/invalid-Datum-Exceptions
+✅ **Unused Import entfernt** - safeParseToISO aus ImportExcel.tsx entfernt
+✅ **Import-Feature scan** - alle parseToISO-Aufrufe in import-excel/** gegardet
+✅ **Build grün** - keine Datum-Parser-Crashes mehr
