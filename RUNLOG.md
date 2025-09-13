@@ -438,6 +438,35 @@ $ npm run build
 
 ---
 
+# HF-9: Icon-Imports konsolidieren
+
+## Icon-Verwendung ermittelt
+```bash
+$ grep -n "FileSpreadsheet\|CheckCircle\|FolderOpen" src/features/import-excel/ImportExcel.tsx
+# Gefunden: FileSpreadsheet (Zeile ~646), CheckCircle, FolderOpen, Upload, etc.
+# Alle Icons aus lucide-react, bereits in Import-Liste vorhanden
+```
+
+## Fix Applied
+1. **ImportExcel.tsx**: FileSpreadsheet zu bestehender lucide-react Import-Liste hinzugefügt
+   - Bestehende konsolidierte Import-Zeile erweitert
+   - Keine neuen Import-Statements oder Dependencies
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine Import-Errors
+
+$ npm run build
+# ✅ Build successful - FileSpreadsheet-Referenzen aufgelöst
+```
+
+## Status HF-9
+✅ **Icon-Import Fix** - FileSpreadsheet zu lucide-react Import hinzugefügt
+✅ **Build grün** - Icon-Referenzen korrekt aufgelöst
+
+---
+
 # HF-8: Badge Import Fix
 
 ## Badge-Vorkommen gefunden
