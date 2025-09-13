@@ -555,6 +555,16 @@ export function ImportExcel() {
         updated: updatedItems,
         removed: removedItems
       });
+    } catch (err) {
+      console.error('Import failed (handleNext):', err);
+      setImportSummary(prev => prev ? {
+        ...prev,
+        warnings: [...prev.warnings, `Sync-Vorschau fehlgeschlagen: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`]
+      } : null);
+      return;
+    } finally {
+      setIsProcessing(false);
+    }
       
     } catch (error) {
       console.error('Sync preview error:', error);
