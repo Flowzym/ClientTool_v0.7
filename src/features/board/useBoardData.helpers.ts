@@ -1,4 +1,3 @@
-// src/features/board/useBoardData.helpers.ts
 export type FilterChip =
   | 'bam'
   | 'lebenslauf'
@@ -23,7 +22,6 @@ export type BoardFilters = {
   chips: FilterChip[];
   showArchived: boolean;
   currentUserId?: string | null;
-  /** optional: zielperson für 'assigned-to' chip; UI kann das separat handhaben */
   assignedToId?: string | null;
 };
 
@@ -35,7 +33,6 @@ export type BoardColumnVisibility = {
   followUp?: boolean;
   assignedTo?: boolean;
   priority?: boolean;
-  // weitere Spalten bei Bedarf ergänzen; defaultView setzt sinnvolle true-Defaults
 };
 
 export type BoardView = {
@@ -64,7 +61,6 @@ export async function loadViewFromStorage(): Promise<BoardView | null> {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return null;
-    // flache Verträglichkeitsprüfung
     if (!parsed.filters || !parsed.sort) return null;
     return parsed as BoardView;
   } catch {
@@ -76,6 +72,6 @@ export async function saveViewToStorage(view: BoardView): Promise<void> {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(view));
   } catch {
-    // bewusst schlucken (Quota / private mode etc.)
+    // ignore (Quota / private mode)
   }
 }
