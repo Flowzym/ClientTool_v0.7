@@ -61,13 +61,16 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const auth = useAuth();
 
-  let enc = 'PLAIN';
+  const enc = (() => {
   try {
-    const mode = getEncryptionMode?.() ?? 'plain';
-    if (mode === 'dev-enc') enc = 'DEV-ENC';
-    else if (mode === 'prod-enc') enc = 'PROD-ENC';
-    else enc = 'PLAIN';
-  } catch {}
+      const mode = getEncryptionMode?.() ?? 'plain';
+      if (mode === 'dev-enc') return 'DEV-ENC';
+      else if (mode === 'prod-enc') return 'PROD-ENC';
+      else return 'PLAIN';
+    } catch {
+      return 'PLAIN';
+    }
+  })();
 
   const role = (auth?.role ?? 'admin').toUpperCase();
   const userName = auth?.currentUser?.name ?? 'Admin (Demo)';
