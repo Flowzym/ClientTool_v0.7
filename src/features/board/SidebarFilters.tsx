@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Users, X } from 'lucide-react';
 import { db } from '../../data/db';
 import type { User } from '../../domain/models';
-import type { FilterChip } from './useBoardData';
+import type { FilterChip } from './useBoardData.helpers';
 
 export function SidebarFilters() {
   const [activeChips, setActiveChips] = useState<FilterChip[]>([]);

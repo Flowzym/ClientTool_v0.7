@@ -138,5 +138,4 @@ function Board() {
   );
 }
 
-export { Board };
 export default Board;

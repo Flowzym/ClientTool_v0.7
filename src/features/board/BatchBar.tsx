@@ -10,27 +10,7 @@ import { AssignDropdown } from './AssignDropdown';
 import { StatusChip, ResultChip, AngebotChip } from './StatusChips';
 import { FollowupPicker } from './FollowupPicker';
 import { Can } from '../../components/auth/Can';
-import type { User, Status, Result } from '../../domain/models';
-import type { Angebot } from '../../domain/models';
-
-interface BatchBarProps {
-  selectedCount: number;
-  users: User[];
-  onClearSelection: () => void;
-  onBatchAssign: (userId?: string) => void;
-  onBatchStatus: (status: Status) => void;
-  onBatchResult: (result?: Result) => void;
-  onBatchAngebot: (angebot?: Angebot) => void;
-  onBatchFollowup: (date?: string) => void;
-  onBatchArchive: () => void;
-  onBatchUnarchive: () => void;
-  onBatchDelete: () => void;
-  onBatchPin: () => void;
-  onBatchUnpin: () => void;
-  onExportSelected: () => void;
-  canDelete: boolean;
-  showArchived: boolean;
-}
+import type { BatchBarProps } from './BatchBar.helpers';
 
 export function BatchBar({
   selectedCount,

@@ -5,88 +5,15 @@ import { useState, useEffect, useMemo } from 'react';
 import { db } from '../../data/db';
 import { cryptoManager } from '../../data/crypto';
 import type { Client, User } from '../../domain/models';
-
-export type FilterChip = 
-  | 'bam'
-  | 'lebenslauf'
-  | 'bewerbungsbuero'
-  | 'km-termin'
-  | 'termin-vereinbart'
-  | 'mailaustausch'
-  | 'rueckmeldung-erwartet'
-  | 'gebucht'
-  | 'absolviert'
-  | 'offen'
-  | 'unassigned'
-  | 'priority-high'
-  | 'unreachable-3plus'
-  | 'entfernt-vom-tas'
-  | 'assigned-me'
-  | 'assigned-to'; // Für Zuständigkeits-Popup
-
-export type SortMode = 'urgency' | 'activity' | 'assignee';
-
-export interface BoardFilters {
-  chips: FilterChip[];
-  showArchived: boolean;
-  currentUserId: string;
-}
-
-export interface BoardSort {
-  mode: SortMode;
-}
-
-export interface BoardColumnVisibility {
-  kunde: boolean;
-  angebot: boolean;
-  status: boolean;
-  result: boolean;
-  contactCount: boolean;
-  followUp: boolean;
-  assignedTo: boolean;
-  note: boolean;
-  amsBookingDate: boolean;
-  amsAgentLastName: boolean;
-  amsAgentFirstName: boolean;
-  priority: boolean;
-  lastActivity: boolean;
-  actions: boolean;
-}
-
-export interface BoardView {
-  filters: BoardFilters;
-  sort: BoardSort;
-  columnVisibility: BoardColumnVisibility;
-}
-
-const defaultColumnVisibility: BoardColumnVisibility = {
-  kunde: true,
-  status: true,
-  result: true,
-  angebot: true,
-  contactCount: true,
-  followUp: true,
-  assignedTo: true,
-  note: true,
-  amsBookingDate: true,
-  amsAgentLastName: false,
-  amsAgentFirstName: false,
-  priority: true,
-  lastActivity: false,
-  actions: true
-};
-
-const defaultView: BoardView = {
-  filters: {
-    chips: [],
-    showArchived: false,
-    currentUserId: 'u-sb-1'
-  },
-  sort: {
-    mode: 'urgency'
-  },
-  columnVisibility: defaultColumnVisibility
-};
+import type { 
+  FilterChip, 
+  SortMode, 
+  BoardFilters, 
+  BoardSort, 
+  BoardColumnVisibility, 
+  BoardView 
+} from './useBoardData.helpers';
+import { defaultView, loadViewFromStorage, saveViewToStorage } from './useBoardData.helpers';
 
 export function useBoardData() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -369,28 +296,4 @@ export function useBoardData() {
     resetToDefaultView,
     refreshData
   };
-}
-
-// Storage-Funktionen
-async function loadViewFromStorage(): Promise<BoardView | null> {
-  try {
-    const data = await db.getKV('board.view.v1');
-    if (!data) return null;
-    
-    const json = new TextDecoder().decode(data);
-    return JSON.parse(json);
-  } catch (error) {
-    console.warn('⚠️ Failed to load board view from storage:', error);
-    return null;
-  }
-}
-
-async function saveViewToStorage(view: BoardView): Promise<void> {
-  try {
-    const json = JSON.stringify(view);
-    const data = new TextEncoder().encode(json);
-    await db.setKV('board.view.v1', data.buffer);
-  } catch (error) {
-    console.warn('⚠️ Failed to save board view to storage:', error);
-  }
 }
