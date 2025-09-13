@@ -107,6 +107,22 @@ Der **Network Guard bleibt in allen Umgebungen aktiv** und blockiert externe Req
 npm run build
 ```
 
+### Performance Playground (Development)
+
+For testing Board virtualization performance:
+
+```bash
+npm run perf:play
+```
+
+Opens `/dev/perf` route with:
+- **Dataset generation**: 100/1k/5k/10k synthetic clients
+- **A/B testing**: Virtual rows ON/OFF comparison
+- **Metrics**: Mount time, scroll FPS, DOM node count, memory usage
+- **Export**: Download performance results as JSON
+
+Use this to validate virtualization benefits with large datasets.
+
 Erstellt eine optimierte Version in `dist/` für die Bereitstellung auf lokalen Systemen.
 
 ## 📋 Roadmap (Zukünftige Phasen)

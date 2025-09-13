@@ -103,6 +103,13 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
           <NavItem to="/backup" icon={Download} title="Export" desc="Daten exportieren" />
 
+          {/* Dev-only navigation */}
+          {import.meta.env.DEV && (
+            <div className="mt-2 pt-2 border-t border-gray-200">
+              <NavItem to="/dev/perf" icon={BarChart3} title="Perf Playground" desc="Virtualisierung testen" />
+            </div>
+          )}
+
           <div className="mt-2 h-px bg-gray-200" />
           <div className="px-2 py-3 text-[11px] text-gray-500">
             <div className="font-medium">Local-Only Modus</div>

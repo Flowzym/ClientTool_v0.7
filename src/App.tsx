@@ -14,6 +14,11 @@ import { Sicherheit } from './features/sicherheit/Sicherheit';
 import { Admin } from './features/admin/Admin';
 import { SyncSettings } from './features/sync/SyncSettings';
 
+// Dev-only performance playground
+const PerfPlayground = import.meta.env.DEV 
+  ? React.lazy(() => import('./dev/PerfPlayground').then(m => ({ default: m.PerfPlayground })))
+  : null;
+
 export default function App() {
   return (
     <AuthProvider>
@@ -34,6 +39,19 @@ export default function App() {
             <Route path="/backup" element={<Backup />} />
             <Route path="/sicherheit" element={<Sicherheit />} />
             <Route path="/admin" element={<Admin />} />
+            
+            {/* Dev-only routes */}
+            {import.meta.env.DEV && PerfPlayground && (
+              <Route 
+                path="/dev/perf" 
+                element={
+                  <React.Suspense fallback={<div className="p-6">Loading Performance Playground...</div>}>
+                    <PerfPlayground />
+                  </React.Suspense>
+                } 
+              />
+            )}
+            
             <Route path="*" element={<div className="p-6 text-gray-600">Not found</div>} />
           </Routes>
         </Shell>

@@ -5,6 +5,8 @@
 
 export interface FeatureFlags {
   virtualRows: boolean;
+  virtualRowsAuto: boolean;
+  virtualRowsThreshold: number;
   advancedFilters: boolean;
   bulkOperations: boolean;
   exportFormats: boolean;
@@ -12,6 +14,8 @@ export interface FeatureFlags {
 
 const DEFAULT_FEATURES: FeatureFlags = {
   virtualRows: false, // Default: off for stability
+  virtualRowsAuto: false, // Auto-enable based on dataset size
+  virtualRowsThreshold: 1500, // Threshold for auto-enable
   advancedFilters: true,
   bulkOperations: true,
   exportFormats: true

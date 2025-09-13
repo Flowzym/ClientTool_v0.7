@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { perfMark, perfMeasure } from '../../lib/perf/timer';
+import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
 import { useBoardActions } from './hooks/useBoardActions';
 import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
@@ -107,15 +109,23 @@ function Board() {
   const lastIndexRef = useRef<number | null>(null);
   
   const visibleClients = useOptimisticOverlay(clients);
+  const renderCount = useRenderCount('Board');
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const allIds = useMemo(() => visibleClients.map((c:any) => c.id as string), [visibleClients]);
 
   // Subscribe to feature flag changes
   useEffect(() => {
+    perfMark('board:render:start');
     return featureManager.subscribe((features) => {
       setVirtualRowsEnabled(features.virtualRows);
     });
   }, []);
+
+  // Performance measurement after render
+  useEffect(() => {
+    perfMark('board:render:end');
+    perfMeasure('board:render', 'board:render:start', 'board:render:end');
+  });
 
   // Event handlers - no hooks inside
   const clearSelection = () => setSelectedIds([]);

@@ -4,7 +4,12 @@
  */
 
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
+import { perfMark } from '../../../lib/perf/timer';
+import { createCounter } from '../../../lib/perf/counter';
 import type { Client, User } from '../../../domain/models';
+
+// Performance counters (Dev-only)
+const overscanCounter = createCounter('overscan');
 
 interface VirtualizedBoardListProps {
   clients: Client[];
@@ -37,6 +42,14 @@ export function VirtualizedBoardList({
   const [scrollTop, setScrollTop] = useState(0);
   const [containerHeight, setContainerHeight] = useState(600);
 
+  // Track virtualization lifecycle
+  useEffect(() => {
+    perfMark('list:mount');
+    return () => {
+      perfMark('list:unmount');
+    };
+  }, []);
+
   // Calculate visible range
   const { virtualItems, totalSize } = useMemo(() => {
     const itemCount = clients.length;
@@ -48,6 +61,11 @@ export function VirtualizedBoardList({
 
     const items: VirtualItem[] = [];
     for (let i = startIndex; i <= endIndex; i++) {
+      // Count overscan renders
+      if (i < Math.floor(scrollTop / rowHeight) || i > Math.ceil((scrollTop + containerHeight) / rowHeight)) {
+        overscanCounter.inc();
+      }
+      
       items.push({
         index: i,
         start: i * rowHeight,

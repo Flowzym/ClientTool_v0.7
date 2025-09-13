@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:perf": "vite --open /dev/perf",
+    "perf:play": "npm run dev:perf",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",

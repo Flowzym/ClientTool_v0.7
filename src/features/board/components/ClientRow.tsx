@@ -1,4 +1,5 @@
 import React from 'react';
+import { createCounter } from '../../../lib/perf/counter';
 import { Pin } from 'lucide-react';
 import NameCell from './cells/NameCell';
 import OfferCell from './cells/OfferCell';
@@ -12,6 +13,9 @@ import BookingDateCell from './cells/BookingDateCell';
 import PriorityCell from './cells/PriorityCell';
 import ActivityCell from './cells/ActivityCell';
 import ArchiveCell from './cells/ArchiveCell';
+
+// Performance counter for row mounts (Dev-only)
+const rowMountCounter = createCounter('rowMounts');
 
 type Actions = {
   update: (id: string, changes: any) => Promise<void> | void;
@@ -38,6 +42,14 @@ export function ClientRow({
   onToggleSelect?: (withShift: boolean) => void;
 }) {
   const { id } = client ?? {};
+
+  // Track row mounts for performance analysis
+  React.useEffect(() => {
+    rowMountCounter.inc();
+    return () => {
+      // Could track unmounts if needed
+    };
+  }, []);
 
   const phone = client.contactPhone || 0;
   const sms = client.contactSms || 0;
