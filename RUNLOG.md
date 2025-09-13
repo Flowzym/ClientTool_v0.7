@@ -531,6 +531,37 @@ $ npm run build
 
 ---
 
+# HF-13: Doppelten XLSX Import entfernen
+
+## Doppelimport-Fehler gefunden
+```bash
+# Editor-Suche in ImportExcel.tsx:
+# - import * as XLSX from 'xlsx'; (Zeile ~5)
+# - import * as XLSX from 'xlsx'; (Zeile ~6) ← Duplikat
+# Fehler: Identifier 'XLSX' has already been declared
+```
+
+## Fix Applied
+1. **ImportExcel.tsx**: Doppelten XLSX-Import entfernt (Zeile ~6)
+   - Einzige xlsx-Importzeile am Dateianfang
+   - Keine Namenskonflikte oder doppelte Imports
+   - XLSX.read/XLSX.utils konsistent genutzt
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine Import-Errors
+
+$ npm run build
+# ✅ Build successful - XLSX-Referenzen aufgelöst
+```
+
+## Status HF-13
+✅ **Doppelimport entfernt** - import * as XLSX from 'xlsx' nur einmal vorhanden
+✅ **Build grün** - XLSX-Referenzen korrekt aufgelöst
+
+---
+
 # HF-10: XLSX Import konsolidieren
 
 ## XLSX-Verwendung ermittelt
