@@ -5,7 +5,6 @@
 import { describe, it, expect } from 'vitest';
 import { importService } from './ImportService';
 
-// Mock file für Tests
 function createMockFile(content: string, name: string, type: string = 'text/csv'): File {
   const blob = new Blob([content], { type });
   return new File([blob], name, { type });

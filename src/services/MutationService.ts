@@ -61,14 +61,11 @@ class MutationService {
   /**
    * Bulk-Patches anwenden (sequentiell für Konsistenz)
    */
-  async applyPatches<T>(patches: Patch<T>[]): Promise<MutationResult> {
     let failed = 0;
 
     for (const patch of patches) {
       const result = await this.applyPatch(patch);
-      if (result.success) {
-        applied++;
-      } else {
+      if (!result.success) {
         failed++;
         console.warn(`MutationService: Patch failed for ${patch.id}:`, result.error);
       }

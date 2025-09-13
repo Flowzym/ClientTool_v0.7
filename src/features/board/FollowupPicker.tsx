@@ -53,7 +53,12 @@ export function FollowupPicker({ value, onChange, disabled }: FollowupPickerProp
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        onClick={(e) => { e.stopPropagation(); !disabled && setIsOpen(!isOpen); }}
+        onClick={(e) => { 
+          e.stopPropagation(); 
+          if (!disabled) {
+            setIsOpen(!isOpen);
+          }
+        }}
         disabled={disabled}
         className={`flex items-center gap-1 px-2 py-1 text-xs border rounded ${
           value ? 'bg-blue-50 border-blue-200 text-blue-800' : 'bg-gray-50 border-gray-200 text-gray-600'

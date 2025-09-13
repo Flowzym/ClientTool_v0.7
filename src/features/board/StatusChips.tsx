@@ -71,7 +71,12 @@ export function StatusChip({ value, onChange, disabled , labelOverride}: StatusC
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        onClick={(e) => { e.stopPropagation(); !disabled && setIsOpen(!isOpen); }}
+        onClick={(e) => { 
+          e.stopPropagation(); 
+          if (!disabled) {
+            setIsOpen(!isOpen);
+          }
+        }}
         onPointerDown={(e) => e.stopPropagation()}
         disabled={disabled}
         className={`flex items-center gap-1 ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-80'}`}
@@ -137,7 +142,12 @@ export function ResultChip({ value, onChange, disabled }: ResultChipProps) {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
-        onClick={(e) => { e.stopPropagation(); !disabled && setIsOpen(!isOpen); }}
+        onClick={(e) => { 
+          e.stopPropagation(); 
+          if (!disabled) {
+            setIsOpen(!isOpen);
+          }
+        }}
         onPointerDown={(e) => e.stopPropagation()}
         disabled={disabled}
         className={`flex items-center gap-1 ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer hover:opacity-80'}`}

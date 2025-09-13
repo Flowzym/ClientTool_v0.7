@@ -62,7 +62,7 @@ describe('NameCell Notiz-Badge', () => {
   });
 
   it('should prioritize notes array over other sources', () => {
-    const client: any = {
+    const client = {
       notes: ['Array-Notiz'],
       contactLog: [{ type: 'note', text: 'Log-Notiz' }],
       note: 'Text-Notiz'
