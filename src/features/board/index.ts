@@ -7,6 +7,9 @@
 // Main Board component
 export { default as Board } from './Board';
 
+// Board types
+export type { OfferValue, PriorityValue, StatusValue } from './types';
+
 // Board components
 export { StatusChip, ResultChip, AngebotChip } from './StatusChips';
 export { AssignDropdown } from './AssignDropdown';

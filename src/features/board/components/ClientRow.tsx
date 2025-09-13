@@ -91,12 +91,7 @@ export function ClientRow({
       <OfferCell
         id={id}
         value={client.angebot}
-        onChange={(v?: string) => (actions.setOffer ? actions.setOffer(id, v) : actions.update(id, { angebot: v }))}
-      />
-      <OfferCell
-        id={id}
-        value={client.angebot}
-        onChange={(v?: string) => (actions.setOffer ? actions.setOffer(id, v) : actions.update(id, { angebot: v }))}
+        onChange={(v) => actions.setOffer?.(id, v)}
       />
 
       <StatusCell id={id} value={client.status} onChange={(s?: string) => actions.setStatus?.(id, s)} />

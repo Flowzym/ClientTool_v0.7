@@ -63,6 +63,14 @@ export function useBoardActions() {
     await update(id, { result: result ?? null });
   }, [update]);
 
+  /**
+   * Setzt das Angebot für einen Client
+   * @param id Client-ID
+   * @param offer Angebot-Wert ('BAM' | 'LL/B+' | 'BwB' | 'NB') oder undefined zum Löschen
+   */
+  const setOffer = useCallback(async (id: string, offer?: string) => {
+    await update(id, { angebot: offer ?? null });
+  }, [update]);
   const cyclePriority = useCallback(async (id: string, current?: string | null) => {
     const order = [null, 'niedrig', 'mittel', 'hoch'] as const;
     const idx = order.indexOf((current ?? null) as any);
@@ -133,11 +141,11 @@ export function useBoardActions() {
     update,
     bulkUpdate,
     setOffer,
-    setOffer,
     setFollowup,
     setAssignedTo,
     setStatus,
     setResult,
+    setOffer,
     cyclePriority,
     addContactAttempt,
     togglePin,
