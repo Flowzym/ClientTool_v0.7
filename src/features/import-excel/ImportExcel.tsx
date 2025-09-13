@@ -18,6 +18,7 @@ import { db } from '../../data/db';
 import { cryptoManager } from '../../data/crypto';
 import { supportsFSAccess, isEmbedded, isBoltHost } from '../../utils/env';
 import type { Client, ImportSession } from '../../domain/models';
+import type { ImportRawRow, ImportMappedRow, ImportSummary, SniffResult } from './types';
 
 // Protected fields that won't be overwritten during sync
 const PROTECTED_FIELDS: string[] = [
@@ -35,14 +36,14 @@ type WizardStep = 'file' | 'mapping' | 'preview' | 'result';
 interface ImportData {
   fileName: string;
   headers: string[];
-  rows: any[][];
-  mappedRows: any[];
+  rows: unknown[][];
+  mappedRows: ImportMappedRow[];
   validationResults: Array<{ ok: boolean; errors: string[]; warnings: string[] }>;
   duplicates: Array<{ indices: number[]; key: string; reason: string }>;
 }
 
 interface SyncPreview {
-  new: any[];
+  new: Client[];
   updated: Array<{ existing: Client; updates: any; diff: string[] }>;
   removed: Client[];
 }
@@ -183,13 +184,13 @@ export function ImportExcel() {
       });
 
       // Zeilen zu Objekten mappen
-      const mappedRows = rows.map(row => {
-        const mapped: any = {};
+      const mappedRows: ImportMappedRow[] = rows.map(row => {
+        const mapped: ImportMappedRow = {} as ImportMappedRow;
         headers.forEach((header, index) => {
           const value = row[index];
           if (value != null && value !== '') {
             const targetField = detectedMapping[index.toString()] || header;
-            mapped[targetField] = value;
+            (mapped as any)[targetField] = value;
           }
         });
         return mapped;

@@ -4,6 +4,7 @@
 import { parseToISO } from '../../utils/date';
 import { normalize, normalizePriority, normalizeStatus, normalizeResult, trimToNull } from '../../utils/normalize';
 import type { Priority, Status } from '../../domain/models';
+import type { ImportRawRow, ImportMappedRow, ImportIssue } from './types';
 
 const toISOIfFilled = (value: unknown): string | undefined => {
   const s = value == null ? '' : String(value).trim();
@@ -26,7 +27,7 @@ const VALID_STATUSES: Status[] = [
   'offen','inBearbeitung','terminVereinbart','wartetRueckmeldung','dokumenteOffen','foerderAbklaerung','zugewiesenExtern','ruht','erledigt','nichtErreichbar','abgebrochen'
 ];
 
-export function validateRow(row: any): ValidationResult {
+export function validateRow(row: ImportRawRow): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -71,7 +72,7 @@ export function validateRow(row: any): ValidationResult {
  * Deduplizierung innerhalb der Importdaten (nur gleiche Quelle)
  * Findet Duplikate per AMS-ID oder (normalized name + birthdate)
  */
-export function dedupeImport(rows: any[]): { duplicates: Array<{indices: number[]; key: string; reason: string}> } {
+export function dedupeImport(rows: ImportRawRow[]): { duplicates: Array<{indices: number[]; key: string; reason: string}> } {
   const seen = new Map<string, number[]>();
   const duplicates: Array<{indices: number[]; key: string; reason: string}> = [];
 

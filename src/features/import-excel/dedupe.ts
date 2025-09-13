@@ -4,6 +4,7 @@
 import { normalize } from '../../utils/normalize';
 import { parseToISO } from '../../utils/date';
 import CryptoJS from 'crypto-js';
+import type { ImportRawRow, ISODateString } from './types';
 
 const toISOIfFilled = (value: unknown): string | undefined => {
   const s = value == null ? '' : String(value).trim();
@@ -15,7 +16,7 @@ const toISOIfFilled = (value: unknown): string | undefined => {
   }
 };
 
-export function buildRowKey(row: any): string {
+export function buildRowKey(row: ImportRawRow): string {
   // Primär: amsId
   if (row.amsId?.trim()) {
     return row.amsId.trim().toUpperCase();
@@ -29,9 +30,9 @@ export function buildRowKey(row: any): string {
   return `${firstName}${lastName}#${birthDate}`;
 }
 
-export function hashRow(row: any): string {
+export function hashRow(row: ImportRawRow): string {
   // Nur importrelevante Felder für Hash verwenden
-  const relevantFields = {
+  const relevantFields: Record<string, string> = {
     amsId: row.amsId || '',
     firstName: row.firstName || '',
     lastName: row.lastName || '',
@@ -42,7 +43,7 @@ export function hashRow(row: any): string {
     internalCode: row.internalCode || '',
     priority: row.priority || '',
     status: row.status || '',
-    followUp: toISOIfFilled(row.followUp) || row.followUp || ''
+    followUp: toISOIfFilled(row.followUp) || String(row.followUp || '')
   };
   
   const json = JSON.stringify(relevantFields, Object.keys(relevantFields).sort());

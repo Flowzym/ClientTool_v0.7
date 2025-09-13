@@ -12,10 +12,17 @@ import {
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { AlertCircle, CheckCircle } from 'lucide-react';
+import type { ImportMappedRow, ImportIssue } from './types';
+
+interface ValidationResult {
+  ok: boolean;
+  errors: string[];
+  warnings: string[];
+}
 
 interface PreviewGridProps {
-  data: any[];
-  validationResults?: Array<{ ok: boolean; errors: string[]; warnings: string[] }>;
+  data: ImportMappedRow[];
+  validationResults?: ValidationResult[];
   maxRows?: number;
 }
 
@@ -36,8 +43,8 @@ export function PreviewGrid({ data, validationResults, maxRows = 50 }: PreviewGr
     if (!data.length) return [];
     
     const columnHelper = createColumnHelper<any>();
-    const sampleRow = data[0];
-    const cols: ColumnDef<any, any>[] = [];
+    const columnHelper = createColumnHelper<ImportMappedRow>();
+    const cols: ColumnDef<ImportMappedRow, unknown>[] = [];
     
     // Status-Spalte
     if (validationResults) {
@@ -72,7 +79,7 @@ export function PreviewGrid({ data, validationResults, maxRows = 50 }: PreviewGr
     // Daten-Spalten
     Object.keys(sampleRow).forEach(key => {
       cols.push(
-        columnHelper.accessor(key, {
+        columnHelper.accessor(key as keyof ImportMappedRow, {
           header: key,
           size: 120,
           cell: ({ getValue }) => {
