@@ -1,5 +1,20 @@
 # Changelog
 
+## [Phase 4] - 2025-01-27
+
+### Added
+- feat(pwa): offline-fallback, cache-strategien, cache-invalidierung; same-origin guard
+- Offline-Fallback-Seite (/offline.html) für Netzwerkausfälle
+- Service Worker mit Cache-Strategien: Network-First (Navigation), Cache-First (Assets)
+- Same-Origin Guard verhindert Caching externer Ressourcen
+- SW-Logic als pure Functions für Unit-Tests extrahiert
+- Automatische Cache-Invalidierung bei Version-Updates
+
+### Technical
+- Cache-Namen versioniert (v0.8-pwa-1)
+- Robuste Precaching mit Fehlertoleranz
+- Offline-Tests für SW-Logic-Functions
+
 ## [Phase 3] - 2025-01-27
 
 ### Added

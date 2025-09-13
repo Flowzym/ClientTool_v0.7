@@ -2,6 +2,7 @@ import React from 'react';
 import { Pin } from 'lucide-react';
 import NameCell from './cells/NameCell';
 import OfferCell from './cells/OfferCell';
+import OfferCell from './cells/OfferCell';
 import StatusCell from './cells/StatusCell';
 import ResultCell from './cells/ResultCell';
 import FollowupCell from './cells/FollowupCell';
@@ -89,6 +90,11 @@ export function ClientRow({
         onOpenNotes={onOpenNotes}
       />
 
+      <OfferCell
+        id={id}
+        value={client.angebot}
+        onChange={(v?: string) => (actions.setOffer ? actions.setOffer(id, v) : actions.update(id, { angebot: v }))}
+      />
       <OfferCell
         id={id}
         value={client.angebot}

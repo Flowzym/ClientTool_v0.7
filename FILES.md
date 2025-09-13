@@ -97,6 +97,37 @@
 
 # Geänderte Dateien - Phase 0
 
+# Geänderte Dateien - Phase 4
+
+## Neue Dateien
+
+| Datei | Beschreibung |
+|-------|--------------|
+| `public/offline.html` | Offline-Fallback-Seite für PWA |
+| `src/sw/logic.ts` | SW-Logic als pure Functions (testbar) |
+| `src/sw/logic.test.ts` | Unit-Tests für Service Worker Logic |
+| `docs/OFFLINE.md` | Offline-Funktionalität dokumentiert |
+
+## Modifizierte Dateien
+
+| Datei | Änderung | Grund |
+|-------|----------|-------|
+| `public/sw.js` | Cache-Strategien & Same-Origin Guard | Robuste Offline-Funktionalität |
+| `src/utils/pwa.ts` | SW-Version-Logging | Debugging-Unterstützung |
+| `CHANGELOG.md` | Phase 4 Eintrag | Dokumentation |
+| `RUNLOG.md` | Phase 4 Logs | Dokumentation |
+
+## Build-Status Phase 4
+- ✅ ESLint: Keine Fehler
+- ✅ TypeScript: Keine Fehler  
+- ✅ Vite Build: Erfolgreich
+- ✅ Tests: 38 passed (6 neue SW-Tests)
+- ✅ Offline-Fallback implementiert
+- ✅ Cache-Strategien robust
+- ✅ Same-Origin Guard aktiv
+
+---
+
 ## Modifizierte Dateien
 
 | Datei | Änderung | Grund |

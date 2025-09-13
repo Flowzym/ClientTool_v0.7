@@ -97,6 +97,7 @@ function Board() {
           <div>✓ • Pin</div>
           <div>Kunde</div>
           <div>Offer</div>
+          <div>Offer</div>
           <div>Status</div>
           <div>Ergebnis</div>
           <div>Follow-up</div>
@@ -127,7 +128,7 @@ function Board() {
               );
             })}
             {visibleClients.length === 0 && (
-              <div className="px-3 py-6 text-sm text-gray-500">Keine Einträge für die aktuelle Ansicht.</div>
+              <div className="px-3 py-6 text-sm text-gray-500 hover:bg-gray-50">Keine Einträge für die aktuelle Ansicht.</div>
             )}
           </div>
           <div style={{ height: bottomPad }} />

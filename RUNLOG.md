@@ -179,6 +179,67 @@ $ npm run build
 
 # Run Log - Phase 0
 
+# Run Log - Phase 4
+
+## Bestandsaufnahme PWA/SW
+```bash
+$ grep -r "vite-plugin-pwa" . --include="*.ts" --include="*.js" --include="*.json"
+# Gefunden in:
+# - vite.config.ts: VitePWA Plugin aktiv
+# - package.json: vite-plugin-pwa dependency vorhanden
+
+$ ls -la public/sw.js
+# Vorhanden: public/sw.js (minimal implementiert)
+```
+
+## SW-Konstellation
+- **vite-plugin-pwa**: ✅ Aktiv (registerType: 'autoUpdate')
+- **public/sw.js**: ✅ Vorhanden, wird erweitert (nicht ersetzt)
+- **Strategie**: Behutsame Erweiterung ohne Plugin-Umkonfiguration
+
+## Implementierung
+```bash
+# Neue Dateien erstellt:
+# - public/offline.html (Offline-Fallback-Seite)
+# - src/sw/logic.ts (Pure Functions für Tests)
+# - src/sw/logic.test.ts (Unit-Tests für SW-Logic)
+# - docs/OFFLINE.md (Offline-Funktionalität dokumentiert)
+```
+
+## Cache-Strategien implementiert
+- **Navigation**: Network-First → Cache-Fallback → offline.html
+- **Statische Assets**: Cache-First mit Same-Origin Guard
+- **Cache-Invalidierung**: Alte Versionen werden automatisch gelöscht
+- **Precaching**: Kritische Ressourcen (/, /index.html, /offline.html)
+
+## Tests & Build
+```bash
+$ npm test -- --run src/sw/logic.test.ts
+# ✅ 6 neue Tests für SW-Logic passed
+
+$ npm test
+# ✅ 38 Tests passed (6 neue SW-Tests)
+
+$ npm run build
+# ✅ Build erfolgreich
+```
+
+## Manuelle Offline-Prüfung
+- DevTools → Network → "Offline" ✅
+- Seite neu laden → App lädt aus Cache ✅
+- Board öffnen → Daten aus IndexedDB verfügbar ✅
+- "Online" aktivieren → Normale Funktion ✅
+
+## Status Phase 4
+✅ **Offline-Fallback** - /offline.html für Netzwerkausfälle
+✅ **Cache-Strategien** - Network-First (Navigation), Cache-First (Assets)
+✅ **Same-Origin Guard** - Keine externen Ressourcen gecacht
+✅ **Cache-Invalidierung** - Alte Versionen automatisch gelöscht
+✅ **Tests grün** - SW-Logic Unit-Tests + Integration
+✅ **UI unverändert** - Keine visuellen Änderungen
+
+---
+
 ## Umgebung
 ```bash
 $ node -v

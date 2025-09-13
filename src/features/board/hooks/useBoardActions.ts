@@ -67,6 +67,9 @@ export function useBoardActions() {
     await update(id, { result: result ?? null });
   }, [update]);
 
+  const setOffer = useCallback(async (id: string, offer?: string) => {
+    await update(id, { angebot: offer ?? null });
+  }, [update]);
   /** Priority cycle: null -> 'niedrig' -> 'mittel' -> 'hoch' -> null */
   const cyclePriority = useCallback(async (id: string, current?: string | null) => {
     const order = [null, 'niedrig', 'mittel', 'hoch'] as const;
@@ -137,6 +140,7 @@ export function useBoardActions() {
   return {
     update,
     bulkUpdate,
+    setOffer,
     setOffer,
     setFollowup,
     setAssignedTo,
