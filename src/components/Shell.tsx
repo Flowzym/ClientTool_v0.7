@@ -59,7 +59,7 @@ function NavItem({ to, icon: Icon, title, desc }: NavItemProps) {
 
 export function Shell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
-  const auth = (() => { try { return useAuth(); } catch { return null; } })();
+  const auth = useAuth();
 
   let enc = 'PLAIN';
   try {

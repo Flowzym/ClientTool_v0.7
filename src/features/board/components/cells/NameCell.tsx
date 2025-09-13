@@ -14,7 +14,7 @@ function countNotes(client: any): number {
   return 0;
 }
 
-export default function NameCell({ client, onOpenNotes }: { client: any; onOpenNotes: (id: string) => void; }) {
+export default function NameCell({ client, onOpenNotes: _onOpenNotes }: { client: any; onOpenNotes: (id: string) => void; }) {
   const name = [client?.lastName, client?.firstName].filter(Boolean).join(', ');
   const title = client?.title ? ` (${client.title})` : '';
   const count = countNotes(client);
@@ -26,7 +26,7 @@ export default function NameCell({ client, onOpenNotes }: { client: any; onOpenN
         <button
           className={`p-1 rounded hover:bg-gray-50 ${muted ? 'text-gray-400' : 'text-gray-700'}`}
           title="Notizen öffnen"
-          onClick={() => onOpenNotes(client?.id)}
+          onClick={() => _onOpenNotes(client?.id)}
         >
           <PencilLine size={16} />
         </button>

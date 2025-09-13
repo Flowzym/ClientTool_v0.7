@@ -12,7 +12,7 @@ import {
 import { Badge } from '../../components/Badge';
 import { Button } from '../../components/Button';
 import { AlertCircle, CheckCircle } from 'lucide-react';
-import type { ImportMappedRow, ImportIssue } from './types';
+import type { ImportMappedRow } from './types';
 
 interface ValidationResult {
   ok: boolean;

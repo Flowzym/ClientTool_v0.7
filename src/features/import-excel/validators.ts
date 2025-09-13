@@ -4,7 +4,7 @@
 import { parseToISO } from '../../utils/date';
 import { normalize, normalizePriority, normalizeStatus, normalizeResult, trimToNull } from '../../utils/normalize';
 import type { Priority, Status } from '../../domain/models';
-import type { ImportRawRow, ImportMappedRow, ImportIssue } from './types';
+import type { ImportRawRow, ImportMappedRow } from './types';
 
 const toISOIfFilled = (value: unknown): string | undefined => {
   const s = value == null ? '' : String(value).trim();
@@ -32,34 +32,34 @@ export function validateRow(row: ImportRawRow): ValidationResult {
   const warnings: string[] = [];
 
   // Pflichtfelder (mindestens irgendeine Form von Identifikation)
-  const fn = trimToNull(row.firstName);
-  const ln = trimToNull(row.lastName);
-  const amsId = trimToNull(row.amsId);
+  const fn = trimToNull((row as any).firstName);
+  const ln = trimToNull((row as any).lastName);
+  const amsId = trimToNull((row as any).amsId);
 
   if (!amsId && !(fn && ln)) {
     errors.push('Fehlende Identifikation (AMS-ID oder Vor- und Nachname)');
   }
 
   // Datum Felder robust parsen
-  const birth = toISOIfFilled(row.birthDate);
-  if (row.birthDate && !birth) warnings.push('Geburtsdatum unverständlich – übernommen als Rohtext');
+  const birth = toISOIfFilled((row as any).birthDate);
+  if ((row as any).birthDate && !birth) warnings.push('Geburtsdatum unverständlich – übernommen als Rohtext');
 
-  const follow = toISOIfFilled(row.followUp);
-  if (row.followUp && !follow) warnings.push('Follow-up Datum unverständlich – übernommen als Rohtext');
+  const follow = toISOIfFilled((row as any).followUp);
+  if ((row as any).followUp && !follow) warnings.push('Follow-up Datum unverständlich – übernommen als Rohtext');
 
   // Priorität/Status/Ergebnis normalisieren
-  const prio = normalizePriority(row.priority);
+  const prio = normalizePriority((row as any).priority);
   if (!VALID_PRIORITIES.includes(prio)) errors.push(`Ungültige Priorität: ${row.priority ?? ''}`);
 
-  const status = normalizeStatus(row.status);
+  const status = normalizeStatus((row as any).status);
   if (!VALID_STATUSES.includes(status)) errors.push(`Ungültiger Status: ${row.status ?? ''}`);
 
   // Ergebnis ist weicher – normalisieren, keine harte Fehlerbedingung
-  const _result = normalizeResult(row.result);
+  normalizeResult((row as any).result);
 
   // E-Mail/Telefon einfache Plausis
-  if (row.email && !/.+@.+\..+/.test(String(row.email))) warnings.push('E-Mail wirkt ungültig');
-  if (row.phone && String(row.phone).replace(/\D/g, '').length < 6) warnings.push('Telefonnummer sehr kurz');
+  if ((row as any).email && !/.+@.+\..+/.test(String((row as any).email))) warnings.push('E-Mail wirkt ungültig');
+  if ((row as any).phone && String((row as any).phone).replace(/\D/g, '').length < 6) warnings.push('Telefonnummer sehr kurz');
 
   return {
     ok: errors.length === 0,

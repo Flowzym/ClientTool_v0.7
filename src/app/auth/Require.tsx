@@ -1,4 +1,3 @@
-import { getEncryptionMode } from '../../utils/env';
 import React from 'react';
 import { useAuth } from './AuthProvider';
 import type { Permission } from '../../domain/auth';

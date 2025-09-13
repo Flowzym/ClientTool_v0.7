@@ -9,7 +9,6 @@ import * as XLSX from 'xlsx';
 import { CheckCircle, Upload, ArrowRight, ArrowLeft, AlertCircle, Eye, Plus, RefreshCw, FileSpreadsheet, Settings, FolderOpen } from 'lucide-react';
 import { extractTablesFromHtml } from '../../utils/htmlTable';
 import { sniffBuffer, firstBytesHex } from '../../utils/fileSniff';
-import { buildErrorCSV } from '../../utils/errorReport';
 import { validateRow, dedupeImport } from './validators';
 import { buildRowKey, hashRow } from './dedupe';
 import { savePreset, loadPreset } from './mappingPresets';
@@ -18,7 +17,7 @@ import { db } from '../../data/db';
 import { cryptoManager } from '../../data/crypto';
 import { supportsFSAccess, isEmbedded, isBoltHost } from '../../utils/env';
 import type { Client, ImportSession } from '../../domain/models';
-import type { ImportRawRow, ImportMappedRow, ImportSummary, SniffResult } from './types';
+import type { ImportMappedRow } from './types';
 
 // Protected fields that won't be overwritten during sync
 const PROTECTED_FIELDS: string[] = [

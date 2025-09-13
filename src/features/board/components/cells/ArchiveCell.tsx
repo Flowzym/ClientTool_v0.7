@@ -1,7 +1,7 @@
 import React from 'react';
 import { Archive, ArchiveRestore } from 'lucide-react';
 
-export default function ArchiveCell({ id, isArchived, onArchive, onUnarchive }: {
+export default function ArchiveCell({ id: _id, isArchived, onArchive, onUnarchive }: {
   id: string;
   isArchived: boolean;
   onArchive: () => void;

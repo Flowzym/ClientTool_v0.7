@@ -4,7 +4,7 @@
 import { normalize } from '../../utils/normalize';
 import { parseToISO } from '../../utils/date';
 import CryptoJS from 'crypto-js';
-import type { ImportRawRow, ISODateString } from './types';
+import type { ImportRawRow } from './types';
 
 const toISOIfFilled = (value: unknown): string | undefined => {
   const s = value == null ? '' : String(value).trim();

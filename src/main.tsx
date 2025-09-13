@@ -37,7 +37,9 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       // Fallback: try classic service worker under /sw.js if available
       try {
         await navigator.serviceWorker.register('/sw.js');
-      } catch {}
+      } catch {
+        /* noop */
+      }
     }
   })();
 }

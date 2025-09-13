@@ -1,7 +1,7 @@
 import React from 'react';
 import { formatDDMMYYYY } from '../../utils/date';
 
-export default function BookingDateCell({ id, value }: { id: string; value?: string }) {
+export default function BookingDateCell({ id: _id, value }: { id: string; value?: string }) {
   const disp = value ? (formatDDMMYYYY(value) ?? value) : '—';
   return <div className="text-sm">{disp}</div>;
 }
