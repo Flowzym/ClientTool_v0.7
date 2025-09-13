@@ -2,7 +2,7 @@
  * Tests für ImportService
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { importService } from './ImportService';
 
 // Mock file für Tests

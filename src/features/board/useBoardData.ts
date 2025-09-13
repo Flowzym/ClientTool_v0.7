@@ -141,8 +141,6 @@ export function useBoardData() {
     }
     
     // Chip-Filter
-    const today = new Date().toISOString().split('T')[0];
-    const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
     
     view.filters.chips.forEach(chip => {
       switch (chip) {

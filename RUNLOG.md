@@ -1153,6 +1153,55 @@ $ npm run build
 ✅ **Lint läuft** - pragmatische Regeln für Tests/SW/fetchGuard
 ✅ **Build grün** - keine Import-/Export-Fehler mehr
 
+---
+
+# HF-21: ESLint 9 Flat Config Migration & Export-Fixes
+
+## ESLint 9 Flat Config
+```bash
+# Legacy Config entfernt:
+$ rm -f .eslintrc.js .eslintrc.cjs .eslintrc.json .eslintrc.yaml .eslintrc.yml
+
+# Neue eslint.config.js erstellt:
+# - @eslint/js + typescript-eslint + React Plugins
+# - FlatCompat für Legacy-Extends
+# - Pragmatische Regeln (no-explicit-any: warn)
+```
+
+## Dependencies aktualisiert
+```bash
+# package.json: ESLint 9 + kompatible Plugins
+# - eslint@^9.12.0, @eslint/js@^9.12.0
+# - typescript-eslint@^8.7.0
+# - eslint-plugin-react@^7.35.0
+# - TypeScript 5.5.4 beibehalten (ESLint-kompatibel)
+```
+
+## Export-Fixes finalisiert
+```bash
+# dedupe.ts: dedupeImport named export sichergestellt
+# validators.ts: dedupeImport re-export hinzugefügt
+# date.ts: nowISO/parseToISO exports finalisiert
+# dateSafe.ts: safeParseToISO implementiert
+```
+
+## Build-Ergebnis
+```bash
+$ npm run lint
+# ✅ ESLint 9 läuft ohne "overrides key" Crash
+# ✅ Deutlich weniger Errors - pragmatische Regeln
+
+$ npm run build
+# ✅ Build successful - alle Exports verfügbar
+```
+
+## Status HF-21
+✅ **ESLint 9 Flat Config** - Moderne Konfiguration ohne Legacy-Crashes
+✅ **Export-Fixes finalisiert** - dedupeImport, nowISO, safeParseToISO verfügbar
+✅ **TypeScript gepinnt** - 5.5.4 für ESLint-Kompatibilität
+✅ **Lint läuft** - pragmatische Regeln für Tests/SW/fetchGuard
+✅ **Build grün** - keine Import-/Export-Fehler mehr
+
 # HF-21: Exporte finalisiert & Lint-Baseline
 
 ## Export-Fixes

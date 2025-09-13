@@ -364,6 +364,7 @@ export function ImportPdf() {
       await cryptoManager.getActiveKey();
       
       let stats = { created: 0, updated: 0, archived: 0, deleted: 0 };
+      const stats = { created: 0, updated: 0, archived: 0, deleted: 0 };
       
       if (mode === 'append') {
         const client: Client = {

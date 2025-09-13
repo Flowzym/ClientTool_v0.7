@@ -7,7 +7,7 @@ function chipClass(value?: string) {
   return 'bg-gray-100 text-gray-800 border border-gray-200';
 }
 
-export default function ResultCell({ id: _id, value, onChange: _onChange }: { id: string; value?: string; onChange?: (v?: string)=>void; }) {
+export default function ResultCell({ value }: { value?: string; }) {
   return (
     <div className="flex items-center gap-2">
       <span className={`px-2 py-0.5 rounded text-xs ${chipClass(value)}`}>{value || '—'}</span>

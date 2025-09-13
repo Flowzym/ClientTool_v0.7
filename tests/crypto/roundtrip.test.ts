@@ -3,8 +3,8 @@
  * Testet vollständigen Datenfluss: Domain → Envelope → Storage → Envelope → Domain
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { codecFactory, getCodec, resetCodec } from '../../src/data/codec';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { codecFactory, resetCodec } from '../../src/data/codec';
 import { base64urlEncode } from '../../src/data/envelope';
 import type { Client } from '../../src/domain/models';
 

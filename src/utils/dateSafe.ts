@@ -20,7 +20,7 @@ export function safeParseToISO(input: unknown): string | undefined {
   // dd.mm.yyyy
   let m = s.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
   if (m) {
-    const [_, d, mo, y] = m;
+    const [_match, d, mo, y] = m;
     const date = new Date(Number(y), Number(mo) - 1, Number(d));
     return isNaN(date.getTime()) ? undefined : date.toISOString();
   }
@@ -28,7 +28,7 @@ export function safeParseToISO(input: unknown): string | undefined {
   // dd/mm/yyyy
   m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if (m) {
-    const [_, d, mo, y] = m;
+    const [_match, d, mo, y] = m;
     const date = new Date(Number(y), Number(mo) - 1, Number(d));
     return isNaN(date.getTime()) ? undefined : date.toISOString();
   }

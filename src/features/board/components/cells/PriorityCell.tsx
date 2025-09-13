@@ -1,7 +1,6 @@
 import React from 'react';
 
-export default function PriorityCell({ id, value, onCycle }: {
-  id: string;
+export default function PriorityCell({ value, onCycle }: {
   value?: string | null;
   onCycle: () => void;
 }) {

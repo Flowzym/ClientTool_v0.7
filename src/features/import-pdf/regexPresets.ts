@@ -30,7 +30,7 @@ export const fieldPatterns = {
   
   // Telefonnummer: verschiedene Formate
   phone: {
-    pattern: /(?:\+43|0043|0)\s*\d{1,4}[\s\/-]*\d{3,4}[\s\/-]*\d{3,4}|\+?\d{2,4}[\s\/-]*\d{6,}/g,
+    pattern: /(?:\+43|0043|0)\s*\d{1,4}[\s/-]*\d{3,4}[\s/-]*\d{3,4}|\+?\d{2,4}[\s/-]*\d{6,}/g,
     confidence: 'medium' as const,
     description: 'Telefonnummer'
   },
