@@ -46,4 +46,12 @@ export default [
     },
     settings: { react: { version: 'detect' } },
   },
+
+  // Test files - relax any rules
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+    },
+  },
 ];
