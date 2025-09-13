@@ -405,6 +405,38 @@ $ npm run build
 
 ---
 
+# HF-6: Try-Block korrekt schließen
+
+## Syntax-Fehler gefunden
+```bash
+$ grep -A 20 -B 5 "setIsProcessing(true)" src/features/import-excel/ImportExcel.tsx
+# Gefunden: try-Block um Zeile 573 mit fehlender catch/finally-Struktur
+
+$ npm run build
+# Fehler: Missing catch or finally clause
+```
+
+## Fix Applied
+1. **ImportExcel.tsx**: Try-Block um Zeile 573 mit catch/finally geschlossen
+   - catch: Error-Logging + Warning in importSummary
+   - finally: setIsProcessing(false) für cleanup
+   - Keine doppelten setIsProcessing(false) gefunden
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine Syntax-Errors
+
+$ npm run build  
+# ✅ Build successful - Try-Block-Parsing erfolgreich
+```
+
+## Status HF-6
+✅ **Try-Block-Syntax repariert** - catch/finally ergänzt, setIsProcessing cleanup
+✅ **Build grün** - Syntax-Parsing erfolgreich
+
+---
+
 # HF-1: Doppler fixen
 
 ## Duplicate-Fixes

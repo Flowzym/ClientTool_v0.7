@@ -370,7 +370,21 @@ export function ImportExcel() {
 
   // Schritt 2: Mapping konfigurieren
   const handleMappingNext = useCallback(async () => {
-    if (!importData) return;
+      } catch (error) {
+        console.error('Sync preview error:', error);
+        if (importSummary) {
+          importSummary.warnings.push({
+            type: 'sync-preview',
+            row: 0,
+            column: '',
+            value: '',
+            message: 'Fehler beim Erstellen der Sync-Vorschau'
+          });
+        }
+        return;
+      } finally {
+        setIsProcessing(false);
+      }
     
     // Daten mappen
     const mappedData = importData.rows.map(row => {
