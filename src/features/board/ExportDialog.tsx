@@ -157,12 +157,12 @@ export function ExportDialog({ isOpen, onClose, selectedClients, users }: Export
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
         
         if (supportsFSAccess()) {
-          // @ts-ignore
+          // @ts-expect-error File System Access API types
           const handle = await window.showSaveFilePicker({
             suggestedName: `kunden-export-${new Date().toISOString().split('T')[0]}.csv`,
             types: [{ description: 'CSV-Datei', accept: { 'text/csv': ['.csv'] } }]
           });
-          // @ts-ignore
+          // @ts-expect-error File System Access API types
           const stream = await handle.createWritable();
           await stream.write(blob);
           await stream.close();
@@ -185,12 +185,12 @@ export function ExportDialog({ isOpen, onClose, selectedClients, users }: Export
           const fileName = `kunde-${client.amsId || client.id}-${new Date().toISOString().split('T')[0]}.csv`;
           
           if (supportsFSAccess()) {
-            // @ts-ignore
+            // @ts-expect-error File System Access API types
             const handle = await window.showSaveFilePicker({
               suggestedName: fileName,
               types: [{ description: 'CSV-Datei', accept: { 'text/csv': ['.csv'] } }]
             });
-            // @ts-ignore
+            // @ts-expect-error File System Access API types
             const stream = await handle.createWritable();
             await stream.write(blob);
             await stream.close();

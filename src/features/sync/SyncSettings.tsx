@@ -409,14 +409,14 @@ export function SyncSettings() {
                 </li>
                 <li>
                   <strong>Gemeinsamen Ordner erstellen:</strong> Erstellen Sie in OneDrive/SharePoint einen Ordner 
-                  namens "KlientenTool-Sync\" und stellen Sie sicher, dass alle drei Nutzer Zugriff haben.
+                  namens &quot;KlientenTool-Sync&quot; und stellen Sie sicher, dass alle drei Nutzer Zugriff haben.
                 </li>
                 <li>
                   <strong>Lokale Synchronisation:</strong> Synchronisieren Sie diesen Ordner auf allen drei PCs 
-                  (Rechtsklick → "Immer auf diesem Gerät behalten").
+                  (Rechtsklick → &quot;Immer auf diesem Gerät behalten&quot;).
                 </li>
                 <li>
-                  <strong>Sync-Ordner in App auswählen:</strong> Klicken Sie oben auf "Sync-Ordner auswählen" 
+                  <strong>Sync-Ordner in App auswählen:</strong> Klicken Sie oben auf &quot;Sync-Ordner auswählen&quot; 
                   und wählen Sie den lokalen Sync-Ordner aus.
                 </li>
                 <li>

@@ -120,7 +120,7 @@ export function ContactDialog({ isOpen, onClose, onConfirm, clientName, currentS
           {showQuickStatus && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
               <div className="text-sm text-yellow-800">
-                💡 Tipp: Bei Telefonanrufen ohne Erfolg Status auf "nicht erreichbar" setzen?
+                💡 Tipp: Bei Telefonanrufen ohne Erfolg Status auf &quot;nicht erreichbar&quot; setzen?
               </div>
             </div>
           )}

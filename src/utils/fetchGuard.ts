@@ -125,15 +125,14 @@ class NetworkGuard {
 
     // Wrap fetch
     this.originalFetch = globalThis.fetch;
-    const self = this;
     globalThis.fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
       const method = (init && init.method) ? init.method.toUpperCase() : 'GET';
       const url = typeof input === 'string' ? input : (input as any).url;
-      if (!self.isAllowed(url)) {
-        self.logBlocked('fetch', method, url);
+      if (!this.isAllowed(url)) {
+        this.logBlocked('fetch', method, url);
         return Promise.reject(new TypeError(`NetworkGuard: External request blocked - ${url}`));
       }
-      return (self.originalFetch as any).call(globalThis, input, init);
+      return (this.originalFetch as any).call(globalThis, input, init);
     } as any;
 
     // Wrap XHR

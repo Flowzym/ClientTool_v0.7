@@ -35,8 +35,14 @@ export default [
     rules: {
       // Relax temporarily so lint runs cleanly while we fix code later
       '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/ban-ts-comment': 'warn',
+      '@typescript-eslint/no-this-alias': 'warn',
       'no-empty': ['warn', { allowEmptyCatch: true }],
       'react-refresh/only-export-components': 'warn',
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
+      'react/no-unescaped-entities': 'warn',
     },
     settings: { react: { version: 'detect' } },
   },

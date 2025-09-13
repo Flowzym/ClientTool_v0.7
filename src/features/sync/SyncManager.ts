@@ -91,7 +91,7 @@ class SyncManager {
     }
 
     try {
-      // @ts-ignore - File System Access API
+      // @ts-expect-error File System Access API types
       this.syncFolderHandle = await window.showDirectoryPicker({
         mode: 'readwrite',
         startIn: 'documents'

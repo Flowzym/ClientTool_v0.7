@@ -319,7 +319,7 @@ export function SharePointImport() {
               <span className="font-medium">Download erfolgreich</span>
             </div>
             <div className="text-sm text-green-700 mt-1">
-              Datei "{state.selectedFile?.name}" wurde erfolgreich von SharePoint heruntergeladen.
+              Datei &quot;{state.selectedFile?.name}&quot; wurde erfolgreich von SharePoint heruntergeladen.
             </div>
           </div>
           

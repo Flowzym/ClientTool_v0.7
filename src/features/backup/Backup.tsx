@@ -38,12 +38,12 @@ export function Backup() {
       }
 
       if (supportsFSAccess()) {
-        // @ts-ignore
+        // @ts-expect-error File System Access API types
         const handle = await window.showSaveFilePicker({
           suggestedName: result.fileName,
           types: [{ description: 'JSON', accept: { 'application/json': ['.json'] } }]
         });
-        // @ts-ignore
+        // @ts-expect-error File System Access API types
         const stream = await handle.createWritable();
         await stream.write(result.blob);
         await stream.close();
