@@ -374,6 +374,37 @@ $ npm run build
 
 ---
 
+# HF-5: Try-Block-Syntax korrigieren
+
+## Syntax-Fehler gefunden
+```bash
+$ grep -A 10 -B 5 "} catch" src/features/import-excel/ImportExcel.tsx
+# Gefunden: überzählige } vor catch (error) um Zeile 575
+
+$ npm run build
+# Fehler: Unexpected token, expected ','
+```
+
+## Fix Applied
+1. **ImportExcel.tsx**: Überzählige } vor catch (error) entfernt (Zeile ~575)
+   - try-Block korrekt geschlossen: try { ... } catch { ... } finally { ... }
+   - Keine doppelten setIsProcessing(false) gefunden
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine Syntax-Errors
+
+$ npm run build  
+# ✅ Build successful - Try-Block-Parsing erfolgreich
+```
+
+## Status HF-5
+✅ **Try-Block-Syntax korrigiert** - überzählige } entfernt, Block korrekt geschlossen
+✅ **Build grün** - Syntax-Parsing erfolgreich
+
+---
+
 # HF-1: Doppler fixen
 
 ## Duplicate-Fixes
