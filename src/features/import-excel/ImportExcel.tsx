@@ -9,7 +9,6 @@ import * as XLSX from 'xlsx';
 import * as XLSX from 'xlsx';
 import { 
   CheckCircle, 
-  FolderOpen, 
   Upload, 
   FileSpreadsheet,
   ArrowRight, 
