@@ -28,6 +28,15 @@ export function parseToISO(input: string): string {
     return d.toISOString();
   }
 
+  // dd/mm/yyyy
+  m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(s);
+  if (m) {
+    const [, dd, mm, yyyy] = m;
+    const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    if (!Number.isFinite(d.getTime())) throw new Error('parseToISO: invalid dd/mm/yyyy');
+    return d.toISOString();
+  }
+
   // yyyy-mm-dd (mit optionalem Zeitteil)
   m = /^\s*(\d{4})-(\d{2})-(\d{2})(?:\s|T|$)/.exec(s);
   if (m) {
@@ -41,6 +50,20 @@ export function parseToISO(input: string): string {
   if (Number.isFinite(t)) return new Date(t).toISOString();
 
   throw new Error('parseToISO: unsupported format');
+}
+
+/**
+ * Sichere Variante von parseToISO - wirft keine Exceptions
+ * Gibt undefined zurück bei unbekannten/ungültigen Formaten
+ */
+export function safeParseToISO(value: unknown): string | undefined {
+  if (value == null || value === '') return undefined;
+  
+  try {
+    return parseToISO(String(value));
+  } catch {
+    return undefined;
+  }
 }
 
 export function isValidISO(v?: string | null): boolean {

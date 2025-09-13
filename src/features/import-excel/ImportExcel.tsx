@@ -5,7 +5,7 @@ import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
-import { 
+import { safeParseToISO, nowISO } from '../../utils/date';
   FileSpreadsheet, 
   Upload, 
   ArrowRight, 
@@ -644,9 +644,29 @@ return mapped;
               stats.deleted = await db.bulkDelete(toDelete.map(c => c.id));
             }
             
-            // Rest archivieren
+              const parsed = safeParseToISO(row[field]);
+              if (parsed) {
+                normalized[field] = parsed;
+              } else {
+                // Datum unverständlich - in Warnings sammeln
+                warnings.push({
+                  type: 'date-parse',
+                  row: index + 2,
+                  column: field,
+                  value: String(row[field]),
+                  message: 'unsupported date format'
+                });
+                delete normalized[field];
+              }
             const toArchive = syncPreview.removed.filter(c => !toDelete.includes(c));
-            if (toArchive.length > 0) {
+              // Fallback für parseToISO-Throws (sollte nicht mehr auftreten)
+              warnings.push({
+                type: 'date-parse',
+                row: index + 2,
+                column: field,
+                value: String(row[field]),
+                message: 'date parsing failed'
+              });
               stats.archived = await db.bulkArchive(toArchive.map(c => c.id), nowISO());
             }
           }
