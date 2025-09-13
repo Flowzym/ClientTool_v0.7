@@ -218,3 +218,4 @@ function ClientRowVirtualized(props: any) {
       <ClientRow {...props} />
     </React.Suspense>
   );
+}
