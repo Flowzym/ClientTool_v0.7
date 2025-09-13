@@ -61,6 +61,7 @@ class MutationService {
   /**
    * Bulk-Patches anwenden (sequentiell für Konsistenz)
    */
+  async applyPatches<T>(patches: Patch<T>[]): Promise<MutationResult> {
     let failed = 0;
 
     for (const patch of patches) {
