@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card'
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
 import * as XLSX from 'xlsx';
+import {
   CheckCircle, 
   Upload, 
   FileSpreadsheet,
@@ -18,7 +19,9 @@ import * as XLSX from 'xlsx';
   Download, 
   X, 
   Search,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Settings,
+  FolderOpen
 } from 'lucide-react';
 import { safeParseToISO } from '../../utils/date';
 import { extractTablesFromHtml } from '../../utils/htmlTable';
@@ -46,6 +49,8 @@ interface ImportData {
   headers: string[];
   rows: any[][];
   mappedData: any[];
+  isHtmlFallback?: boolean;
+  htmlTableCount?: number;
 }
 
 interface MappingConfig {
