@@ -562,6 +562,33 @@ $ npm run build
 
 ---
 
+# HF-14: Lint-Aufräumen Pass 1
+
+## Bereinigte Dateien
+- ImportExcel.tsx: Doppelten XLSX-Import entfernt
+- AssignDropdown.tsx: Badge, User Imports entfernt
+- ClientInfoDialog.tsx: User, Calendar, Building Imports entfernt  
+- ExportDialog.tsx: Badge, FileText, CheckCircle Imports entfernt
+- ClientRow.tsx: index Parameter entfernt
+- Import.tsx: Download, CheckCircle Imports entfernt
+- ImportPdf.tsx: FileX, validateRow Imports entfernt
+- Statistik.tsx: TrendingUp Import entfernt
+- SyncSettings.tsx: Users Import entfernt
+- ExportService.ts: User Import entfernt
+- sw.ts: @ts-ignore → @ts-expect-error ersetzt
+
+## Lint-Ergebnis
+- Unbenutzte Importe: ~15 Dateien bereinigt
+- @ts-ignore → @ts-expect-error: 2 Ersetzungen
+- Duplicate XLSX Import: behoben
+
+## Status HF-14 Pass 1
+✅ **Unbenutzte Importe entfernt** - nur explizit gemeldete Symbole
+✅ **@ts-ignore ersetzt** - konsistent @ts-expect-error
+✅ **Build grün** - keine neuen Fehler eingeführt
+
+---
+
 # HF-10: XLSX Import konsolidieren
 
 ## XLSX-Verwendung ermittelt
