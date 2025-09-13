@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { bulkApply, updateById, undoLast, redoLast, canUndo, canRedo } from '../services/BoardService';
+import { bulkApply, updateById, undoLast, redoLast, getUndoRedoStatus } from '../services/BoardService';
 import { build } from '../services/PatchBuilder';
 import { isValidISO } from '../utils/date';
 import type { OfferValue } from '../types';
@@ -139,6 +139,7 @@ export function useBoardActions() {
   const getStackStatus = useCallback(() => {
     return getUndoRedoStatus();
   }, []);
+
   return {
     update,
     bulkUpdate,
@@ -156,7 +157,7 @@ export function useBoardActions() {
     unarchive,
     undo,
     redo,
-    canUndo: () => canUndo(),
-    canRedo: () => canRedo()
+    canUndo: () => getUndoRedoStatus().canUndo,
+    canRedo: () => getUndoRedoStatus().canRedo
   };
 }
