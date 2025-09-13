@@ -1,66 +1,76 @@
+/**
+ * ESLint 9 flat config — no `overrides`.
+ * Typescript + React Hooks + Vite React Refresh.
+ */
+import tseslint from 'typescript-eslint';
 import js from '@eslint/js';
-import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
-import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
-  { ignores: ['dist'] },
+export default [
+  // Ignore build artifacts
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
-    files: ['**/*.{ts,tsx}'],
+    ignores: ['dist/**', 'build/**', 'node_modules/**', 'public/**', 'coverage/**'],
+  },
+
+  // Base JS + TS rules
+  js.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+  ...tseslint.configs.stylisticTypeChecked,
+
+  // Project-wide TS settings and common rules
+  {
+    files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.browser,
+      parserOptions: {
+        project: ['./tsconfig.json'],
+        tsconfigRootDir: process.cwd(),
+      },
     },
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,
     },
-    
     rules: {
-      // Relax strictness to focus on functional issues first
-      '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-unused-vars': ['warn', {
-        argsIgnorePattern: '^_',
-        varsIgnorePattern: '^_',
-        ignoreRestSiblings: true,
-        caughtErrors: 'none'
-      }],
-      '@typescript-eslint/ban-ts-comment': 'warn',
-      '@typescript-eslint/no-this-alias': 'warn',
-      '@typescript-eslint/no-unused-expressions': 'warn',
-      'no-unused-expressions': 'warn',
-      'no-empty': ['warn', { allowEmptyCatch: true }],
-      'no-case-declarations': 'warn',
-      'no-useless-escape': 'warn',
-      'prefer-const': 'warn',
-      'react-hooks/rules-of-hooks': 'warn',
-      'react-hooks/exhaustive-deps': 'warn',
-      'no-constant-binary-expression': 'warn',
-    },
+      // TS hygiene
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/ban-ts-comment': ['error', { 'ts-expect-error': 'allow-with-description' }],
 
-    overrides: [
-      {
-        files: ['**/*.test.ts', '**/*.test.tsx'],
-        rules: {
-          '@typescript-eslint/no-explicit-any': 'off',
-          '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }]
-        }
-      },
-      {
-        files: ['src/sw.ts', 'src/sw/**/*.ts'],
-        rules: {
-          '@typescript-eslint/ban-ts-comment': 'off',
-          '@typescript-eslint/no-unused-expressions': 'off'
-        }
-      },
-      {
-        files: ['src/utils/fetchGuard.ts'],
-        rules: {
-          '@typescript-eslint/no-this-alias': 'off'
-        }
-      }
-    ]
-  }
-);
+      // React
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
+
+      // General
+      'no-empty': 'error',
+      'prefer-const': 'warn',
+    },
+  },
+
+  // Tests: relax some strict rules
+  {
+    files: ['**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unused-vars': 'off',
+    },
+  },
+
+  // Service worker files might need special comments/expressions
+  {
+    files: ['src/sw.ts', 'src/sw/**/*.ts'],
+    rules: {
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+    },
+  },
+
+  // Known file with necessary ts-comment
+  {
+    files: ['src/utils/fetchGuard.ts'],
+    rules: {
+      '@typescript-eslint/ban-ts-comment': 'off',
+    },
+  },
+];
