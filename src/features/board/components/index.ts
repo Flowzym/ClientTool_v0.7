@@ -10,6 +10,7 @@ export { default as ExportDialog } from './ExportDialog';
 export { default as ContactDialog } from './ContactDialog';
 export { default as ClientInfoDialog } from './ClientInfoDialog';
 export { default as ExportCsvDialog } from './ExportCsvDialog';
+export { default as VirtualizedBoardList } from './VirtualizedBoardList';
 
 // Cell components
 export * from './cells';

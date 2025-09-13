@@ -123,3 +123,5 @@ export function ClientRow({
     </div>
   );
 }
+
+export default ClientRow;

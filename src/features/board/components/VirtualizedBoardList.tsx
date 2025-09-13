@@ -206,12 +206,15 @@ export function VirtualizedBoardList({
 
 // Wrapper component for ClientRow to handle virtualization context
 function ClientRowVirtualized(props: any) {
-  // Import ClientRow dynamically to avoid circular dependencies
-  const ClientRow = React.lazy(() => import('./ClientRow'));
+  // Import ClientRow dynamically with robust lazy mapping
+  const ClientRow = React.lazy(() =>
+    import('./ClientRow').then((m) => ({
+      default: m.default ?? m.ClientRow,
+    }))
+  );
   
   return (
     <React.Suspense fallback={<div className="h-12 bg-gray-50 animate-pulse" />}>
       <ClientRow {...props} />
     </React.Suspense>
   );
-}
