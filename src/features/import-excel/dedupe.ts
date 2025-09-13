@@ -2,8 +2,18 @@
  * Deduplizierung und Hashing für Delta-Sync
  */
 import { normalize } from '../../utils/normalize';
-import { parseToISO } from '../../utils/date';
 import CryptoJS from 'crypto-js';
+
+const toISOIfFilled = (value: unknown): string | undefined => {
+  const s = value == null ? '' : String(value).trim();
+  if (!s) return undefined;
+  try {
+    const { parseToISO } = await import('../../utils/date');
+    return parseToISO(s);
+  } catch {
+    return undefined;
+  }
+};
 
 export function buildRowKey(row: any): string {
   // Primär: amsId
@@ -14,7 +24,7 @@ export function buildRowKey(row: any): string {
   // Fallback: normalisierter Name + Geburtsdatum
   const firstName = normalize(row.firstName || '');
   const lastName = normalize(row.lastName || '');
-  const birthDate = parseToISO(row.birthDate) || '';
+  const birthDate = toISOIfFilled(row.birthDate) || '';
   
   return `${firstName}${lastName}#${birthDate}`;
 }
@@ -25,7 +35,7 @@ export function hashRow(row: any): string {
     amsId: row.amsId || '',
     firstName: row.firstName || '',
     lastName: row.lastName || '',
-    birthDate: parseToISO(row.birthDate) || row.birthDate || '',
+    birthDate: toISOIfFilled(row.birthDate) || row.birthDate || '',
     phone: row.phone || '',
     email: row.email || '',
     address: row.address || '',
@@ -33,6 +43,7 @@ export function hashRow(row: any): string {
     priority: row.priority || '',
     status: row.status || '',
     followUp: parseToISO(row.followUp) || row.followUp || ''
+    followUp: toISOIfFilled(row.followUp) || row.followUp || ''
   };
   
   const json = JSON.stringify(relevantFields, Object.keys(relevantFields).sort());

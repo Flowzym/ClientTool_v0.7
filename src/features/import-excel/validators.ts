@@ -5,6 +5,16 @@ import { parseToISO } from '../../utils/date';
 import { normalize, normalizePriority, normalizeStatus, normalizeResult, trimToNull } from '../../utils/normalize';
 import type { Priority, Status } from '../../domain/models';
 
+const toISOIfFilled = (value: unknown): string | undefined => {
+  const s = value == null ? '' : String(value).trim();
+  if (!s) return undefined;               // leer => kein Throw, Feld bleibt undefined
+  try {
+    return parseToISO(s);                  // nur bei nicht-leer parsen
+  } catch (err) {
+    return undefined;                      // ungültiges Datum => undefined
+  }
+};
+
 export interface ValidationResult {
   ok: boolean;
   errors: string[];
@@ -30,10 +40,10 @@ export function validateRow(row: any): ValidationResult {
   }
 
   // Datum Felder robust parsen
-  const birth = parseToISO(row.birthDate);
+  const birth = toISOIfFilled(row.birthDate);
   if (row.birthDate && !birth) warnings.push('Geburtsdatum unverständlich – übernommen als Rohtext');
 
-  const follow = parseToISO(row.followUp);
+  const follow = toISOIfFilled(row.followUp);
   if (row.followUp && !follow) warnings.push('Follow-up Datum unverständlich – übernommen als Rohtext');
 
   // Priorität/Status/Ergebnis normalisieren
