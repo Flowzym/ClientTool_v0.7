@@ -2,7 +2,6 @@ import React from 'react';
 import { Pin } from 'lucide-react';
 import NameCell from './cells/NameCell';
 import OfferCell from './cells/OfferCell';
-import OfferCell from './cells/OfferCell';
 import StatusCell from './cells/StatusCell';
 import ResultCell from './cells/ResultCell';
 import FollowupCell from './cells/FollowupCell';
