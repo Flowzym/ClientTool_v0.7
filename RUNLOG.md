@@ -973,3 +973,47 @@ $ npm run build
 **✅ HF-19 abgeschlossen – doppelten followUp-Key entfernt, Objekt korrekt geschlossen.**
 
 Duplicate-Key-Fehler behoben, toISOIfFilled-Funktion bleibt aktiv, Build stabil.
+
+---
+
+# HF-20: any-Reduktion Import-Excel Feature (Teil 1)
+
+## Zentrale Typdatei erstellt
+```bash
+# Neue Datei: src/features/import-excel/types.ts
+# - ImportRawRow, ImportMappedRow (Datenstrukturen)
+# - ImportIssue, ImportSummary (Validierung/Ergebnisse)
+# - SniffResult, ISODateString (Utilities)
+```
+
+## Typisierte Dateien (4 Dateien)
+- **types.ts**: Zentrale Typdefinitionen für Import-Feature
+- **validators.ts**: ImportRawRow/ImportMappedRow Parameter, ValidationResult
+- **dedupe.ts**: ImportRawRow Parameter, Record<string, string> für relevantFields
+- **previewGrid.tsx**: ImportMappedRow[], ValidationResult Interface
+- **ImportExcel.tsx**: ImportData Interface, mappedRows Typisierung
+
+## any-Reduktion Erfolg
+- **Parameter-Typen**: row: any → row: ImportRawRow/ImportMappedRow
+- **Array-Typen**: any[] → ImportMappedRow[], ValidationResult[]
+- **Objekt-Typen**: any → Record<string, string>, ImportData Interface
+- **Rückgabe-Typen**: Konkrete Interfaces statt any
+
+## Build-Ergebnis
+```bash
+$ npm run lint
+# ✅ Deutlich weniger no-explicit-any Errors im Import-Feature
+
+$ npm run build
+# ✅ Build successful - keine neuen TypeScript-Fehler
+```
+
+## Status HF-20
+✅ **Import-Feature typisiert** - Zentrale types.ts + konkrete Signaturen
+✅ **any-Reduktion** - Parameter/Rückgaben in validators.ts, dedupe.ts, previewGrid.tsx
+✅ **Build grün** - keine Logikänderungen, nur Typen ergänzt
+✅ **Vorbereitung Pass 2** - Weitere Features folgen in nächstem Pass
+
+**✅ HF-20 abgeschlossen – Import-Excel Feature typisiert, any deutlich reduziert.**
+
+Zentrale Typdatei erstellt, konkrete Signaturen statt any, Build stabil, bereit für weitere Features.
