@@ -438,6 +438,42 @@ $ npm run build
 
 ---
 
+# HF-8: Badge Import Fix
+
+## Badge-Vorkommen gefunden
+```bash
+$ grep -n "<Badge\|</Badge>" src/features/import-excel/ImportExcel.tsx
+# Gefunden um Zeilen: ~1970, weitere Stellen
+# Badge wird verwendet für Status-Anzeigen, Validierungs-Feedback
+```
+
+## Bestehende Badge-Komponente gefunden
+```bash
+$ find src/ -name "*.tsx" | xargs grep -l "export.*Badge"
+# ✅ src/components/Badge.tsx vorhanden
+# Fall A: Import bestehender Badge-Komponente
+```
+
+## Fix Applied
+1. **ImportExcel.tsx**: Badge-Import hinzugefügt (import { Badge } from '../../components/Badge')
+   - Bestehende Badge-Komponente wiederverwendet
+   - Keine neuen Dependencies oder UI-Komponenten erstellt
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine Import-Errors
+
+$ npm run build
+# ✅ Build successful - Badge-Referenzen aufgelöst
+```
+
+## Status HF-8
+✅ **Badge Import Fix** - Fall A: Import bestehender Badge-Komponente aus src/components/Badge.tsx
+✅ **Build grün** - Badge-Referenzen korrekt aufgelöst
+
+---
+
 # HF-6: Try-Block korrekt schließen
 
 ## Syntax-Fehler gefunden
