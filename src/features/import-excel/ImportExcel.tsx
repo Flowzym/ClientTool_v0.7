@@ -565,10 +565,15 @@ export function ImportExcel() {
     } finally {
       setIsProcessing(false);
     }
-      
     } catch (error) {
       console.error('Sync preview error:', error);
-      alert('Fehler beim Erstellen der Vorschau');
+      setImportSummary(prev => prev ? {
+        ...prev,
+        warnings: [...(prev.warnings || []), {
+          type: 'sync-preview',
+          message: `Sync-Vorschau fehlgeschlagen: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`
+        }]
+      } : null);
     } finally {
       setIsProcessing(false);
     }
