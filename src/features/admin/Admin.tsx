@@ -21,7 +21,8 @@ import {
   AlertCircle,
   CheckCircle,
   Upload,
-  Image
+  Image,
+  BarChart3
 } from 'lucide-react';
 import { db } from '../../data/db';
 import { useAuth } from '../../app/auth/AuthProvider';
@@ -624,6 +625,17 @@ export function Admin() {
                   <Settings className="w-4 h-4 mr-2" />
                   Cache leeren
                 </Button>
+                {import.meta.env.DEV && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full justify-start"
+                    onClick={() => window.open('/dev/perf', '_blank')}
+                  >
+                    <BarChart3 className="w-4 h-4 mr-2" />
+                    Performance Playground
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
