@@ -29,3 +29,6 @@ export function validateRow(row: Record<string, unknown>): ValidationResult {
 
   return { ok: errors.length === 0, errors, warnings };
 }
+
+// Re-export for callers that previously imported from validators
+export { dedupeImport } from './dedupe';

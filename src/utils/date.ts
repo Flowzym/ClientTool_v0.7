@@ -1,8 +1,8 @@
 /**
  * Date helpers.
- * - parseToISO: strict -> returns YYYY-MM-DD or throws
+ * - parseToISO: strict -> returns ISO string or throws
  * - safeParseToISO: permissive (delegates to dateSafe)
- * - nowISO: today's date as YYYY-MM-DD
+ * - nowISO: current timestamp as ISO string
  */
 import { safeParseToISO as _safeParseToISO } from './dateSafe';
 
@@ -12,15 +12,11 @@ export type ISODateString = string;
 const pad2 = (n: number) => String(n).padStart(2, '0');
 
 /**
- * Strict parse. Accepts: Date, ISO-like strings, locale dates.
- * Returns YYYY-MM-DD or throws if the value cannot be parsed.
+ * Strict parse. Returns ISO string or throws if the value cannot be parsed.
  */
 export function parseToISO(input: unknown): ISODateString {
   if (input instanceof Date) {
-    const y = input.getFullYear();
-    const m = pad2(input.getMonth() + 1);
-    const d = pad2(input.getDate());
-    return `${y}-${m}-${d}`;
+    return input.toISOString();
   }
 
   if (typeof input !== 'string' || !input.trim()) {
@@ -32,10 +28,7 @@ export function parseToISO(input: unknown): ISODateString {
   // Try native Date parse first
   const d = new Date(s);
   if (!isNaN(d.valueOf())) {
-    const y = d.getFullYear();
-    const m = pad2(d.getMonth() + 1);
-    const dd = pad2(d.getDate());
-    return `${y}-${m}-${dd}`;
+    return d.toISOString();
   }
 
   // Try D.M.YYYY or D/M/YYYY
@@ -47,15 +40,20 @@ export function parseToISO(input: unknown): ISODateString {
     const dd = Number(d2);
     const dt = new Date(y, mm - 1, dd);
     if (!isNaN(dt.valueOf())) {
-      return `${y}-${pad2(mm)}-${pad2(dd)}`;
+      return dt.toISOString();
     }
   }
 
   throw new Error('parseToISO: unparseable');
 }
 
-/** Today as YYYY-MM-DD */
+/** Current timestamp as ISO string */
 export function nowISO(): ISODateString {
+  return new Date().toISOString();
+}
+
+/** Today as YYYY-MM-DD */
+export function todayISO(): ISODateString {
   const d = new Date();
   const y = d.getFullYear();
   const m = pad2(d.getMonth() + 1);

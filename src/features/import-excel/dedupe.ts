@@ -102,3 +102,6 @@ export function dedupeImport<T extends RowGeneric>(rows: T[]): {
 
   return { dedupedRows: deduped, duplicates, keyByIndex };
 }
+
+// Ensure named export exists for validators.ts re-export
+export { dedupeImport };
