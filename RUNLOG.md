@@ -562,6 +562,38 @@ $ npm run build
 
 ---
 
+# HF-15: Kaputten lucide-react-Import reparieren
+
+## Defekter Import-Block gefunden
+```bash
+# Editor-Suche in ImportExcel.tsx:
+# - Mehrzeiliger lucide-react Import-Block mit isolierter } am Ende
+# - Doppelte FileSpreadsheet-Einträge
+# - Fehler: Unexpected "}" - Parser-Fehler
+```
+
+## Fix Applied
+1. **ImportExcel.tsx**: Defekten mehrzeiligen Import-Block entfernt
+   - Durch eine konsolidierte Importzeile ersetzt
+   - Nur tatsächlich verwendete Icons importiert
+   - Doppelte FileSpreadsheet-Einträge entfernt
+   - X, Search entfernt (ungenutzt)
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine Parser-Errors
+
+$ npm run build
+# ✅ Build successful - lucide-react Icons korrekt aufgelöst
+```
+
+## Status HF-15
+✅ **Lucide-Import repariert** - kaputten Block durch eine gültige Importzeile ersetzt
+✅ **Build grün** - Parser-Fehler behoben, Icons korrekt aufgelöst
+
+---
+
 # HF-14: Lint-Aufräumen Pass 1
 
 ## Bereinigte Dateien
