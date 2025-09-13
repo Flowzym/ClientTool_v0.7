@@ -42,7 +42,6 @@ export function hashRow(row: any): string {
     internalCode: row.internalCode || '',
     priority: row.priority || '',
     status: row.status || '',
-    followUp: parseToISO(row.followUp) || row.followUp || ''
     followUp: toISOIfFilled(row.followUp) || row.followUp || ''
   };
   
