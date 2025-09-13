@@ -2,13 +2,13 @@
  * Deduplizierung und Hashing für Delta-Sync
  */
 import { normalize } from '../../utils/normalize';
+import { parseToISO } from '../../utils/date';
 import CryptoJS from 'crypto-js';
 
 const toISOIfFilled = (value: unknown): string | undefined => {
   const s = value == null ? '' : String(value).trim();
   if (!s) return undefined;
   try {
-    const { parseToISO } = await import('../../utils/date');
     return parseToISO(s);
   } catch {
     return undefined;
