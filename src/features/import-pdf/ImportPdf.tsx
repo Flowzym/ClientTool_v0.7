@@ -309,7 +309,7 @@ export function ImportPdf() {
           const newVal = (mappedData as any)[key];
           const oldVal = (existing as any)[key];
           if (oldVal !== newVal) {
-            const isProtected = /* respectProtected */ true && PROTECTED_FIELDS.includes(key);
+            const isProtected = PROTECTED_FIELDS.includes(key);
             const onlyEmpty = /* onlyEmptyFields */ false;
             if (isProtected) {
               diff.push(`${key}: "${oldVal}" → "${newVal}" (geschützt, nicht überschrieben)`);

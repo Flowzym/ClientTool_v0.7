@@ -23,7 +23,7 @@ export const fieldPatterns = {
   
   // Geburtsdatum: dd.mm.yyyy oder dd/mm/yyyy
   birthDate: {
-    pattern: /\b(\d{1,2}[.\/-]\d{1,2}[.\/-]\d{4})\b/g,
+    pattern: /\b(\d{1,2}[./-]\d{1,2}[./-]\d{4})\b/g,
     confidence: 'high' as const,
     description: 'Geburtsdatum (dd.mm.yyyy)'
   },
