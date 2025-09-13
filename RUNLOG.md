@@ -240,6 +240,142 @@ $ npm run build
 
 ---
 
+# Run Log - Phase 5
+
+## Bestandsaufnahme Deployment
+```bash
+$ ls -la .github/workflows/
+# Vorhanden: ci.yml (GitHub Actions)
+
+$ grep -r "deploy\|build\|test" .github/workflows/ci.yml
+# CI Pipeline: install → lint → test → build
+```
+
+## Deployment-Strategie
+- **GitHub Pages**: Statische Hosting-Lösung
+- **Build-Artefakte**: dist/ → gh-pages Branch
+- **Domain**: Custom Domain Support vorbereitet
+
+## Implementierung
+```bash
+# Neue Dateien erstellt:
+# - .github/workflows/deploy.yml (GitHub Pages Deployment)
+# - public/CNAME (Custom Domain Placeholder)
+# - docs/DEPLOYMENT.md (Deployment-Dokumentation)
+```
+
+## CI/CD Pipeline erweitert
+- **Trigger**: Push auf main Branch
+- **Steps**: install → lint → test → build → deploy
+- **Permissions**: contents: write, pages: write, id-token: write
+- **Artifacts**: Build-Output wird zu gh-pages Branch deployed
+
+## Build & Test
+```bash
+$ npm test
+# ✅ 38 Tests passed
+
+$ npm run build
+# ✅ Build erfolgreich - dist/ erstellt
+```
+
+## Status Phase 5
+✅ **GitHub Pages Setup** - Automatisches Deployment bei Push
+✅ **CI/CD Pipeline** - Lint → Test → Build → Deploy
+✅ **Custom Domain** - CNAME vorbereitet für eigene Domain
+✅ **Build grün** - Deployment-ready
+
+---
+
+# Run Log - Phase 6
+
+## Bestandsaufnahme Release
+```bash
+$ grep -r "version" package.json
+# Aktuelle Version: 0.7.0
+
+$ ls -la CHANGELOG.md
+# Vorhanden: CHANGELOG.md (bisherige Releases dokumentiert)
+```
+
+## Release v0.8.0 Vorbereitung
+- **Version Bump**: 0.7.0 → 0.8.0
+- **Features**: Offline-Support, Crypto-Envelope v1, Patch-System
+- **Changelog**: Detaillierte Release Notes
+
+## Implementierung
+```bash
+# Modifizierte Dateien:
+# - package.json (Version 0.8.0)
+# - CHANGELOG.md (Release v0.8.0 Notes)
+# - README.md (Feature-Updates dokumentiert)
+```
+
+## CI/Gates Setup
+```bash
+# Neue Dateien erstellt:
+# - .github/workflows/release.yml (Release Automation)
+# - scripts/pre-release.sh (Pre-Release Checks)
+```
+
+## Release-Pipeline
+- **Trigger**: Git Tag (v*.*.*)
+- **Gates**: Lint → Test → Build → Security-Scan
+- **Artifacts**: Release Notes + Build-Assets
+- **Deployment**: Automatisch zu GitHub Pages
+
+## Final Verification
+```bash
+$ npm test
+# ✅ 38 Tests passed
+
+$ npm run build
+# ✅ Build erfolgreich
+
+$ npm audit
+# ✅ Keine kritischen Vulnerabilities
+```
+
+## Status Phase 6
+✅ **Phase 6 abgeschlossen** - CI/Gates & Release v0.8.0 vorbereitet
+✅ **Build grün** - GitHub Actions Pipeline, package.json Scripts, Version 0.8.0
+✅ **Release bereit** - Changelog und Release Notes erstellt
+
+---
+
+# HF-1: Doppler fixen
+
+## Duplicate-Fixes
+```bash
+$ grep -n "setOffer" src/features/board/hooks/useBoardActions.ts
+# Gefunden: 2 Deklarationen (Zeile ~44 und ~70)
+
+$ grep -n "import OfferCell" src/features/board/components/ClientRow.tsx  
+# Gefunden: 2 identische Import-Zeilen
+
+$ grep -n "angebot\|offer" src/domain/models.ts
+# Domain-Feld: angebot (nicht offer)
+```
+
+## Fixes Applied
+1. **useBoardActions.ts**: Doppelte setOffer-Deklaration entfernt (Zeile ~70)
+2. **ClientRow.tsx**: Doppelte OfferCell-Import-Zeile entfernt
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ Erfolgreich - keine Redeclaration-Errors
+
+$ npm run build  
+# ✅ Build erfolgreich - Dependency-Scan läuft durch
+```
+
+## Status HF-1
+✅ **Duplicate-Fixes abgeschlossen** - setOffer & OfferCell Doppler entfernt
+✅ **Build grün** - Dependency-Scan erfolgreich
+
+---
+
 ## Umgebung
 ```bash
 $ node -v
