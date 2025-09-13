@@ -1,4 +1,4 @@
-import { safeParseToISO } from '../../utils/dateSafe';
+import { safeParseToISO } from '../../utils/date/safeParseToISO';
 
 export type ValidationResult = { ok: boolean; errors: string[]; warnings: string[] };
 
@@ -21,7 +21,7 @@ export function validateRow(row: Record<string, unknown>): ValidationResult {
     try {
       // rewrite to ISO if possible
       (row as any).followUp = safeParseToISO(String(followUp)) || String(followUp);
-    } catch {
+    return safeParseToISO(input);
       warnings.push('Could not parse follow-up date');
     }
   }

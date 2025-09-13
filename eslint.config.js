@@ -33,16 +33,34 @@ export default [
       parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
     },
     rules: {
-      // Relax temporarily so lint runs cleanly while we fix code later
+      // Export/Import consistency rules
       '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
-      '@typescript-eslint/ban-ts-comment': 'warn',
-      '@typescript-eslint/no-this-alias': 'warn',
-      'no-empty': ['warn', { allowEmptyCatch: true }],
-      'react-refresh/only-export-components': 'warn',
+      '@typescript-eslint/no-unused-vars': ['error', { 
+        argsIgnorePattern: '^_', 
+        varsIgnorePattern: '^_',
+        ignoreRestSiblings: true
+      }],
+      '@typescript-eslint/ban-ts-comment': 'error',
+      '@typescript-eslint/consistent-type-imports': ['error', { 
+        prefer: 'type-imports',
+        fixStyle: 'separate-type-imports'
+      }],
+      
+      // Code quality
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+      'no-empty': ['error', { allowEmptyCatch: true }],
+      'prefer-const': 'error',
+      'no-var': 'error',
+      
+      // React rules
+      'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       'react/no-unescaped-entities': 'warn',
+      'react-hooks/exhaustive-deps': 'warn',
+      
+      // Import/Export rules (no new plugins needed)
+      'no-duplicate-imports': 'error'
     },
     settings: { react: { version: 'detect' } },
   },
@@ -52,6 +70,25 @@ export default [
     files: ['**/*.test.ts', '**/*.test.tsx'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      'no-console': 'off',
+      '@typescript-eslint/ban-ts-comment': 'warn'
+    },
+  },
+
+  // Service Worker - special rules
+  {
+    files: ['**/sw.ts', '**/sw.js', 'public/sw.js'],
+    rules: {
+      'no-console': 'off',
+      '@typescript-eslint/ban-ts-comment': 'warn'
+    },
+  },
+
+  // Fetch guard - allow console for debugging
+  {
+    files: ['**/fetchGuard.ts'],
+    rules: {
+      'no-console': 'off'
     },
   },
 ];

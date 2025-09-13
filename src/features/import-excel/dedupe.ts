@@ -5,7 +5,7 @@
 //   - hashRow(row) -> string
 //   - dedupeImport(rows) -> { dedupedRows, duplicates, keyByIndex }
 //
-// The goal: keep the API stable for ImportExcel.tsx and ImportPdf.tsx.
+import { safeParseToISO } from '../../utils/date/safeParseToISO';
 
 export type RowGeneric = Record<string, unknown>;
 
@@ -38,7 +38,7 @@ export function buildRowKey(
     }
 
     // Fallback: hash of entire row (stable order)
-    return `h:${hashRow(row)}`;
+    return safeParseToISO(input);
   } catch {
     // Defensive: never throw during key calc
     return `h:${hashRow(row)}`;

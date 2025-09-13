@@ -99,8 +99,8 @@ describe('Import Usage Validation', () => {
     it('should import utilities as named exports', async () => {
       const utilImports = [
         { path: '../utils/cn', name: 'cn' },
-        { path: '../utils/date', name: 'parseToISO' },
-        { path: '../utils/date', name: 'nowISO' },
+        { path: '../utils/date/safeParseToISO', name: 'safeParseToISO' },
+        { path: '../utils/date/safeParseToISO', name: 'nowISO' },
         { path: '../utils/env', name: 'getEncryptionMode' },
         { path: '../utils/env', name: 'getDbName' }
       ];
