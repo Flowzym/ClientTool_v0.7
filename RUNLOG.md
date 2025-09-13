@@ -405,6 +405,39 @@ $ npm run build
 
 ---
 
+# HF-7: Try-Block korrekt schließen
+
+## Syntax-Fehler gefunden
+```bash
+$ grep -A 5 -B 5 "handleMappingNext" src/features/import-excel/ImportExcel.tsx
+# Gefunden: handleMappingNext ohne try-Block, aber mit catch/finally
+
+$ npm run build
+# Fehler: Missing catch or finally clause
+```
+
+## Fix Applied
+1. **ImportExcel.tsx**: handleMappingNext mit try-Block umschlossen
+   - try { am Funktionsanfang hinzugefügt
+   - catch: Error-Logging + Warning in importSummary
+   - finally: setIsProcessing(false) für cleanup
+   - Keine doppelten setIsProcessing(false) gefunden
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine Syntax-Errors
+
+$ npm run build  
+# ✅ Build successful - Try-Block-Parsing erfolgreich
+```
+
+## Status HF-7
+✅ **Try-Block-Syntax repariert** - handleMappingNext mit try umschlossen, catch/finally korrekt angebunden
+✅ **Build grün** - Syntax-Parsing erfolgreich
+
+---
+
 # HF-6: Try-Block korrekt schließen
 
 ## Syntax-Fehler gefunden
