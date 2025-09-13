@@ -1,22 +1,24 @@
 import React from 'react';
 import type { OfferValue } from '../../types';
+import { useBoardActions } from '../../hooks/useBoardActions';
 
 const OFFERS: OfferValue[] = ['BAM', 'LL/B+', 'BwB', 'NB'];
 
-export default function OfferCell({ id: _id, value, onChange }: { 
+export default function OfferCell({ id, value }: { 
   id: string;
   value?: OfferValue | null; 
-  onChange?: (v?: OfferValue) => void;
 }) {
+  const { setOffer } = useBoardActions();
+  
   const handleChange = (newValue: string) => {
     if (!newValue) {
-      onChange?.(undefined);
+      setOffer(id, undefined);
       return;
     }
     
     // Guard: nur erlaubte Werte akzeptieren
     if (OFFERS.includes(newValue as OfferValue)) {
-      onChange?.(newValue as OfferValue);
+      setOffer(id, newValue as OfferValue);
     } else {
       console.warn('OfferCell: Invalid offer value ignored:', newValue);
     }

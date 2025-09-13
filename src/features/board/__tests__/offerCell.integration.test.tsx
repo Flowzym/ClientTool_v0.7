@@ -173,7 +173,7 @@ describe('OfferCell Integration', () => {
       const mockOnChange = vi.fn();
 
       renderWithProviders(
-        <OfferCell id="test-1" value={undefined} onChange={mockOnChange} />
+        <OfferCell id="test-1" value={undefined} />
       );
 
       const offerSelect = screen.getByRole('combobox');
@@ -182,8 +182,8 @@ describe('OfferCell Integration', () => {
       offerSelect.value = 'INVALID';
       offerSelect.dispatchEvent(new Event('change', { bubbles: true }));
 
-      // Should not call onChange for invalid value
-      expect(mockOnChange).not.toHaveBeenCalled();
+      // Should not call setOffer for invalid value (console.warn instead)
+      expect(mockActions.setOffer).not.toHaveBeenCalled();
     });
   });
 
@@ -221,7 +221,7 @@ describe('OfferCell Integration', () => {
       await user.keyboard('{ArrowDown}');
       await user.keyboard('{Enter}');
 
-      // Should trigger onChange (exact value depends on dropdown behavior)
+      // Should trigger setOffer (exact value depends on dropdown behavior)
       await waitFor(() => {
         expect(mockActions.setOffer).toHaveBeenCalled();
       });
@@ -229,7 +229,7 @@ describe('OfferCell Integration', () => {
 
     it('should have proper ARIA label', () => {
       renderWithProviders(
-        <OfferCell id="test-1" value="BAM" onChange={vi.fn()} />
+        <OfferCell id="test-1" value="BAM" />
       );
 
       const offerSelect = screen.getByRole('combobox');
