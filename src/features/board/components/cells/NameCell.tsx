@@ -6,7 +6,12 @@ function countNotes(client: any): number {
   if (Array.isArray(client?.notes)) return client.notes.length;
   // 2) contactLog entries with type/kind === 'note'
   if (Array.isArray(client?.contactLog)) {
-    const n = client.contactLog.filter((e:any) => (e?.type === 'note' || e?.kind === 'note')).length;
+    const n = client.contactLog.filter((e:any) => {
+      if (!e) return false;
+      const hasNoteType = e?.type === 'note' || e?.kind === 'note';
+      const hasText = e?.text && String(e.text).trim().length > 0;
+      return hasNoteType && hasText;
+    }).length;
     if (n > 0) return n;
   }
   // 3) fallback: note text
@@ -14,7 +19,7 @@ function countNotes(client: any): number {
   return 0;
 }
 
-export default function NameCell({ client, onOpenNotes: _onOpenNotes }: { client: any; onOpenNotes: (id: string) => void; }) {
+export default function NameCell({ client, onOpenNotes }: { client: any; onOpenNotes: (id: string) => void; }) {
   const name = [client?.lastName, client?.firstName].filter(Boolean).join(', ');
   const title = client?.title ? ` (${client.title})` : '';
   const count = countNotes(client);
@@ -26,7 +31,8 @@ export default function NameCell({ client, onOpenNotes: _onOpenNotes }: { client
         <button
           className={`p-1 rounded hover:bg-gray-50 ${muted ? 'text-gray-400' : 'text-gray-700'}`}
           title="Notizen öffnen"
-          onClick={() => _onOpenNotes(client?.id)}
+          onClick={() => onOpenNotes(client?.id)}
+          aria-label="Notizen öffnen"
         >
           <PencilLine size={16} />
         </button>
