@@ -1,5 +1,36 @@
 # Changelog
 
+## [v0.7.1] - 2025-01-27
+
+### Added
+- feat(ci): GitHub Actions status workflow with build/test/lint gates
+- feat(test): Vitest coverage gate with thresholds (85% lines, 85% functions, 80% branches)
+- feat(tools): Status gate script with automated red/yellow flag detection
+- test(board): Comprehensive test suite for optimistic updates, CSV/ZIP utils, rendering
+- test(integration): Status↔Follow-up, Undo/Redo, Selection/Batch operation tests
+- test(guards): Export policy contract tests and import usage validation
+
+### Fixed
+- fix(board): setOffer patch flow implementation and OfferCell wiring
+- fix(board): React hook order violations by extracting helpers into components
+- fix(board): React.lazy mapping for ClientRowVirtualized with robust default export
+- fix(import): Excel file routing to prevent PDF handler conflicts
+- fix(lint): Removed all unused imports across codebase (0 warnings achieved)
+- fix(types): Import resolution errors for canUndo/canRedo functions
+
+### Changed
+- refactor(board): Extracted ClassicClientList and VirtualClientList components
+- refactor(board): Improved virtualization with proper Suspense boundaries
+- improve(test): Enhanced test coverage with unit, integration, and guard tests
+- improve(ci): Automated ESLint fixes in CI pipeline
+
+### Technical
+- Coverage thresholds enforced via Vitest V8 provider
+- Export policy compliance with automated contract validation
+- Hook order stability guards prevent React warnings
+- Comprehensive Excel/PDF routing with edge case handling
+- Zero new runtime dependencies
+
 ## [Phase 4] - 2025-01-27
 
 ### Added
