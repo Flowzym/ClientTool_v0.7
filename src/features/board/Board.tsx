@@ -5,12 +5,15 @@ import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import { ClientRow } from './components/ClientRow';
 import { BatchActionsBar } from './components/BatchActionsBar';
 import { BoardHeader } from './components/BoardHeader';
+import { VirtualizedBoardList } from './components/VirtualizedBoardList';
+import { featureManager } from '../../config/features';
 
 const ROW_HEIGHT = 44;
 
 function Board() {
   const { clients, users, isLoading } = useBoardData();
   const actions = useBoardActions();
+  const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
 
   const visibleClients = useOptimisticOverlay(clients);
 
@@ -19,6 +22,12 @@ function Board() {
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const allIds = useMemo(() => visibleClients.map((c:any) => c.id as string), [visibleClients]);
 
+  // Subscribe to feature flag changes
+  useEffect(() => {
+    return featureManager.subscribe((features) => {
+      setVirtualRowsEnabled(features.virtualRows);
+    });
+  }, []);
   const clearSelection = () => setSelectedIds([]);
   const selectAllVisible = () => setSelectedIds(allIds);
 
@@ -51,21 +60,66 @@ function Board() {
     return () => window.removeEventListener('keydown', handler);
   }, [actions, allIds]);
 
-  // Simple virtualization
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const onScroll = (e: React.UIEvent<HTMLDivElement>) => setScrollTop((e.target as HTMLDivElement).scrollTop);
-  const viewportHeight = 520;
-  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 5);
-  const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT) + 10;
-  const endIndex = Math.min(visibleClients.length, startIndex + visibleCount);
-  const topPad = startIndex * ROW_HEIGHT;
-  const bottomPad = Math.max(0, (visibleClients.length - endIndex) * ROW_HEIGHT);
 
   const selectedRowsProvider = () => visibleClients.filter((c:any) => selectedSet.has(c.id));
 
   if (isLoading) return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;
 
+  // Render virtualized or classic list based on feature flag
+  const renderClientList = () => {
+    if (virtualRowsEnabled) {
+      return (
+        <VirtualizedBoardList
+          clients={visibleClients}
+          users={users}
+          actions={actions}
+          selectedIds={selectedSet}
+          onToggleSelect={toggleAtIndex}
+          rowHeight={ROW_HEIGHT}
+          className="min-w-[1480px] border rounded-lg overflow-hidden"
+        />
+      );
+    }
+
+    // Classic non-virtualized rendering (existing implementation)
+    const containerRef = useRef<HTMLDivElement | null>(null);
+    const [scrollTop, setScrollTop] = useState(0);
+    const onScroll = (e: React.UIEvent<HTMLDivElement>) => setScrollTop((e.target as HTMLDivElement).scrollTop);
+    const viewportHeight = 520;
+    const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 5);
+    const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT) + 10;
+    const endIndex = Math.min(visibleClients.length, startIndex + visibleCount);
+    const topPad = startIndex * ROW_HEIGHT;
+    const bottomPad = Math.max(0, (visibleClients.length - endIndex) * ROW_HEIGHT);
+
+    return (
+      <div className="min-w-[1480px] border rounded-lg overflow-hidden">
+        <div ref={containerRef} onScroll={onScroll} style={{ maxHeight: viewportHeight, overflowY: 'auto' }}>
+          <div style={{ height: topPad }} />
+          <div className="divide-y">
+            {visibleClients.slice(startIndex, endIndex).map((c:any, idx:number) => {
+              const realIndex = startIndex + idx;
+              return (
+                <ClientRow
+                  key={c.id}
+                  client={c}
+                  index={realIndex}
+                  users={users}
+                  actions={actions}
+                  selected={selectedSet.has(c.id)}
+                  onToggleSelect={(withShift: boolean) => toggleAtIndex(realIndex, c.id, withShift)}
+                />
+              );
+            })}
+            {visibleClients.length === 0 && (
+              <div className="px-3 py-6 text-sm text-gray-500 hover:bg-gray-50">Keine Einträge für die aktuelle Ansicht.</div>
+            )}
+          </div>
+          <div style={{ height: bottomPad }} />
+        </div>
+      </div>
+    );
+  };
   return (
     <div className="p-4 overflow-auto">
       <BoardHeader
@@ -92,8 +146,9 @@ function Board() {
         />
       )}
 
-      <div className="min-w-[1480px] border rounded-lg overflow-hidden">
-        <div className="grid grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px] gap-2 bg-gray-50 border-b px-3 py-2 text-xs font-medium text-gray-600">
+      {/* Sticky Header */}
+      <div className="min-w-[1480px] border rounded-t-lg bg-gray-50 border-b px-3 py-2 text-xs font-medium text-gray-600">
+        <div className="grid grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px] gap-2">
           <div>✓ • Pin</div>
           <div>Kunde</div>
           <div>Offer</div>
@@ -109,31 +164,28 @@ function Board() {
           <div>Aktivität</div>
           <div>Aktionen</div>
         </div>
-
-        <div ref={containerRef} onScroll={onScroll} style={{ maxHeight: viewportHeight, overflowY: 'auto' }}>
-          <div style={{ height: topPad }} />
-          <div className="divide-y">
-            {visibleClients.slice(startIndex, endIndex).map((c:any, idx:number) => {
-              const realIndex = startIndex + idx;
-              return (
-                <ClientRow
-                  key={c.id}
-                  client={c}
-                  index={realIndex}
-                  users={users}
-                  actions={actions}
-                  selected={selectedSet.has(c.id)}
-                  onToggleSelect={(withShift: boolean) => toggleAtIndex(realIndex, c.id, withShift)}
-                />
-              );
-            })}
-            {visibleClients.length === 0 && (
-              <div className="px-3 py-6 text-sm text-gray-500 hover:bg-gray-50">Keine Einträge für die aktuelle Ansicht.</div>
-            )}
-          </div>
-          <div style={{ height: bottomPad }} />
-        </div>
       </div>
+
+      {/* Client List (virtualized or classic) */}
+      {renderClientList()}
+
+      {/* Development feature toggle */}
+      {import.meta.env.DEV && (
+        <div className="mt-4 p-3 bg-gray-50 border rounded-lg">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={virtualRowsEnabled}
+              onChange={(e) => featureManager.setFeature('virtualRows', e.target.checked)}
+              className="rounded border-gray-300"
+            />
+            <span>Virtualized Rows (Performance)</span>
+            <span className="text-xs text-gray-500">
+              ({virtualRowsEnabled ? 'ON' : 'OFF'}) - {visibleClients.length} clients
+            </span>
+          </label>
+        </div>
+      )}
     </div>
   );
 }

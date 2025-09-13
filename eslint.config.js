@@ -60,7 +60,20 @@ export default [
       'react-hooks/exhaustive-deps': 'warn',
       
       // Import/Export rules (no new plugins needed)
-      'no-duplicate-imports': 'error'
+      'no-duplicate-imports': 'error',
+      
+      // Export/Import conventions
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'ExportNamedDeclaration[declaration.type="FunctionDeclaration"] ~ ExportDefaultDeclaration',
+          message: 'Components should use either default OR named exports, not both in same file'
+        },
+        {
+          selector: 'ExportDefaultDeclaration[declaration.type="ArrowFunctionExpression"]',
+          message: 'Use function declarations for default exports, not arrow functions'
+        }
+      ]
     },
     settings: { react: { version: 'detect' } },
   },
