@@ -892,3 +892,49 @@ $ npm run build
 ✅ **Unused Import entfernt** - safeParseToISO aus ImportExcel.tsx entfernt
 ✅ **Import-Feature scan** - alle parseToISO-Aufrufe in import-excel/** gegardet
 ✅ **Build grün** - keine Datum-Parser-Crashes mehr
+
+**✅ HF-17 abgeschlossen – parseToISO empty abgefangen, ungenutzten Import entfernt.**
+
+Datum-Parser-Crashes behoben, leere Felder führen zu undefined statt Exception, Build stabil.
+
+---
+
+# HF-18: dedupe.ts dynamic import entfernen
+
+## Dynamic Import Problem gefunden
+```bash
+# Editor-Suche in dedupe.ts:
+# - const { parseToISO } = await import('../../utils/date'); (Zeile ~8)
+# - toISOIfFilled als sync-Funktion deklariert, aber mit await
+# Fehler: await can only be used inside an async function
+```
+
+## Fix Applied
+1. **dedupe.ts**: Dynamic import durch statischen Import ersetzt
+   - import { parseToISO } from '../../utils/date'; am Dateianfang hinzugefügt
+   - await import('../../utils/date') entfernt aus toISOIfFilled
+   - Funktion bleibt synchron, keine Signaturänderung
+   - try/catch für parseToISO-Fehler beibehalten
+
+## Suchlauf Import-Feature
+```bash
+# Suche nach weiteren dynamic imports in src/features/import-excel/**:
+# Keine weiteren await import('../../utils/date') gefunden
+```
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine async/await Syntax-Errors
+
+$ npm run build
+# ✅ Build successful - parseToISO statisch importiert
+```
+
+## Status HF-18
+✅ **Dynamic Import entfernt** - parseToISO statisch importiert, toISOIfFilled synchron
+✅ **Build grün** - keine async/await Syntax-Fehler mehr
+
+**✅ HF-18 abgeschlossen – dynamic import entfernt, parseToISO statisch importiert.**
+
+toISOIfFilled-Funktion bleibt synchron, await-Syntax-Fehler behoben, Build stabil.
