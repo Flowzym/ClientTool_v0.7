@@ -5,22 +5,7 @@ import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
-import * as XLSX from 'xlsx';
-  CheckCircle, 
-  Upload, 
-  FileSpreadsheet,
-  ArrowRight, 
-  ArrowLeft, 
-  AlertCircle, 
-  RefreshCw, 
-  Eye, 
-  Plus, 
-  Download, 
-  X, 
-  Search,
-  Settings,
-  FolderOpen
-} from 'lucide-react';
+import { CheckCircle, Upload, ArrowRight, ArrowLeft, AlertCircle, Eye, Plus, RefreshCw, FileSpreadsheet, Settings, FolderOpen } from 'lucide-react';
 import { safeParseToISO } from '../../utils/date';
 import { extractTablesFromHtml } from '../../utils/htmlTable';
 import { sniffBuffer, firstBytesHex } from '../../utils/fileSniff';
