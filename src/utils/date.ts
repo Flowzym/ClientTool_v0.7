@@ -9,6 +9,13 @@ export function nowISO(): string {
   return new Date().toISOString();
 }
 
+export function parseToISO(s: string): string {
+  if (!s || !String(s).trim()) throw new Error('parseToISO: empty');
+  const d = new Date(s);
+  if (Number.isNaN(d.getTime())) throw new Error('parseToISO: invalid');
+  return d.toISOString();
+}
+
 /** Returns today's date in YYYY-MM-DD (local time). */
 export function todayISO(): ISODateString {
   const d = new Date();

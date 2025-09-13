@@ -1,6 +1,12 @@
 import { safeParseToISO } from '../../utils/dateSafe';
 import type { ImportRawRow, ImportMappedRow } from './types';
 
+export interface ValidationResult {
+  ok: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
 export type AnyRow = Record<string, unknown>;
 
 export interface ValidationResult {
@@ -37,6 +43,9 @@ export function validateRow(row: ImportMappedRow): ValidationResult {
     warnings
   };
 }
+
+// Re-export für Aufrufer, die bisher aus validators importiert haben
+export { dedupeImport } from './dedupe';
 
 // Re-export dedupeImport
 export { dedupeImport } from './dedupe';

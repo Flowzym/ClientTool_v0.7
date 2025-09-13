@@ -79,3 +79,8 @@ export function dedupeImport<T extends Record<string, unknown>>(rows: T[]): {
   
   return { dedupedRows, duplicates };
 }
+
+export function dedupeImport<T extends Record<string, unknown>>(rows: T[]): T[] {
+  const { dedupedRows } = dedupeImport(rows);
+  return dedupedRows;
+}
