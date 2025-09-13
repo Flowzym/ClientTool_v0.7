@@ -1,51 +1,31 @@
 import { safeParseToISO } from '../../utils/dateSafe';
-import type { ImportRawRow, ImportMappedRow } from './types';
+export { dedupeImport } from './dedupe';
 
-export interface ValidationResult {
-  ok: boolean;
-  errors: string[];
-  warnings: string[];
-}
-
-export type AnyRow = Record<string, unknown>;
-
-export interface ValidationResult {
-  ok: boolean;
-  errors: string[];
-  warnings: string[];
-}
+export type ValidationResult = { ok: boolean; errors: string[]; warnings: string[] };
 
 /**
- * Normalize a single import row.
- * - Parses followUp to ISO if possible; leaves original if not.
- * - Never throws on empty/invalid dates.
+ * Minimal validation used by ImportExcel.tsx
+ * - Ensures required "name" is present
+ * - Tries to parse an optional "followUp" date permissively
  */
-export function normalizeRow(row: ImportRawRow): ImportMappedRow {
-  const followUp = row?.followUp as unknown;
-  const followUpISO = safeParseToISO(followUp);
-  return {
-    ...row,
-    followUp: followUpISO ?? (typeof followUp === 'string' ? followUp : '')
-  } as ImportMappedRow;
-}
-
-export function validateRow(row: ImportMappedRow): ValidationResult {
+export function validateRow(row: Record<string, unknown>): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
-  
-  if (!row.firstName && !row.lastName && !row.name) {
-    errors.push('Name erforderlich');
+
+  // required
+  const name = String(row.name ?? '').trim();
+  if (!name) errors.push('Missing required field: name');
+
+  // followUp (optional) — permissive parse
+  const followUp = row.followUp;
+  if (followUp != null && String(followUp).trim()) {
+    try {
+      // rewrite to ISO if possible
+      (row as any).followUp = safeParseToISO(String(followUp)) || String(followUp);
+    } catch {
+      warnings.push('Could not parse follow-up date');
+    }
   }
-  
-  return {
-    ok: errors.length === 0,
-    errors,
-    warnings
-  };
+
+  return { ok: errors.length === 0, errors, warnings };
 }
-
-// Re-export für Aufrufer, die bisher aus validators importiert haben
-export { dedupeImport } from './dedupe';
-
-// Re-export dedupeImport
-export { dedupeImport } from './dedupe';
