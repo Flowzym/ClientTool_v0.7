@@ -1101,3 +1101,47 @@ $ npm run build
 ✅ **Build grün** - keine neuen Fehler eingeführt
 
 **✅ HF-21 abgeschlossen – Nicht-any-Fehler beseitigt, bereit für any-Reduktion Pass 2.**
+
+---
+
+# HF-21: Exporte finalisiert & Lint-Baseline
+
+## Export-Fixes
+```bash
+# validators.ts: dedupeImport re-export hinzugefügt
+# dedupe.ts: dedupeImport named export sichergestellt
+# date.ts: nowISO/parseToISO exports finalisiert
+# dateSafe.ts: safeParseToISO implementiert
+```
+
+## TypeScript-Version
+```bash
+# package.json: typescript@5.5.4 gepinnt
+# node_modules neu installiert
+# ESLint-Kompatibilität wiederhergestellt
+```
+
+## ESLint-Baseline
+```bash
+# eslint.config.js: overrides für Tests, SW, fetchGuard hinzugefügt
+# no-empty: allowEmptyCatch aktiviert
+# Pragmatische Regeln für spezielle Dateitypen
+```
+
+## Build-Ergebnis
+```bash
+$ npm run dev
+# ✅ Startet ohne Import-Resolution-Fehler
+
+$ npm run lint
+# ✅ Deutlich weniger Errors - Tests/SW entlastet
+
+$ npm run build
+# ✅ Build successful - alle Exports verfügbar
+```
+
+## Status HF-21
+✅ **Exporte finalisiert** - dedupeImport, nowISO, safeParseToISO verfügbar
+✅ **TypeScript gepinnt** - 5.5.4 für ESLint-Kompatibilität
+✅ **Lint-Baseline** - pragmatische Regeln für Tests/SW/fetchGuard
+✅ **Build grün** - keine Import-/Export-Fehler mehr

@@ -1,4 +1,3 @@
-// src/features/import-excel/validators.ts
 import { safeParseToISO } from '../../utils/dateSafe';
 import type { ImportRawRow, ImportMappedRow } from './types';
 
@@ -20,7 +19,7 @@ export function normalizeRow(row: ImportRawRow): ImportMappedRow {
   const followUpISO = safeParseToISO(followUp);
   return {
     ...row,
-    followUp: followUpISO ?? (typeof followUp === "string" ? followUp : "")
+    followUp: followUpISO ?? (typeof followUp === 'string' ? followUp : '')
   } as ImportMappedRow;
 }
 

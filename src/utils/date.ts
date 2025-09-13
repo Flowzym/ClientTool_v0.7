@@ -24,8 +24,11 @@ export function todayISO(): ISODateString {
  * Tries to parse and returns YYYY-MM-DD; throws if input cannot be parsed.
  */
 export function parseToISO(input: unknown): ISODateString {
+  if (!input || typeof input !== 'string' || !input.trim()) {
+    throw new Error('parseToISO: empty');
+  }
   const v = _safeParseToISO(input);
-  if (!v) throw new Error("parseToISO: invalid");
+  if (!v) throw new Error('parseToISO: invalid');
   return v;
 }
 

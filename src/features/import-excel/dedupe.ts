@@ -50,7 +50,7 @@ export function hashRow(row: ImportRawRow): string {
   return CryptoJS.SHA256(json).toString();
 }
 
-export function dedupeImport<T extends Record<string, unknown>>(rows: T[]): { 
+export function dedupeImport<T extends Record<string, unknown>>(rows: T[]): {
   dedupedRows: T[]; 
   duplicates: Array<{ indices: number[]; key: string; reason: string }> 
 } {
