@@ -99,19 +99,25 @@ export function ExportDialog({ isOpen, onClose, selectedClients, users }: Export
     switch (field) {
       case 'fullName':
         {
+        {
         return [client.lastName, client.firstName].filter(Boolean).join(', ') + 
                (client.title ? ` (${client.title})` : '');
         }
+        }
       case 'fullAddress':
+        {
         {
         return [
           client.address,
           [client.zip, client.city].filter(Boolean).join(' ')
         ].filter(Boolean).join(', ');
         }
+        }
       case 'assignedToName':
         {
+        {
         return users.find(u => u.id === client.assignedTo)?.name || '';
+        }
         }
       case 'birthDate':
       case 'followUp':
@@ -119,20 +125,28 @@ export function ExportDialog({ isOpen, onClose, selectedClients, users }: Export
       case 'entryDate':
       case 'exitDate':
         {
+        {
         return formatDDMMYYYY((client as any)[field]) || '';
+        }
         }
       case 'isPinned':
         {
+        {
         return client.isPinned ? 'Ja' : 'Nein';
+        }
         }
       case 'contactCount':
         {
+        {
         return String(client.contactCount || 0);
+        }
         }
       default:
         {
+        {
         const value = (client as any)[field];
         return value != null ? String(value) : '';
+        }
         }
     }
   };

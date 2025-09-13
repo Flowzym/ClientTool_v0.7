@@ -138,6 +138,7 @@ class NetworkGuard {
     // Wrap XHR
     this.originalXHROpen = XMLHttpRequest.prototype.open;
     const original = this.originalXHROpen;
+    const self = this;
     XMLHttpRequest.prototype.open = function(this: XMLHttpRequest, method: string, url: string, async?: boolean, user?: string|null, password?: string|null) {
       const m = (method || 'GET').toUpperCase();
       if (!self.isAllowed(url)) {

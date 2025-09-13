@@ -56,7 +56,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Persist auth session so reloads don't log out
   useEffect(() => {
-    try { sessionStorage.setItem('auth:session', isAuthenticated ? '1' : '0'); } catch {}
+    try { sessionStorage.setItem('auth:session', isAuthenticated ? '1' : '0'); } catch { /* no-op */ }
   }, [isAuthenticated]);
 
   // Prüfe beim Start, ob Bypass aktiviert ist
@@ -68,7 +68,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, [bypassEnabled]);
 
   const login = async (passphrase: string): Promise<boolean> => {
-    if (getEncryptionMode() !== 'prod-enc') { setIsAuthenticated(true); return true; }
+    if (getEncryptionMode() !== 'prod-enc') { 
+      setIsAuthenticated(true); 
+      return true; 
+    }
     try {
       console.log('🔐 Auth: Attempting login (kv-probe)...');
       // Key ableiten
@@ -79,7 +82,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         const probeKey = 'auth:probe';
         await db.setKV(probeKey, new TextEncoder().encode('ok'));
         const res = await db.getKV(probeKey);
-        await db.deleteKV(probeKey).catch(() => {});
+        await db.deleteKV(probeKey).catch(() => { /* no-op */ });
         if (!res) throw new Error('KV-Probe fehlgeschlagen');
       } catch (e) {
         // Falsche Passphrase: AES-Entschlüsselung/Codec schlägt fehl
