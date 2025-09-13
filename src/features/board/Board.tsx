@@ -5,20 +5,108 @@ import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import { ClientRow } from './components/ClientRow';
 import { BatchActionsBar } from './components/BatchActionsBar';
 import { BoardHeader } from './components/BoardHeader';
-import { VirtualizedBoardList } from './components/VirtualizedBoardList';
 import { featureManager } from '../../config/features';
 
-const ROW_HEIGHT = 44;
+// Extracted components for stable hook order
+function ClassicClientList({ 
+  clients, 
+  users, 
+  actions, 
+  selectedSet, 
+  onToggleSelect 
+}: {
+  clients: any[];
+  users: any[];
+  actions: any;
+  selectedSet: Set<string>;
+  onToggleSelect: (index: number, id: string, withShift: boolean) => void;
+}) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
+  
+  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop((e.target as HTMLDivElement).scrollTop);
+  };
+  
+  const ROW_HEIGHT = 44;
+  const viewportHeight = 520;
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 5);
+  const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT) + 10;
+  const endIndex = Math.min(clients.length, startIndex + visibleCount);
+  const topPad = startIndex * ROW_HEIGHT;
+  const bottomPad = Math.max(0, (clients.length - endIndex) * ROW_HEIGHT);
+
+  return (
+    <div className="min-w-[1480px] border rounded-lg overflow-hidden">
+      <div ref={containerRef} onScroll={onScroll} style={{ maxHeight: viewportHeight, overflowY: 'auto' }}>
+        <div style={{ height: topPad }} />
+        <div className="divide-y">
+          {clients.slice(startIndex, endIndex).map((c: any, idx: number) => {
+            const realIndex = startIndex + idx;
+            return (
+              <ClientRow
+                key={c.id}
+                client={c}
+                index={realIndex}
+                users={users}
+                actions={actions}
+                selected={selectedSet.has(c.id)}
+                onToggleSelect={(withShift: boolean) => onToggleSelect(realIndex, c.id, withShift)}
+              />
+            );
+          })}
+          {clients.length === 0 && (
+            <div className="px-3 py-6 text-sm text-gray-500 hover:bg-gray-50">
+              Keine Einträge für die aktuelle Ansicht.
+            </div>
+          )}
+        </div>
+        <div style={{ height: bottomPad }} />
+      </div>
+    </div>
+  );
+}
+
+function VirtualClientList({ 
+  clients, 
+  users, 
+  actions, 
+  selectedSet, 
+  onToggleSelect 
+}: {
+  clients: any[];
+  users: any[];
+  actions: any;
+  selectedSet: Set<string>;
+  onToggleSelect: (index: number, id: string, withShift: boolean) => void;
+}) {
+  // Import VirtualizedBoardList dynamically to avoid circular deps
+  const VirtualizedBoardList = React.lazy(() => import('./components/VirtualizedBoardList').then(m => ({ default: m.VirtualizedBoardList })));
+  
+  return (
+    <React.Suspense fallback={<div className="min-w-[1480px] border rounded-lg overflow-hidden h-[520px] bg-gray-50 animate-pulse" />}>
+      <VirtualizedBoardList
+        clients={clients}
+        users={users}
+        actions={actions}
+        selectedIds={selectedSet}
+        onToggleSelect={onToggleSelect}
+        rowHeight={44}
+        className="min-w-[1480px] border rounded-lg overflow-hidden"
+      />
+    </React.Suspense>
+  );
+}
 
 function Board() {
+  // ALL HOOKS AT TOP LEVEL - NEVER CONDITIONAL
   const { clients, users, isLoading } = useBoardData();
   const actions = useBoardActions();
-  const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
-
-  const visibleClients = useOptimisticOverlay(clients);
-
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
   const lastIndexRef = useRef<number | null>(null);
+  
+  const visibleClients = useOptimisticOverlay(clients);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const allIds = useMemo(() => visibleClients.map((c:any) => c.id as string), [visibleClients]);
 
@@ -28,9 +116,11 @@ function Board() {
       setVirtualRowsEnabled(features.virtualRows);
     });
   }, []);
+
+  // Event handlers - no hooks inside
   const clearSelection = () => setSelectedIds([]);
   const selectAllVisible = () => setSelectedIds(allIds);
-
+  
   const toggleAtIndex = (index: number, id: string, withShift: boolean) => {
     if (!withShift || lastIndexRef.current == null) {
       setSelectedIds(prev => {
@@ -48,6 +138,7 @@ function Board() {
     lastIndexRef.current = index;
   };
 
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       const meta = e.metaKey || e.ctrlKey;
@@ -60,66 +151,12 @@ function Board() {
     return () => window.removeEventListener('keydown', handler);
   }, [actions, allIds]);
 
-
+  // Derived values
   const selectedRowsProvider = () => visibleClients.filter((c:any) => selectedSet.has(c.id));
 
+  // Early return AFTER all hooks
   if (isLoading) return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;
 
-  // Render virtualized or classic list based on feature flag
-  const renderClientList = () => {
-    if (virtualRowsEnabled) {
-      return (
-        <VirtualizedBoardList
-          clients={visibleClients}
-          users={users}
-          actions={actions}
-          selectedIds={selectedSet}
-          onToggleSelect={toggleAtIndex}
-          rowHeight={ROW_HEIGHT}
-          className="min-w-[1480px] border rounded-lg overflow-hidden"
-        />
-      );
-    }
-
-    // Classic non-virtualized rendering (existing implementation)
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const [scrollTop, setScrollTop] = useState(0);
-    const onScroll = (e: React.UIEvent<HTMLDivElement>) => setScrollTop((e.target as HTMLDivElement).scrollTop);
-    const viewportHeight = 520;
-    const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 5);
-    const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT) + 10;
-    const endIndex = Math.min(visibleClients.length, startIndex + visibleCount);
-    const topPad = startIndex * ROW_HEIGHT;
-    const bottomPad = Math.max(0, (visibleClients.length - endIndex) * ROW_HEIGHT);
-
-    return (
-      <div className="min-w-[1480px] border rounded-lg overflow-hidden">
-        <div ref={containerRef} onScroll={onScroll} style={{ maxHeight: viewportHeight, overflowY: 'auto' }}>
-          <div style={{ height: topPad }} />
-          <div className="divide-y">
-            {visibleClients.slice(startIndex, endIndex).map((c:any, idx:number) => {
-              const realIndex = startIndex + idx;
-              return (
-                <ClientRow
-                  key={c.id}
-                  client={c}
-                  index={realIndex}
-                  users={users}
-                  actions={actions}
-                  selected={selectedSet.has(c.id)}
-                  onToggleSelect={(withShift: boolean) => toggleAtIndex(realIndex, c.id, withShift)}
-                />
-              );
-            })}
-            {visibleClients.length === 0 && (
-              <div className="px-3 py-6 text-sm text-gray-500 hover:bg-gray-50">Keine Einträge für die aktuelle Ansicht.</div>
-            )}
-          </div>
-          <div style={{ height: bottomPad }} />
-        </div>
-      </div>
-    );
-  };
   return (
     <div className="p-4 overflow-auto">
       <BoardHeader
@@ -167,7 +204,23 @@ function Board() {
       </div>
 
       {/* Client List (virtualized or classic) */}
-      {renderClientList()}
+      {virtualRowsEnabled ? (
+        <VirtualClientList
+          clients={visibleClients}
+          users={users}
+          actions={actions}
+          selectedSet={selectedSet}
+          onToggleSelect={toggleAtIndex}
+        />
+      ) : (
+        <ClassicClientList
+          clients={visibleClients}
+          users={users}
+          actions={actions}
+          selectedSet={selectedSet}
+          onToggleSelect={toggleAtIndex}
+        />
+      )}
 
       {/* Development feature toggle */}
       {import.meta.env.DEV && (

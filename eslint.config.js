@@ -62,6 +62,9 @@ export default [
       // Import/Export rules (no new plugins needed)
       'no-duplicate-imports': 'error',
       
+      // React Hooks rules (hardened)
+      'react-hooks/rules-of-hooks': 'error',
+      
       // Export/Import conventions
       'no-restricted-syntax': [
         'error',
