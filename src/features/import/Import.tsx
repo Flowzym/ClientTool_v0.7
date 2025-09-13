@@ -11,9 +11,7 @@ import {
   FileText, 
   Building, 
   Upload,
-  Download,
   AlertCircle,
-  CheckCircle,
   ExternalLink
 } from 'lucide-react';
 import { ImportExcel } from '../import-excel/ImportExcel';

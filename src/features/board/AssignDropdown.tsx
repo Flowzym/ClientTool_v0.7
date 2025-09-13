@@ -2,9 +2,8 @@
  * Zuweisung an Mitarbeitende
  */
 import React, { useState, useRef, useEffect } from 'react';
-import { Badge } from '../../components/Badge';
 import { Avatar } from '../../components/Avatar';
-import { ChevronDown, User } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import type { User as UserType } from '../../domain/models';
 
 interface AssignDropdownProps {

@@ -5,7 +5,7 @@
 import * as XLSX from 'xlsx';
 import { db } from '../data/db';
 import { getEncryptionMode } from '../utils/env';
-import type { Client, User } from '../domain/models';
+import type { Client } from '../domain/models';
 
 export interface ExportOptions {
   format: 'csv' | 'xlsx';

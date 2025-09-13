@@ -29,14 +29,13 @@ type Actions = {
 };
 
 export function ClientRow({
-  client, users, actions, selected, onToggleSelect, index
+  client, users, actions, selected, onToggleSelect
 }: {
   client: any;
   users: any[];
   actions: Actions;
   selected?: boolean;
   onToggleSelect?: (withShift: boolean) => void;
-  index?: number;
 }) {
   const { id } = client ?? {};
 

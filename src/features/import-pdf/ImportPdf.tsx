@@ -17,12 +17,10 @@ import {
   AlertCircle,
   CheckCircle,
   FolderOpen,
-  FileX
 } from 'lucide-react';
 import { loadPdfDocument, extractTextFromPages, type PDFDocumentProxy } from './pdfWorker';
 import { analyzeTextWithRegex, getBestMatches, splitFullName, parseAddress, fieldPatterns, type RegexMatch } from './regexPresets';
 import { buildRowKey, hashRow } from '../import-excel/dedupe';
-import { validateRow } from '../import-excel/validators';
 import { nowISO, parseToISO } from '../../utils/date';
 import { db } from '../../data/db';
 import { cryptoManager } from '../../data/crypto';

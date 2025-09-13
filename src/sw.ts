@@ -1,10 +1,10 @@
 /// <reference lib="webworker" />
 self.addEventListener('install', () => {
-  // @ts-ignore
+  // @ts-expect-error
   self.skipWaiting && self.skipWaiting();
 });
 self.addEventListener('activate', (event) => {
-  // @ts-ignore
+  // @ts-expect-error
   self.clients && self.clients.claim && event.waitUntil(self.clients.claim());
 });
 self.addEventListener('fetch', (event) => {

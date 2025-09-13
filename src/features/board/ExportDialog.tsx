@@ -3,8 +3,7 @@
  */
 import React, { useState } from 'react';
 import { Button } from '../../components/Button';
-import { Badge } from '../../components/Badge';
-import { X, Download, FileText, CheckCircle } from 'lucide-react';
+import { X, Download } from 'lucide-react';
 import { formatDDMMYYYY } from '../../utils/date';
 import { supportsFSAccess } from '../../utils/env';
 import type { Client, User } from '../../domain/models';

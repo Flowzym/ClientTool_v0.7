@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card';
 import { Button } from '../../components/Button';
-import { BarChart3, TrendingUp, RefreshCw, Filter } from 'lucide-react';
+import { BarChart3, RefreshCw, Filter } from 'lucide-react';
 import { db } from '../../data/db';
 import type { Client } from '../../domain/models';
 import { computeKPIs } from '../dashboard/kpis';

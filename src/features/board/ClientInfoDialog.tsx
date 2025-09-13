@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Phone, Mail, MapPin, Copy, User, Calendar, Building } from 'lucide-react';
+import { X, Phone, Mail, MapPin, Copy } from 'lucide-react';
 import type { Client } from '../../domain/models';
 import { formatDDMMYYYY } from '../../utils/date';
 
