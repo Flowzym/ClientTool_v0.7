@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "status": "node scripts/status-gate.mjs"
   },
   "dependencies": {
     "@noble/hashes": "^2.0.0",
