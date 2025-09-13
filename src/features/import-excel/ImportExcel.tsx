@@ -75,7 +75,7 @@ const PROTECTED_FIELDS: string[] = [
   'result',
   'contactLog',
   'contactCount',
-  ];
+];
 
 
 export function ImportExcel() {
@@ -328,32 +328,32 @@ export function ImportExcel() {
     const headerLower = importData.headers.map(h => h.toLowerCase());
     
     const mappingHints: Record<string, string[]> = {
-  amsId: ['ams', 'kundennummer', 'id'],
-  title: ['titel', 'anrede'],
-  firstName: ['vorname'],
-  lastName: ['nachname'],
-  gender: ['geschlecht', 'm/w', 'mw'],
-  svNumber: ['sv-nummer', 'svnr', 'sozialversicherungsnummer'],
-  birthDate: ['geburtsdatum', 'gebdat', 'geb.,'],
-  zip: ['plz', 'postleitzahl'],
-  city: ['ort', 'stadt'],
-  address: ['adresse', 'strasse', 'straße'],
-  countryCode: ['landesvorwahl', 'country code'],
-  areaCode: ['vorwahl', 'area code'],
-  phoneNumber: ['telefonnummer', 'telefon', 'tel.', 'telefon-nr', 'telefon-nr.'],
-  phone: ['telefon (kombiniert)', 'telefon', 'tel'],
-  email: ['mailadresse', 'e-mail', 'email'],
-  note: ['anmerkung', 'notiz', 'bemerkung'],
-  amsBookingDate: ['zubuchungsdatum', 'zubuchung (ams)', 'zubuchungsdatum (ams)', 'zubuchung'],
-  entryDate: ['eintritt', 'eintritt (gebucht)'],
-  exitDate: ['austritt', 'austritt (abgebucht)'],
-  amsAgentLastName: ['nachname ams betreuer', 'ams betreuer nachname', 'familien-/nachname betreuer', 'nachname betreuer'],
-  amsAgentFirstName: ['vorname ams betreuer', 'ams betreuer vorname', 'vorname betreuer'],
-  priority: ['prio', 'priorität'],
-  status: ['status', 'buchungsstatus'],
-  result: ['ergebnis'],
-  followUp: ['termin', 'termin vereinbart für', 'wiedervorlage', 'geplant']
-};
+      amsId: ['ams', 'kundennummer', 'id'],
+      title: ['titel', 'anrede'],
+      firstName: ['vorname'],
+      lastName: ['nachname'],
+      gender: ['geschlecht', 'm/w', 'mw'],
+      svNumber: ['sv-nummer', 'svnr', 'sozialversicherungsnummer'],
+      birthDate: ['geburtsdatum', 'gebdat', 'geb.,'],
+      zip: ['plz', 'postleitzahl'],
+      city: ['ort', 'stadt'],
+      address: ['adresse', 'strasse', 'straße'],
+      countryCode: ['landesvorwahl', 'country code'],
+      areaCode: ['vorwahl', 'area code'],
+      phoneNumber: ['telefonnummer', 'telefon', 'tel.', 'telefon-nr', 'telefon-nr.'],
+      phone: ['telefon (kombiniert)', 'telefon', 'tel'],
+      email: ['mailadresse', 'e-mail', 'email'],
+      note: ['anmerkung', 'notiz', 'bemerkung'],
+      amsBookingDate: ['zubuchungsdatum', 'zubuchung (ams)', 'zubuchungsdatum (ams)', 'zubuchung'],
+      entryDate: ['eintritt', 'eintritt (gebucht)'],
+      exitDate: ['austritt', 'austritt (abgebucht)'],
+      amsAgentLastName: ['nachname ams betreuer', 'ams betreuer nachname', 'familien-/nachname betreuer', 'nachname betreuer'],
+      amsAgentFirstName: ['vorname ams betreuer', 'ams betreuer vorname', 'vorname betreuer'],
+      priority: ['prio', 'priorität'],
+      status: ['status', 'buchungsstatus'],
+      result: ['ergebnis'],
+      followUp: ['termin', 'termin vereinbart für', 'wiedervorlage', 'geplant']
+    };
     
     Object.entries(mappingHints).forEach(([targetField, hints]) => {
       const matchIndex = headerLower.findIndex(header => 
@@ -439,7 +439,7 @@ export function ImportExcel() {
         const ready = [fn, ln].filter(Boolean).join(' ').trim();
         if (ready) mapped.assignedTo = ready;
       }
-return mapped;
+      return mapped;
     });
     setImportData(prev => prev ? { ...prev, mappedData } : null);
     
@@ -530,7 +530,7 @@ return mapped;
               }
             }
           });
-        updatedItems.push({
+          updatedItems.push({
             existing,
             updates: {
               ...updates,
@@ -562,7 +562,7 @@ return mapped;
     } finally {
       setIsProcessing(false);
     }
-  }, [importData, mode, sourceId]);
+  }, [importData, mode, sourceId, respectProtected, onlyEmptyFields]);
 
   // Schritt 5: Import ausführen
   const executeImport = useCallback(async () => {
@@ -630,29 +630,8 @@ return mapped;
               stats.deleted = await db.bulkDelete(toDelete.map(c => c.id));
             }
             
-              const parsed = safeParseToISO(row[field]);
-              if (parsed) {
-                normalized[field] = parsed;
-              } else {
-                // Datum unverständlich - in Warnings sammeln
-                warnings.push({
-                  type: 'date-parse',
-                  row: index + 2,
-                  column: field,
-                  value: String(row[field]),
-                  message: 'unsupported date format'
-                });
-                delete normalized[field];
-              }
             const toArchive = syncPreview.removed.filter(c => !toDelete.includes(c));
-              // Fallback für parseToISO-Throws (sollte nicht mehr auftreten)
-              warnings.push({
-                type: 'date-parse',
-                row: index + 2,
-                column: field,
-                value: String(row[field]),
-                message: 'date parsing failed'
-              });
+            if (toArchive.length > 0) {
               stats.archived = await db.bulkArchive(toArchive.map(c => c.id), nowISO());
             }
           }
