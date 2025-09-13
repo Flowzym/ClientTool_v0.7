@@ -33,7 +33,7 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
       if (mod && typeof mod.registerSW === 'function') {
         mod.registerSW({ immediate: true });
       }
-    } catch (e) {
+    } catch {
       // Fallback: try classic service worker under /sw.js if available
       try {
         await navigator.serviceWorker.register('/sw.js');

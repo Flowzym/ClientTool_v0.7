@@ -4,7 +4,7 @@
 import { parseToISO } from '../../utils/date';
 import { normalize, normalizePriority, normalizeStatus, normalizeResult, trimToNull } from '../../utils/normalize';
 import type { Priority, Status } from '../../domain/models';
-import type { ImportRawRow, ImportMappedRow } from './types';
+import type { ImportRawRow } from './types';
 
 const toISOIfFilled = (value: unknown): string | undefined => {
   const s = value == null ? '' : String(value).trim();

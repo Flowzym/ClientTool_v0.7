@@ -1,5 +1,4 @@
 import React from 'react';
-import { useAuth } from './AuthProvider';
 import type { Permission } from '../../domain/auth';
 
 interface RequireProps {

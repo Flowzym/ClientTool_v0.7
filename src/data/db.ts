@@ -6,7 +6,7 @@
 
 import Dexie, { type Table } from 'dexie';
 import type { Client, User, ImportSession } from '../domain/models';
-import { codecFactory, type Envelope } from './codec';
+import { codecFactory } from './codec';
 import { EnvelopeV1, validateEnvelope } from './envelope';
 import { getDbName } from '../utils/env';
 
