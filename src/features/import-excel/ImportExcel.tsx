@@ -370,21 +370,127 @@ export function ImportExcel() {
 
   // Schritt 2: Mapping konfigurieren
   const handleMappingNext = useCallback(async () => {
-      } catch (error) {
-        console.error('Sync preview error:', error);
-        if (importSummary) {
-          importSummary.warnings.push({
-            type: 'sync-preview',
-            row: 0,
-            column: '',
-            value: '',
-            message: 'Fehler beim Erstellen der Sync-Vorschau'
+    if (!importData) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      // Sync-Vorschau erstellen falls Sync-Modus
+      if (mode === 'sync') {
+        // Sicherstellen, dass Crypto-Key verfügbar ist
+        await cryptoManager.getActiveKey();
+        
+        // Bestehende Clients laden
+        const existingClients = (await Promise.all((await db.clients.toArray()) as any));
+        const existingByRowKey = new Map<string, Client>();
+        
+        existingClients.forEach(client => {
+          if (client.rowKey) {
+            existingByRowKey.set(client.rowKey, client);
+          }
+        });
+        
+        const newItems: any[] = [];
+        const updatedItems: SyncPreview['updated'] = [];
+        const seenRowKeys = new Set<string>();
+        
+        // Import-Daten verarbeiten
+        importData.rows.map(row => {
+          const mapped: any = {};
+          Object.entries(mapping).forEach(([sourceCol, targetField]) => {
+            const colIndex = importData.headers.indexOf(sourceCol);
+            if (colIndex >= 0) {
+              let value = row[colIndex];
+              // Datum-Parsing
+              if (['birthDate', 'followUp', 'amsBookingDate', 'entryDate', 'exitDate'].includes(targetField) && value) {
+                value = parseToISO(String(value)) || value;
+              }
+              mapped[targetField] = value;
+            }
           });
-        }
-        return;
-      } finally {
-        setIsProcessing(false);
+          return mapped;
+        }).forEach(row => {
+          const rowKey = buildRowKey(row);
+          const rowHash = hashRow(row);
+          seenRowKeys.add(rowKey);
+          
+          const existing = existingByRowKey.get(rowKey);
+          
+          if (!existing) {
+            // Neu
+            newItems.push({
+              ...row,
+              id: crypto.randomUUID(),
+              rowKey,
+              sourceRowHash: rowHash,
+              sourceId,
+              contactCount: 0,
+              contactLog: [],
+              isArchived: false,
+              lastImportedAt: nowISO(),
+              lastSeenInSourceAt: nowISO()
+            });
+          } else if (existing.sourceRowHash !== rowHash) {
+            // Aktualisiert mit Merge-Regeln
+            const diff: string[] = [];
+            const updates: any = {};
+            Object.keys(row).forEach(key => {
+              const newVal = (row as any)[key];
+              const oldVal = (existing as any)[key];
+              if (oldVal !== newVal) {
+                const isProtected = respectProtected && PROTECTED_FIELDS.includes(key);
+                const onlyEmpty = onlyEmptyFields && (oldVal !== null && oldVal !== undefined && String(oldVal).trim() !== '');
+                if (isProtected) {
+                  diff.push(`${key}: "${oldVal}" → "${newVal}" (geschützt, nicht überschrieben)`);
+                } else if (onlyEmpty) {
+                  diff.push(`${key}: "${oldVal}" → "${newVal}" (übersprungen: onlyEmptyFields)`);
+                } else {
+                  diff.push(`${key}: "${oldVal}" → "${newVal}"`);
+                  updates[key] = newVal;
+                }
+              }
+            });
+            updatedItems.push({
+              existing,
+              updates: {
+                ...updates,
+                sourceRowHash: rowHash,
+                lastSeenInSourceAt: nowISO()
+              },
+              diff
+            });
+          }
+        });
+        
+        // Entfallene finden
+        const removedItems = existingClients.filter(client => 
+          client.sourceId === sourceId && 
+          client.rowKey && 
+          !seenRowKeys.has(client.rowKey) &&
+          !client.isArchived
+        );
+        
+        setSyncPreview({
+          new: newItems,
+          updated: updatedItems,
+          removed: removedItems
+        });
       }
+    } catch (error) {
+      console.error('Sync preview error:', error);
+      if (importSummary) {
+        importSummary.warnings.push({
+          type: 'sync-preview',
+          row: 0,
+          column: '',
+          value: '',
+          message: 'Fehler beim Erstellen der Sync-Vorschau'
+        });
+      }
+      return;
+    } finally {
+      setIsProcessing(false);
+    }
     
     // Daten mappen
     const mappedData = importData.rows.map(row => {
@@ -463,7 +569,7 @@ export function ImportExcel() {
     }
     
     setStep('validation');
-  }, [importData, mapping, sourceId]);
+  }, [importData, mapping, sourceId, mode, respectProtected, onlyEmptyFields]);
 
   // Schritt 3: Validierung
   const handleValidation = useCallback(() => {
@@ -569,16 +675,6 @@ export function ImportExcel() {
         updated: updatedItems,
         removed: removedItems
       });
-    } catch (err) {
-      console.error('Import failed (handleNext):', err);
-      setImportSummary(prev => prev ? {
-        ...prev,
-        warnings: [...prev.warnings, `Sync-Vorschau fehlgeschlagen: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`]
-      } : null);
-      return;
-    } finally {
-      setIsProcessing(false);
-    }
     } catch (error) {
       console.error('Sync preview error:', error);
       setImportSummary(prev => prev ? {
