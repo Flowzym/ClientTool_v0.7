@@ -91,6 +91,13 @@ const defaultView: BoardView = {
 export function useBoardData() {
   const [clients, setClients] = useState<Client[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [view, setView] = useState<BoardView>(defaultView);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Daten laden
+  useEffect(() => {
+    const loadData = async () => {
       try {
         // Sicherstellen, dass Crypto-Key verfügbar ist
         await cryptoManager.getActiveKey();
