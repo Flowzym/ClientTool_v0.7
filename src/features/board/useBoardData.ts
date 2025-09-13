@@ -97,13 +97,16 @@ export function useBoardData() {
 
   // Daten laden
   useEffect(() => {
-    const loadData = async () => {
+    let cancelled = false;
+    (async () => {
       try {
         // Sicherstellen, dass Crypto-Key verfügbar ist
         await cryptoManager.getActiveKey();
+        if (cancelled) return;
         
         // View aus Storage laden
         const savedView = await loadViewFromStorage();
+        if (cancelled) return;
         if (savedView) {
           setView(savedView);
         }
@@ -114,16 +117,19 @@ export function useBoardData() {
           Promise.all((await Promise.all((await db.users.toArray()) as any)) as any)
         ]);
         
+        if (cancelled) return;
         setClients(clientsData);
         setUsers(usersData);
       } catch (error) {
         console.error('❌ Board data loading failed:', error);
       } finally {
-        setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
-    };
-    
-    loadData();
+    })();
+
+    return () => { cancelled = true; };
   }, []);
 
   // View-Änderungen persistieren
