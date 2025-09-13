@@ -1,88 +1,53 @@
-/**
- * App-weite Datums-Utilities
- * Wird von ImportExcel, ImportPdf und Sync genutzt.
- */
-
-export function nowISO(): string {
-  return new Date().toISOString();
-}
+export type ISODateString = `${number}-${number}-${number}`;
 
 /**
- * Akzeptiert u.a.:
- *  - "dd.mm.yyyy"
- *  - "yyyy-mm-dd" (mit/ohne Zeitteil)
- *  - ISO-Strings
- *  - frei parsebare Datumstexte
- * Liefert ein ISO-String (UTC).
+ * Parses many date formats to YYYY-MM-DD. Never throws.
+ * Returns undefined if input is empty or invalid.
  */
-export function parseToISO(input: string): string {
-  if (!input) throw new Error('parseToISO: empty');
-  const s = String(input).trim();
+export function safeParseToISO(input: unknown): ISODateString | undefined {
+  if (input == null) return undefined;
+  const raw = String(input).trim();
+  if (!raw) return undefined;
 
-  // dd.mm.yyyy
-  let m = /^\s*(\d{2})\.(\d{2})\.(\d{4})\s*$/.exec(s);
-  if (m) {
-    const [, dd, mm, yyyy] = m;
-    const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-    if (!Number.isFinite(d.getTime())) throw new Error('parseToISO: invalid dd.mm.yyyy');
-    return d.toISOString();
+  // already ISO-like (YYYY-MM-DD...)
+  const isoMatch = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) {
+    const [, y, m, d] = isoMatch;
+    const dt = new Date(`${y}-${m}-${d}T00:00:00Z`);
+    if (!Number.isNaN(dt.valueOf())) return `${y}-${m}-${d}` as ISODateString;
   }
 
-  // dd/mm/yyyy
-  m = /^\s*(\d{1,2})\/(\d{1,2})\/(\d{4})\s*$/.exec(s);
-  if (m) {
-    const [, dd, mm, yyyy] = m;
-    const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-    if (!Number.isFinite(d.getTime())) throw new Error('parseToISO: invalid dd/mm/yyyy');
-    return d.toISOString();
+  // dd.mm.yyyy / dd-mm-yyyy / dd/mm/yyyy
+  const eu = raw.match(/^(\d{1,2})[.\-/](\d{1,2})[.\-/](\d{4})$/);
+  if (eu) {
+    let [, d, m, y] = eu;
+    if (d.length === 1) d = `0${d}`;
+    if (m.length === 1) m = `0${m}`;
+    const dt = new Date(`${y}-${m}-${d}T00:00:00Z`);
+    if (!Number.isNaN(dt.valueOf())) return `${y}-${m}-${d}` as ISODateString;
   }
 
-  // yyyy-mm-dd (mit optionalem Zeitteil)
-  m = /^\s*(\d{4})-(\d{2})-(\d{2})(?:\s|T|$)/.exec(s);
-  if (m) {
-    const [, yyyy, mm, dd] = m;
-    const d = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-    if (!Number.isFinite(d.getTime())) throw new Error('parseToISO: invalid yyyy-mm-dd');
-    return d.toISOString();
+  // 8-digit compact: yyyymmdd or ddmmyyyy
+  const compact = raw.match(/^(\d{8})$/);
+  if (compact) {
+    const s = compact[1];
+    const isoMaybe = `${s.slice(0,4)}-${s.slice(4,6)}-${s.slice(6,8)}`;
+    const dt1 = new Date(`${isoMaybe}T00:00:00Z`);
+    if (!Number.isNaN(dt1.valueOf())) return isoMaybe as ISODateString;
+
+    const euMaybe = `${s.slice(4,8)}-${s.slice(2,4)}-${s.slice(0,2)}`;
+    const dt2 = new Date(`${euMaybe}T00:00:00Z`);
+    if (!Number.isNaN(dt2.valueOf())) return euMaybe as ISODateString;
   }
 
-  const t = Date.parse(s);
-  if (Number.isFinite(t)) return new Date(t).toISOString();
-
-  throw new Error('parseToISO: unsupported format');
-}
-
-/**
- * Sichere Variante von parseToISO - wirft keine Exceptions
- * Gibt undefined zurück bei unbekannten/ungültigen Formaten
- */
-export function safeParseToISO(value: unknown): string | undefined {
-  if (value == null || value === '') return undefined;
-  
-  try {
-    return parseToISO(String(value));
-  } catch {
-    return undefined;
+  // Fallback (e.g., US format)
+  const dt = new Date(raw);
+  if (!Number.isNaN(dt.valueOf())) {
+    const y = dt.getFullYear();
+    const m = String(dt.getMonth() + 1).padStart(2, '0');
+    const d = String(dt.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}` as ISODateString;
   }
-}
 
-export function isValidISO(v?: string | null): boolean {
-  if (!v) return false;
-  const t = Date.parse(v as string);
-  return Number.isFinite(t);
-}
-
-export function formatDDMMYYYY(v?: string): string | undefined {
-  if (!v) return undefined;
-  const d = new Date(v);
-  if (!Number.isFinite(d.getTime())) return undefined;
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yyyy = d.getFullYear();
-  return `${dd}.${mm}.${yyyy}`;
-}
-
-export function toEpoch(v: string): number {
-  const t = Date.parse(v);
-  return Number.isFinite(t) ? t : 0;
+  return undefined;
 }
