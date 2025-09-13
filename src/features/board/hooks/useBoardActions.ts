@@ -1,7 +1,8 @@
 import { useCallback } from 'react';
-import { bulkApply, updateById, undoLast, redoLast, getUndoRedoStatus } from '../services/BoardService';
+import { bulkApply, updateById, undoLast, redoLast, canUndo, canRedo } from '../services/BoardService';
 import { build } from '../services/PatchBuilder';
 import { isValidISO } from '../utils/date';
+import type { OfferValue } from '../types';
 import type { Patch } from '../../../types/patch';
 
 function emit(name: string, detail: any) {
@@ -66,20 +67,12 @@ export function useBoardActions() {
   /**
    * Setzt das Angebot für einen Client
    * @param id Client-ID
-   * @param offer Angebot-Wert ('BAM' | 'LL/B+' | 'BwB' | 'NB') oder undefined zum Löschen
+   * @param offer Angebot-Wert oder undefined zum Löschen
    */
-  const setOffer = useCallback(async (id: string, offer?: string) => {
+  const setOffer = useCallback(async (id: string, offer?: OfferValue) => {
     await update(id, { angebot: offer ?? null });
   }, [update]);
 
-  /**
-   * Setzt das Angebot für einen Client
-   * @param id Client-ID
-   * @param offer Angebot-Wert ('BAM' | 'LL/B+' | 'BwB' | 'NB') oder undefined zum Löschen
-   */
-  const setOffer = useCallback(async (id: string, offer?: string) => {
-    await update(id, { angebot: offer ?? null });
-  }, [update]);
   const cyclePriority = useCallback(async (id: string, current?: string | null) => {
     const order = [null, 'niedrig', 'mittel', 'hoch'] as const;
     const idx = order.indexOf((current ?? null) as any);
@@ -149,7 +142,6 @@ export function useBoardActions() {
   return {
     update,
     bulkUpdate,
-    setOffer,
     setFollowup,
     setAssignedTo,
     setStatus,
@@ -164,6 +156,7 @@ export function useBoardActions() {
     unarchive,
     undo,
     redo,
-    getStackStatus,
+    canUndo: () => canUndo(),
+    canRedo: () => canRedo()
   };
 }
