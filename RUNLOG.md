@@ -594,6 +594,26 @@ $ npm run build
 
 ---
 
+# HF-16: Lint-Aufräumen Pass 1
+
+## Bereinigte Dateien
+- ImportExcel.tsx: Komplette Neuerstellung mit sauberen Imports, doppelten XLSX-Import entfernt
+- App.tsx: Navigate Import entfernt (unbenutzt)
+- sw.ts: @ts-ignore → @ts-expect-error ersetzt (2x)
+
+## Lint-Ergebnis
+- Unbenutzte Importe: ImportExcel.tsx komplett bereinigt
+- @ts-ignore → @ts-expect-error: 2 Ersetzungen in sw.ts
+- Duplicate XLSX Import: endgültig behoben
+- Parser-Fehler: "Unexpected '}'" in lucide-react Import behoben
+
+## Status HF-16 Pass 1
+✅ **Parser-Fehler behoben** - ImportExcel.tsx komplett neu mit sauberen Imports
+✅ **@ts-ignore ersetzt** - konsistent @ts-expect-error mit Begründung
+✅ **Build grün** - keine Syntax-/Parser-Fehler mehr
+
+---
+
 # HF-14: Lint-Aufräumen Pass 1
 
 ## Bereinigte Dateien
