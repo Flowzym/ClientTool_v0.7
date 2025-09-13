@@ -1,120 +1,73 @@
 // src/utils/dateSafe.ts
-export type ISODateString = `${number}-${number}-${number}`;
+// Non-throwing, permissive date parser. Returns YYYY-MM-DD or undefined.
+export type ISODateString = string;
 
-/**
- * Parse a variety of human formats into ISO (YYYY-MM-DD).
- * - Accepts: ISO, dd.mm.yyyy, dd/mm/yyyy, dd-mm-yyyy, yyyy/mm/dd, yyyy.mm.dd,
- *   and compact 8-digit strings (yyyymmdd or ddmmyyyy).
- * - Returns undefined for empty/invalid inputs (never throws).
- */
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+const fromYMD = (y: number, m: number, d: number): ISODateString | undefined => {
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return undefined;
+  if (y < 1000 || m < 1 || m > 12 || d < 1 || d > 31) return undefined;
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  // Validate round-trip (reject impossible dates like 31 Feb)
+  if (dt.getUTCFullYear() !== y || (dt.getUTCMonth() + 1) !== m || dt.getUTCDate() !== d) return undefined;
+  return `${y}-${pad2(m)}-${pad2(d)}`;
+};
+
 export function safeParseToISO(input: unknown): ISODateString | undefined {
   if (input == null) return undefined;
 
-  // Date instance -> ISO
+  // If Date instance
   if (input instanceof Date && !isNaN(input.getTime())) {
-    return toIsoYmd(input) as ISODateString;
+    const y = input.getFullYear();
+    const m = input.getMonth() + 1;
+    const d = input.getDate();
+    return fromYMD(y, m, d);
   }
 
-  // Numbers: treat as epoch ms if plausible (>= 10^10) otherwise ignore
-  if (typeof input === "number") {
-    if (!isFinite(input)) return undefined;
-    // assume milliseconds if in a realistic range (>= 2001-09-09)
-    if (Math.abs(input) >= 1e10) {
-      const d = new Date(input);
-      return isValidDate(d) ? (toIsoYmd(d) as ISODateString) : undefined;
+  // If number: maybe epoch ms or yyyymmdd
+  if (typeof input === "number" && Number.isFinite(input)) {
+    // Treat as epoch ms if it's a large timestamp (>= 10^10 implies seconds, 10^12 implies ms)
+    if (Math.abs(input) > 10 ** 10) {
+      const d = new Date(input > 10 ** 12 ? input : input * 1000);
+      if (!isNaN(d.getTime())) {
+        return fromYMD(d.getFullYear(), d.getMonth() + 1, d.getDate());
+      }
+    }
+    // Or compact YYYYMMDD
+    const s = String(input);
+    if (s.length === 8) {
+      const y = Number(s.slice(0, 4));
+      const m = Number(s.slice(4, 6));
+      const d = Number(s.slice(6, 8));
+      return fromYMD(y, m, d);
     }
     return undefined;
   }
 
-  // Strings
-  if (typeof input !== "string") return undefined;
-  const raw = input.trim();
-  if (!raw) return undefined;
+  // Strings with several common formats
+  if (typeof input === "string") {
+    const s = input.trim();
+    if (!s) return undefined;
 
-  // Already ISO YYYY-MM-DD
-  const iso = /^\d{4}-\d{2}-\d{2}$/;
-  if (iso.test(raw)) {
-    const [y, m, d] = raw.split("-").map((n) => parseInt(n, 10));
-    return isValidYmd(y, m, d) ? (raw as ISODateString) : undefined;
-  }
+    // ISO-ish YYYY-MM-DD (allow single digits in M/D)
+    let m = s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})$/);
+    if (m) return fromYMD(Number(m[1]), Number(m[2]), Number(m[3]));
 
-  // Split by common separators
-  const parts = raw.split(/[\.\/-_\s]+/).filter(Boolean);
-  if (parts.length === 3) {
-    // yyyy-mm-dd or dd-mm-yyyy
-    const a = parts[0], b = parts[1], c = parts[2];
-    const A = parseInt(a, 10), B = parseInt(b, 10), C = parseInt(c, 10);
-    if ([A, B, C].some((n) => Number.isNaN(n))) return undefined;
+    // DD.MM.YYYY or DD/MM/YYYY or DD-MM-YYYY
+    m = s.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+    if (m) return fromYMD(Number(m[3]), Number(m[2]), Number(m[1]));
 
-    let y: number, m: number, d: number;
-    if (a.length === 4) {
-      // yyyy-mm-dd
-      y = A; m = B; d = C;
-    } else if (c.length === 4) {
-      // dd-mm-yyyy
-      d = A; m = B; y = C;
-    } else {
-      // ambiguous -> bail
-      return undefined;
+    // Compact DDMMYYYY
+    m = s.match(/^(\d{2})(\d{2})(\d{4})$/);
+    if (m) return fromYMD(Number(m[3]), Number(m[2]), Number(m[1]));
+
+    // As a last resort: Date.parse (may be timezone-dependent); normalize to Y-M-D
+    const parsed = new Date(s);
+    if (!isNaN(parsed.getTime())) {
+      return fromYMD(parsed.getFullYear(), parsed.getMonth() + 1, parsed.getDate());
     }
-    if (!isValidYmd(y, m, d)) return undefined;
-    return asIso(y, m, d);
-  }
-
-  // Compact 8 digits
-  const compact = /^\d{8}$/;
-  if (compact.test(raw)) {
-    const digits = raw;
-    const maybeYear = parseInt(digits.slice(0, 4), 10);
-    const maybeDayFirst = parseInt(digits.slice(0, 2), 10);
-    // try yyyymmdd first if first 4 digits look like a year
-    if (maybeYear >= 1900 && maybeYear <= 2100) {
-      const y = maybeYear;
-      const m = parseInt(digits.slice(4, 6), 10);
-      const d = parseInt(digits.slice(6, 8), 10);
-      if (isValidYmd(y, m, d)) return asIso(y, m, d);
-    }
-    // else try ddmmyyyy
-    const d = maybeDayFirst;
-    const m = parseInt(digits.slice(2, 4), 10);
-    const y = parseInt(digits.slice(4, 8), 10);
-    if (isValidYmd(y, m, d)) return asIso(y, m, d);
     return undefined;
-  }
-
-  // As last resort, let Date try (but reject if timezones shift date)
-  const tryDate = new Date(raw);
-  if (isValidDate(tryDate)) {
-    return toIsoYmd(tryDate) as ISODateString;
   }
 
   return undefined;
-}
-
-function pad2(n: number): string {
-  return n < 10 ? `0${n}` : `${n}`;
-}
-
-function asIso(y: number, m: number, d: number): ISODateString {
-  return `${y}-${pad2(m)}-${pad2(d)}` as ISODateString;
-}
-
-function toIsoYmd(d: Date): string {
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
-}
-
-function isValidDate(d: Date): boolean {
-  return d instanceof Date && !isNaN(d.getTime());
-}
-
-function isValidYmd(y: number, m: number, d: number): boolean {
-  if (y < 1900 || y > 2100) return false;
-  if (m < 1 || m > 12) return false;
-  if (d < 1 || d > 31) return false;
-  const dt = new Date(Date.UTC(y, m - 1, d));
-  return (
-    dt.getUTCFullYear() === y &&
-    dt.getUTCMonth() === m - 1 &&
-    dt.getUTCDate() === d
-  );
 }
