@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom';
 import {
   Home,
   FileSpreadsheet,
-  FileText,
   Trello,
   BarChart3,
   Download,
@@ -12,13 +11,14 @@ import {
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { useAuth } from './auth/AuthProvider';
+import type { Permission } from '../domain/auth';
 
 interface NavItem {
   path: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   description?: string;
-  requiredPerms?: string[];
+  requiredPerms?: Permission[];
 }
 
 const navigationItems: NavItem[] = [
