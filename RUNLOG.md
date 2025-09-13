@@ -467,6 +467,39 @@ $ npm run build
 
 ---
 
+# HF-11: XLSX Import konsolidieren + fehlende Importe
+
+## XLSX-Verwendung ermittelt
+```bash
+# Editor-Suche in ImportExcel.tsx:
+# - XLSX.read (Zeile ~646): Datei-Parsing
+# - XLSX.utils.sheet_to_json: Datenextraktion  
+# - XLSX.write: Export-Funktionen
+# Alle Icons aus lucide-react, bereits in Import-Liste vorhanden
+```
+
+## Fix Applied
+1. **ImportExcel.tsx**: XLSX-Import hinzugefügt (import * as XLSX from 'xlsx')
+   - Einzige xlsx-Importzeile am Dateianfang
+   - Keine Namenskonflikte oder doppelte Imports
+   - Helper-Imports ergänzt: safeParseToISO, extractTablesFromHtml, sniffBuffer, firstBytesHex
+
+## Build Verification
+```bash
+$ npm run lint
+# ✅ ESLint passed - keine Import-Errors
+
+$ npm run build
+# ✅ Build successful - XLSX-Referenzen aufgelöst
+```
+
+## Status HF-11
+✅ **XLSX Import Fix** - import * as XLSX from 'xlsx' hinzugefügt, konsistent genutzt
+✅ **Helper-Imports** - safeParseToISO, extractTablesFromHtml, sniffBuffer, firstBytesHex ergänzt
+✅ **Build grün** - XLSX-Referenzen korrekt aufgelöst
+
+---
+
 # HF-10: XLSX Import konsolidieren
 
 ## XLSX-Verwendung ermittelt

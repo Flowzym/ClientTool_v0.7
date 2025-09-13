@@ -6,10 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card'
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
 import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx';
 import { 
   CheckCircle, 
   FolderOpen, 
   Upload, 
+  FileSpreadsheet,
   ArrowRight, 
   ArrowLeft, 
   AlertCircle, 
@@ -21,6 +23,9 @@ import {
   Search,
   FileSpreadsheet
 } from 'lucide-react';
+import { safeParseToISO } from '../../utils/date';
+import { extractTablesFromHtml } from '../../utils/htmlTable';
+import { sniffBuffer, firstBytesHex } from '../../utils/fileSniff';
 import { sniffBuffer, firstBytesHex } from '../../utils/fileSniff';
 import { extractTablesFromHtml } from '../../utils/htmlTable';
 import { PreviewGrid } from './previewGrid';
