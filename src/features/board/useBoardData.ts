@@ -16,6 +16,18 @@ import type {
 } from './useBoardData.helpers';
 import { defaultView, loadViewFromStorage, saveViewToStorage } from './useBoardData.helpers';
 
+
+const byFullName = () => (a: any, b: any) => {
+  const aName = `${a?.lastName ?? ''} ${a?.firstName ?? ''}`.trim();
+  const bName = `${b?.lastName ?? ''} ${b?.firstName ?? ''}`.trim();
+  return aName.localeCompare(bName, 'de', { sensitivity: 'base' });
+};
+
+const byNotesCount = () => (a: any, b: any) => {
+  const aCount = (Array.isArray((a as any).notes) ? (a as any).notes.length : ((a as any).noteCount ?? (a as any).notesCount ?? 0));
+  const bCount = (Array.isArray((b as any).notes) ? (b as any).notes.length : ((b as any).noteCount ?? (b as any).notesCount ?? 0));
+  return aCount - bCount;
+};
 // Sorting helper functions
 const byString = (key: string) => (a: any, b: any) => {
   const aVal = a[key] || '';
@@ -25,14 +37,20 @@ const byString = (key: string) => (a: any, b: any) => {
 
 const byEnum = (key: string, order: string[]) => (a: any, b: any) => {
   
-  const unknown = order.length;
-  const ax = order.indexOf(a?.[key] as any);
-  const bx = order.indexOf(b?.[key] as any);
+  // Case-insensitive enum ordering with unknowns at the end.
+  const orderNorm = order.map(o => String(o).toLowerCase());
+  const unknown = orderNorm.length;
+  const av = String(a?.[key] ?? '').toLowerCase();
+  const bv = String(b?.[key] ?? '').toLowerCase();
+  const ax = orderNorm.indexOf(av);
+  const bx = orderNorm.indexOf(bv);
   const aIndex = ax === -1 ? unknown : ax;
   const bIndex = bx === -1 ? unknown : bx;
   if (aIndex !== bIndex) return aIndex - bIndex;
-  // stable secondary key to make ordering visible even when many unknowns
-  return (a?.name ?? '').localeCompare(b?.name ?? '');
+  // Stable secondary key by display name so sorting is visibly stable
+  const aName = `${a?.lastName ?? ''} ${a?.firstName ?? ''}`.trim();
+  const bName = `${b?.lastName ?? ''} ${b?.firstName ?? ''}`.trim();
+  return aName.localeCompare(bName, 'de', { sensitivity: 'base' });
 };
 
 const byDateISO = (key: string) => (a: any, b: any) => {
@@ -253,7 +271,7 @@ export function useBoardData() {
       
       switch (view.sort.key) {
         case 'name':
-          sorted.sort(withPinnedFirst((a, b) => byString('name')(a, b) * direction));
+          sorted.sort(withPinnedFirst((a, b) => byFullName()(a, b) * direction));
           break;
         case 'status':
           const statusOrder = ['offen', 'terminVereinbart', 'inBearbeitung', 'wartetRueckmeldung', 'erledigt', 'nichtErreichbar', 'abgebrochen'];
@@ -280,12 +298,13 @@ export function useBoardData() {
           sorted.sort(withPinnedFirst((a, b) => byNumber('contactCount')(a, b) * direction));
           break;
         case 'notes':
+          sorted.sort(withPinnedFirst((a, b) => byNotesCount()(a, b) * direction));
           break;
         case 'booking':
           sorted.sort(withPinnedFirst((a, b) => byDateISO('amsBookingDate')(a, b) * direction));
           break;
         case 'offer':
-          const angebotOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch'];
+          const angebotOrder = ['BAM', 'LL/B+', 'BwB', 'NB'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('angebot', angebotOrder)(a, b) * direction));
           break;
         case 'result':
