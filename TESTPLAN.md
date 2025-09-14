@@ -68,6 +68,31 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 
 ### Board-Funktionalität
 
+#### Header-Sortierung & Accessibility ⭐ NEU
+1. **Spalten-Sortierung**
+   - Alle Spalten sortierbar (außer Zubuchung, Aktivität, Aktionen)
+   - Sortier-Zyklus: none → asc → desc → none
+   - Kein Crash bei fehlendem setView (lokaler Fallback)
+   - Pinned-first Pipeline in allen Modi
+
+2. **Header-Design**
+   - Alle Header in fett (font-bold)
+   - Kein doppeltes "Offer" mehr
+   - Konsistente Grid-Layout-Ausrichtung
+   - Sort-Pfeile nur bei aktiver Spalte
+
+3. **Header-Checkbox Tri-State** ⭐ NEU
+   - Keine Auswahl: aria-checked="false", nicht indeterminate
+   - Alle ausgewählt: aria-checked="true", checked=true
+   - Teilauswahl: aria-checked="mixed", indeterminate=true
+   - Klick-Verhalten: false→true→false Zyklus
+
+4. **Accessibility**
+   - Tab-Navigation durch sortierbare Header
+   - aria-sort="none/ascending/descending" korrekt
+   - Enter/Space aktiviert Sortierung
+   - Nicht-sortierbare Header haben aria-sort="none"
+
 #### Pin-Operationen
 1. **Einzelnes Pinnen/Entpinnen**
    - Klick auf Pin-Button → Client wird gepinnt/entpinnt
@@ -85,36 +110,33 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
    - Sortierung nach Status → Gepinnte bleiben oben, dann nach Status
    - Sortierung nach Priorität → Gepinnte bleiben oben, dann nach Priorität
 
-#### Accessibility
-1. **Header-Sortierung** ⭐ VERBESSERT
-   - Tab-Navigation durch sortierbare Header
-   - aria-sort="none/ascending/descending" korrekt
-   - Enter/Space aktiviert Sortierung
-   - Nicht-sortierbare Header haben aria-sort="none"
-
-2. **Header-Checkbox Tri-State** ⭐ NEU
-   - Keine Auswahl: aria-checked="false", nicht indeterminate
-   - Alle ausgewählt: aria-checked="true", checked=true
-   - Teilauswahl: aria-checked="mixed", indeterminate=true
-   - Klick-Verhalten: false→true→false Zyklus
-
-3. **Pin-Button Accessibility**
+5. **Pin-Button Accessibility**
    - aria-pressed="true/false" je nach Pin-Status
    - Keyboard-Navigation (Tab + Enter/Space)
    - Beschreibende title-Attribute
 
-#### Sortierung
-1. **Spalten-Sortierung** ⭐ STABILISIERT
-   - Alle Spalten sortierbar (außer Zubuchung, Aktivität, Aktionen)
-   - Sortier-Zyklus: none → asc → desc → none
-   - Kein Crash bei fehlendem setView (lokaler Fallback)
-   - Pinned-first Pipeline in allen Modi
+#### Cell-Komponenten ⭐ NEU
+1. **NameCell Format**
+   - "Nachname, Vorname (Titel)" Format
+   - Telefon-Untertitel oder "—"
+   - Notiz-Badge nur bei count >= 1
+   - PencilLine Icon mit Badge-Overlay
 
-2. **Header-Design** ⭐ VERBESSERT
-   - Alle Header in fett (font-bold)
-   - Kein doppeltes "Offer" mehr
-   - Konsistente Grid-Layout-Ausrichtung
-   - Sort-Pfeile nur bei aktiver Spalte
+2. **FollowupCell Icon-Only**
+   - Kein Datum: nur Kalendersymbol (Tooltip "Termin hinzufügen")
+   - Datum gesetzt: Input + formatierte Anzeige + Clear-Button
+   - Auto-Status: Setzen → terminVereinbart, Entfernen → offen
+
+3. **ContactAttemptsCell**
+   - Größere Icons (18px) für bessere Sichtbarkeit
+   - CounterBadge nur bei count >= 1
+   - Vier Kanäle: Telefon, SMS, E-Mail, Proxy
+
+4. **PriorityCell Single-Dot**
+   - Genau ein farbiger Dot je Level
+   - Farben: niedrig=grün, normal=grau, hoch=gelb, dringend=rot
+   - Klick-Cycle durch alle Level
+   - Tooltip mit Level-Namen
 
 ### Import-Pipeline
 
@@ -225,6 +247,20 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 3. Alle ausgewählt → checked, aria-checked="true"
 4. Klick-Verhalten funktioniert in allen Zuständen
 
+### 7. Cell-Komponenten Interaktion ⭐ NEU
+1. NameCell → Kundeninfo-Dialog öffnen
+2. FollowupCell → Icon-only Modus, Auto-Status
+3. ContactAttemptsCell → Kontaktversuche inkrementieren
+4. PriorityCell → Single-Dot Cycle
+5. PinCell → Shift-Range Pinning
+
+### 8. Pin Shift-Range Operations ⭐ NEU
+1. Ersten Client anklicken (Anker setzen)
+2. Shift+Klick auf anderen Client → Bereich-Operation
+3. Zielzustand vom geklickten Element bestimmt Aktion
+4. Funktioniert aufwärts und abwärts
+5. Gepinnte bleiben in allen Sortierungen oben
+
 ## Browser-Kompatibilität
 
 ### Unterstützte Browser
@@ -320,6 +356,19 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 
 ## Neue Testfälle (v0.7.3)
 
+### Cell Component Tests
+- **Datei**: `src/features/board/__tests__/followup.icononly.test.tsx`
+- **Abdeckung**: Icon-only Modus, Auto-Status, Date-Picker
+- **Szenarien**: Kein Datum → Icon, Datum → Input+Clear, Status-Sync
+
+- **Datei**: `src/features/board/__tests__/contact.badge-visibility.test.tsx`
+- **Abdeckung**: CounterBadge Sichtbarkeit, größere Icons
+- **Szenarien**: Badge nur bei count>=1, Icon-Größe 18px, Interaktion
+
+- **Datei**: `src/features/board/__tests__/priority.single-dot.test.tsx`
+- **Abdeckung**: Single-Dot Rendering, Level-Farben, Cycle
+- **Szenarien**: Ein Dot je Level, Farb-Mapping, Klick-Cycle
+
 ### Pin Shift-Range Tests
 - **Datei**: `src/features/board/__tests__/pin.shift-range.test.tsx`
 - **Abdeckung**: Shift-Range Pinning, Entpinnen, Bereich-Konsistenz
@@ -344,6 +393,15 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 - **Datei**: `src/features/board/__tests__/board.selection.header-checkbox.test.tsx`
 - **Abdeckung**: Tri-State Checkbox, Filtered Selection, Performance
 - **Szenarien**: Partial/Full Selection, Filter-Interaktion, Large Datasets
+
+### Export Policy Tests
+- **Datei**: `tests/contracts/exports.contract.test.ts`
+- **Abdeckung**: Component Default-Exports, Hook/Service Named-Only
+- **Szenarien**: Export-Pattern Validation, Barrel Re-Export Consistency
+
+- **Datei**: `tests/contracts/imports.usage.test.ts`
+- **Abdeckung**: Import-Pattern Enforcement, Mixed-Pattern Prevention
+- **Szenarien**: Default-Import Blocking, Named-Import Validation
 
 ---
 

@@ -59,6 +59,22 @@
 **Last Review**: 2025-01-27  
 **Next Review**: 2025-03-15
 
+### R011: UI Component Regression
+**Status**: Mitigated  
+**Impact**: Board cell components break during refactoring or feature changes  
+**Probability**: Low  
+**Mitigation**:
+- ✅ Comprehensive cell component test suite
+- ✅ Contract tests for export policy compliance
+- ✅ Integration tests for status/follow-up auto-rules
+- ✅ Accessibility tests for header sorting and tri-state checkbox
+- ✅ Pin shift-range operation tests with edge cases
+- ✅ Visual regression prevention via rendering contract tests
+
+**Test Reference**: `src/features/board/__tests__/followup.icononly.test.tsx`, `contact.badge-visibility.test.tsx`, `priority.single-dot.test.tsx`, `pin.shift-range.test.tsx`  
+**Last Review**: 2025-01-27  
+**Next Review**: 2025-02-15
+
 ### R005: Import Routing Confusion
 **Status**: RESOLVED  
 **Impact**: Excel files processed by PDF handler (or vice versa)  
@@ -148,6 +164,7 @@
 | R002 | High | Low-Medium | 🟡 Medium | Monitored |
 | R003 | Medium | Medium | 🟡 Medium | Partially Mitigated |
 | R004 | High | Low | 🟡 Medium | Mitigated |
+| R011 | Medium | Low | 🟢 Low | Mitigated |
 | R005 | Medium | Low | 🟢 Low | Fixed |
 | R006 | Medium | Very Low | 🟢 Low | Mitigated |
 | R007 | Low | Low | 🟢 Low | Monitored |

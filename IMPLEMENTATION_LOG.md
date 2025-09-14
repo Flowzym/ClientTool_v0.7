@@ -2,6 +2,18 @@
 
 ## v0.7.1 - Board Stabilization & Testing (2025-01-27)
 
+### P11: Cell Component Enhancements
+**Files**: `src/features/board/components/cells/FollowupCell.tsx`, `ContactAttemptsCell.tsx`, `PriorityCell.tsx`
+**Impact**: Icon-only follow-up mode, larger contact icons, single-dot priority; improved UX consistency
+
+### P12: Export Policy Enforcement
+**Files**: `tests/contracts/exports.contract.test.ts`, `tests/contracts/imports.usage.test.ts`, `eslint.config.js`
+**Impact**: Automated enforcement of component vs helper export patterns; prevents build failures
+
+### P13: Pin Shift-Range Implementation
+**Files**: `src/features/board/components/cells/PinCell.tsx`, `Board.tsx`, pin shift-range tests
+**Impact**: Range pinning operations with consistent target state; enhanced bulk pin functionality
+
 ### P6: Export Policy Guards & Contract Testing
 **Files**: `src/__tests__/exports.contract.test.ts`, `src/__tests__/imports.usage.test.ts`, `eslint.config.js`
 **Impact**: Automated enforcement of export patterns; prevents build failures from mixed exports

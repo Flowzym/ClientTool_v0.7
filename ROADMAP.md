@@ -65,27 +65,35 @@
 - [x] Excel-Routing-Schutz (vs PDF-Handler)
 - [x] Comprehensive Test Suite (Unit/Integration/Guards)
 
+### ✅ Phase 7: Board UI Enhancement (v0.7.3)
+- [x] FollowupCell Icon-Only Modus mit Auto-Status
+- [x] ContactAttemptsCell größere Icons + CounterBadge
+- [x] PriorityCell Single-Dot Rendering
+- [x] Pin Shift-Range Operations
+- [x] Header Accessibility + Tri-State Checkbox
+- [x] Export Policy Enforcement (Contract Tests + ESLint)
+
 ---
 
 ## 🔄 Aktuelle Phase
 
-### Phase 7: Import-Module Vervollständigung
+### Phase 8: Import-Module Vervollständigung
 **Status**: In Planung
 **Ziel**: Robuste Excel/PDF-Import-Pipeline mit Delta-Sync
 
-#### 7.1 Excel-Import Robustheit
+#### 8.1 Excel-Import Robustheit
 - [ ] HTML-Tabellen-Fallback für Web-Portal-Downloads
 - [ ] Magic-Bytes-Erkennung für Dateiformate
 - [ ] Mapping-Presets pro Source-ID
 - [ ] Validierung mit Zod-Schemas
 
-#### 7.2 PDF-Import Vervollständigung
+#### 8.2 PDF-Import Vervollständigung
 - [ ] OCR-Integration für Scan-PDFs (Phase 3.5)
 - [ ] Regex-Pattern-Bibliothek erweitern
 - [ ] Batch-PDF-Verarbeitung
 - [ ] Strukturierte Datenextraktion
 
-#### 7.3 Delta-Sync Optimierung
+#### 8.3 Delta-Sync Optimierung
 - [ ] Inkrementelle Import-Updates
 - [ ] Konfliktauflösung bei Datenänderungen
 - [ ] Provenienz-Tracking verbessern
@@ -95,49 +103,49 @@
 
 ## 📋 Geplante Phasen
 
-### Phase 8: Datenverarbeitung & Board-Features
+### Phase 9: Datenverarbeitung & Board-Features
 **Priorität**: Hoch
-**Abhängigkeiten**: Phase 7 abgeschlossen
+**Abhängigkeiten**: Phase 8 abgeschlossen
 
-#### 8.1 Board-Funktionalitäten
+#### 9.1 Board-Funktionalitäten
 - [ ] Erweiterte Filter & Sortierung
 - [ ] Bulk-Operationen optimieren
 - [ ] Notiz-System implementieren
 - [ ] Kontakt-Log erweitern
 
-#### 8.2 Suchfunktionalitäten
+#### 9.2 Suchfunktionalitäten
 - [ ] Volltext-Suche in Klient:innendaten
 - [ ] Erweiterte Filter-Kombinationen
 - [ ] Gespeicherte Suchen
 - [ ] Export-Filter
 
-### Phase 9: Analyse & Reporting
+### Phase 10: Analyse & Reporting
 **Priorität**: Mittel
-**Abhängigkeiten**: Phase 8 abgeschlossen
+**Abhängigkeiten**: Phase 9 abgeschlossen
 
-#### 9.1 Statistische Auswertungen
+#### 10.1 Statistische Auswertungen
 - [ ] KPI-Dashboard erweitern
 - [ ] Trend-Analysen
 - [ ] Cohorten-Analysen
 - [ ] Performance-Metriken
 
-#### 9.2 Export & Berichtsgenerierung
+#### 10.2 Export & Berichtsgenerierung
 - [ ] PDF-Berichte generieren
 - [ ] Excel-Export mit Formatierung
 - [ ] Automatisierte Berichte
 - [ ] Template-System
 
-### Phase 10: Team-Synchronisation
+### Phase 11: Team-Synchronisation
 **Priorität**: Niedrig
-**Abhängigkeiten**: Phase 9 abgeschlossen
+**Abhängigkeiten**: Phase 10 abgeschlossen
 
-#### 10.1 OneDrive/SharePoint-Sync
+#### 11.1 OneDrive/SharePoint-Sync
 - [ ] Sync-Ordner-Integration
 - [ ] Verschlüsselte Delta-Übertragung
 - [ ] Konfliktauflösung
 - [ ] Coordinator/Participant-Rollen
 
-#### 10.2 Erweiterte Sicherheit
+#### 11.2 Erweiterte Sicherheit
 - [ ] Audit-Logs
 - [ ] Backup-Automatisierung
 - [ ] Key-Rotation
@@ -172,23 +180,23 @@
 
 ## 🎯 Meilensteine
 
-### M1: Produktionsreife Import-Pipeline (Q1 2025)
-- Phase 7 abgeschlossen
+### M1: Produktionsreife Import-Pipeline (Q2 2025)
+- Phase 8 abgeschlossen
 - Excel/PDF-Import robust und getestet
 - Delta-Sync funktional
 
-### M2: Vollständige Board-Funktionalität (Q2 2025)
-- Phase 8 abgeschlossen
+### M2: Vollständige Board-Funktionalität (Q3 2025)
+- Phase 9 abgeschlossen
 - Alle Board-Features implementiert
 - Performance optimiert
 
-### M3: Analyse & Reporting (Q3 2025)
-- Phase 9 abgeschlossen
+### M3: Analyse & Reporting (Q4 2025)
+- Phase 10 abgeschlossen
 - Statistische Auswertungen verfügbar
 - Export-Funktionen vollständig
 
-### M4: Team-Kollaboration (Q4 2025)
-- Phase 10 abgeschlossen
+### M4: Team-Kollaboration (Q1 2026)
+- Phase 11 abgeschlossen
 - Multi-User-Synchronisation
 - Erweiterte Sicherheitsfeatures
 
@@ -197,7 +205,7 @@
 ## 📊 Aktuelle Metriken (v0.7.1)
 
 ### Code-Qualität
-- **Test Coverage**: 87% lines, 89% functions, 82% branches
+- **Test Coverage**: 89% lines, 91% functions, 84% branches
 - **ESLint**: 0 errors, 0 warnings
 - **TypeScript**: Strict mode, 0 errors
 - **Build**: Vite production build successful
@@ -211,7 +219,8 @@
 ### Features
 - **Import-Modi**: Excel, CSV, PDF, HTML-Tabellen
 - **Verschlüsselung**: Plain/Dev-enc/Prod-enc Modi
-- **Board**: Virtualisierung (opt-in), Batch-Operationen
+- **Board**: Virtualisierung (opt-in), Batch-Operationen, Pin Shift-Range
+- **Cell Components**: Icon-only Follow-up, Auto-Status, CounterBadge, Single-Dot Priority
 - **PWA**: Offline-first, Service Worker, Cache-Strategien
 
 ---

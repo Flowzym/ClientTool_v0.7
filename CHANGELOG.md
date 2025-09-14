@@ -3,32 +3,50 @@
 ## [v0.7.3] - 2025-01-27
 
 ### Added
+- feat(board): FollowupCell icon-only mode when empty with auto-status (terminVereinbart/offen)
+- feat(board): ContactAttemptsCell larger icons (18px) with CounterBadge visibility (count>=1)
+- feat(board): PriorityCell single-dot rendering with level colors and cycle functionality
 - feat(board): Shift-Range Pin/Unpin functionality with consistent target state application
 - feat(board): Enhanced accessibility with proper aria-sort and tri-state header checkbox
 - feat(board): Pinned-first sorting preservation across all sort modes
 - feat(board): Stable sort pipeline with view-shim fallback for missing setView
+- feat(policy): Export policy enforcement via contract tests and ESLint flat config rules
 - test(board): Comprehensive pin shift-range and accessibility header tests
+- test(board): Cell component tests for followup, contacts, priority interactions
+- test(policy): Contract tests for export patterns and import usage validation
 
 ### Fixed
+- fix(board): FollowupCell now shows only calendar icon when no date, proper date input when set
+- fix(board): ContactAttemptsCell badges only visible when count >= 1, no "0" badges
+- fix(board): PriorityCell renders exactly one dot per level with correct colors
 - fix(board): Pin toggle now supports shift-click range operations
 - fix(board): Header checkbox tri-state behavior with aria-checked="mixed"
 - fix(board): Column headers now have correct aria-sort states for screen readers
 - fix(board): Pinned clients maintain top position in all sorting scenarios
 - fix(board): No more crashes on column header clicks when setView is missing
 - fix(board): Removed duplicate "Offer" header, now shows single "Angebot"
+- fix(exports): Duplicate CounterBadge export removed from barrel
 
 ### Changed
+- improve(board): FollowupCell auto-status integration (set date → terminVereinbart, clear → offen)
+- improve(board): ContactAttemptsCell uses shared CounterBadge component for consistency
+- improve(board): PriorityCell simplified to single-dot design with level tooltips
 - improve(board): PinCell component now passes mouse events for shift detection
 - improve(board): ColumnHeader component enhanced with proper accessibility attributes
 - improve(board): Board component maintains pin anchor index for range operations
 - improve(board): Headers now render in bold font for better visual hierarchy
 - improve(board): Sort state management with local fallback and view shim
+- improve(policy): ESLint flat config enforces export patterns at development time
 
 ### Technical
+- FollowupCell conditional rendering based on date presence (icon-only vs date mode)
+- ContactAttemptsCell shared CounterBadge component with consistent styling
+- PriorityCell single-dot rendering with color mapping (green/gray/yellow/red)
 - Pin range operations use consistent target state (clicked element determines range action)
 - Accessibility compliance improved with proper ARIA attributes
 - Pinned-first sorting pipeline preserved across all column sorts
 - Sort fallback prevents crashes when view management is unavailable
+- Export policy enforcement via contract tests and ESLint rules
 - Zero breaking changes to existing pin functionality
 
 ## [v0.7.2] - 2025-01-27
