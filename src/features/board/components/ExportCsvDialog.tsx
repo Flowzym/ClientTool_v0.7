@@ -11,7 +11,7 @@ const DEFAULT_FIELDS = [
 
 const STORAGE_KEY = 'board.csv.preset.v2';
 
-export function ExportCsvDialog({ open, onClose, rows }: Props) {
+export default function ExportCsvDialog({ open, onClose, rows }: Props) {
   const [fields, setFields] = useState<string[]>([]);
   const [filename, setFilename] = useState('export.csv');
   const [sep, setSep] = useState<',' | ';'>(',');
