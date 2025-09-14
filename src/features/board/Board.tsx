@@ -121,7 +121,7 @@ function Board() {
   };
   const _setView = (update) => {
     try {
-      if (typeof setView === 'function') return _setView(update);
+      if (typeof setView === 'function') return setView(update);
     } catch (_) {}
     // fallback path: only care about sort updates
     try {
