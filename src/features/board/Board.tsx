@@ -108,7 +108,7 @@ function Board() {
   const lastIndexRef = useRef<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [clientInfoDialogId, setClientInfoDialogId] = useState<string | null>(null);
-  const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.getFeature('virtualRows'));
+  const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
 
   // All hooks must be called before any early returns
   const { data, isLoading, view, toggleSort } = useBoardData();
@@ -124,7 +124,7 @@ function Board() {
   useEffect(() => {
     perfMark('board:render:start');
     return featureManager.subscribe((features) => {
-      setVirtualRowsEnabled(features.virtualRows);
+      setVirtualRowsEnabled(featureManager.isEnabled('virtualRows'));
     });
   }, []);
 
@@ -265,7 +265,7 @@ function Board() {
             <input
               type="checkbox"
               checked={virtualRowsEnabled}
-              onChange={(e) => featureManager.setFeature('virtualRows', e.target.checked)}
+              onChange={(e) => featureManager.toggle('virtualRows')}
               className="rounded border-gray-300"
             />
             <span>Virtualized Rows (Performance)</span>
