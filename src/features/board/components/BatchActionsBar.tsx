@@ -17,7 +17,7 @@ type Props = {
   selectedRowsProvider?: () => any[];
 };
 
-export function BatchActionsBar({
+export default function BatchActionsBar({
   selectedCount, users, onClear, onSetStatus, onSetResult, onSetAssign, onSetFollowup, onArchive, onUnarchive, onPin, onUnpin, selectedRowsProvider
 }: Props) {
   const [status, setStatus] = useState<string>('');
