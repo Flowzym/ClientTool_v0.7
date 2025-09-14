@@ -6,7 +6,7 @@ import { useBoardActions } from './hooks/useBoardActions';
 import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import { ClientInfoDialog } from './components';
 import { ClientRow } from './components/ClientRow';
-import { BatchActionsBar } from './components/BatchActionsBar';
+import BatchActionsBar from './components/BatchActionsBar';
 import { BoardHeader } from './components/BoardHeader';
 import ColumnHeader from './components/ColumnHeader';
 import { featureManager } from '../../config/features';
