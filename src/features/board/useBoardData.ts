@@ -377,7 +377,8 @@ export function useBoardData() {
     const filtered = sortedClients.length;
     const archived = clients.filter(c => c.isArchived).length;
     
-    return { total, filtered, archived };
+    return {
+    toggleSort, total, filtered, archived };
   }, [clients, sortedClients]);
 
   // Filter-Updates
