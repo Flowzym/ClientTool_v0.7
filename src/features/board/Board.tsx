@@ -114,6 +114,7 @@ function Board() {
   const lastIndexRef = useRef<number | null>(null);
   const [lastPinAnchorIndex, setLastPinAnchorIndex] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const [clientInfoDialogId, setClientInfoDialogId] = useState<string | null>(null);
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
 
