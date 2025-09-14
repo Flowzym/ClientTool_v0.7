@@ -109,7 +109,7 @@ export function useBoardData() {
               ...defaultView.columnVisibility,
               ...savedView.columnVisibility
             }
-          });
+          }));
         }
         
         // Daten laden
@@ -254,7 +254,7 @@ export function useBoardData() {
           // Wird durch separates Popup gehandhabt
           break;
       }
-    });
+    }));
     
     return filtered;
   }, [clients, users, view, assignedToFilter]);
@@ -337,7 +337,7 @@ export function useBoardData() {
         }
         
         return 0;
-      });
+      }));
     }
     
     return sorted;
@@ -369,7 +369,7 @@ export function useBoardData() {
           if (a.lastActivity && !b.lastActivity) return -1;
           if (!a.lastActivity && b.lastActivity) return 1;
           return 0;
-        });
+        }));
         break;
         
       case 'assignee':
@@ -389,7 +389,7 @@ export function useBoardData() {
           const bPrio = priorityOrder[b.priority] || 0;
           
           return bPrio - aPrio;
-        });
+        }));
         break;
     }
     
@@ -462,7 +462,7 @@ export function useBoardData() {
         ...defaultView.filters,
         currentUserId: view.filters.currentUserId // Behalte aktuellen User
       }
-    });
+    }));
   };
 
   const toggleSort = (key: SortKey) => {
@@ -482,7 +482,7 @@ export function useBoardData() {
         // Different column: start with ascending
         return { ...prev, sort: { key, direction: 'asc' } };
       }
-    });
+    }));
   };
 
   // Daten-Updates
