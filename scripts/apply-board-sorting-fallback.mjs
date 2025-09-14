@@ -1,11 +1,7 @@
-\
-#!/usr/bin/env node
-/**
- * Patch Board.tsx to add a local sorting fallback and prevent setView crashes.
- * Idempotent, conservative text edits.
- */
-import fs from 'node:fs';
-import path from 'node:path';
+
+// CommonJS safe patcher (Node >=14)
+const fs = require('fs');
+const path = require('path');
 
 const ROOT = process.cwd();
 const CANDIDATES = [
@@ -22,11 +18,122 @@ function pick() {
   return null;
 }
 
-function insertAfter(haystack, anchorRegex, insertion) {
-  const m = haystack.match(anchorRegex);
-  if (!m) return haystack;
+function insertAfterFirst(code, regex, insertion) {
+  const m = code.match(regex);
+  if (!m) return code;
   const idx = m.index + m[0].length;
-  return haystack.slice(0, idx) + insertion + haystack.slice(idx);
+  return code.slice(0, idx) + insertion + code.slice(idx);
+}
+
+function ensureLocalSort(code) {
+  if (/const\s*\[\s*localSort\s*,\s*setLocalSort\s*\]/.test(code)) return code;
+  let anchor = /const\s*\[\s*virtualRowsEnabled[\s\S]*?;[\t ]*\n/;
+  if (!anchor.test(code)) anchor = /const\s*\[\s*selectedIds[\s\S]*?;[\t ]*\n/;
+  const insertion = "\n  const [localSort, setLocalSort] = useState({ key: null, direction: null });\n";
+  return insertAfterFirst(code, anchor, insertion);
+}
+
+function ensureSortState(code) {
+  if (/const\s+sortState\s*=/.test(code)) return code;
+  const anchor = /const\s+allIds\s*=\s*useMemo\([\s\S]*?\);\s*\n/;
+  const insertion = "  const sortState = (localSort && (localSort.key !== null || localSort.direction !== null)) ? localSort : (view && view.sort ? view.sort : { key: null, direction: null });\n";
+  return insertAfterFirst(code, anchor, insertion);
+}
+
+function ensureSorterAndSortedClients(code) {
+  if (/const\s+sortedClients\s*=/.test(code)) return code;
+  const insertion = `
+  // Sort helper: pinned first -> active column -> id
+  const _formatName = (c) => {
+    const last = c.lastName || '';
+    const first = c.firstName || '';
+    const title = c.title ? ' (' + c.title + ')' : '';
+    const fallback = c.name || '';
+    return (last || first) ? (last + ', ' + first + title) : fallback;
+  };
+  const _getPinned = (c) => !!(c.isPinned ?? c.pinned ?? false);
+  const _cmpStr = (a, b) => String(a).localeCompare(String(b), 'de', { sensitivity: 'base' });
+  const _cmpNum = (a, b) => (Number(a) - Number(b));
+  const _cmpDate = (a, b) => {
+    const A = a || null, B = b || null;
+    if (!A && !B) return 0; if (!A) return 1; if (!B) return -1;
+    if (A < B) return -1; if (A > B) return 1; return 0;
+  };
+  const _sortClients = (list, sort) => {
+    const dir = (sort && sort.direction === 'desc') ? -1 : 1;
+    const key = sort ? sort.key : null;
+    const arr = list.slice();
+    arr.sort((a,b) => {
+      const pa = _getPinned(a), pb = _getPinned(b);
+      if (pa !== pb) return pa ? -1 : 1;
+      let d = 0;
+      switch (key) {
+        case 'name': d = _cmpStr(_formatName(a), _formatName(b)); break;
+        case 'offer': d = _cmpStr(a.offer ?? '', b.offer ?? ''); break;
+        case 'status': d = _cmpStr(a.status ?? '', b.status ?? ''); break;
+        case 'result': d = _cmpStr(a.result ?? '', b.result ?? ''); break;
+        case 'followUp': d = _cmpDate(a.followUp ?? null, b.followUp ?? null); break;
+        case 'assignedTo': d = _cmpStr(a.assignedTo ?? '', b.assignedTo ?? ''); break;
+        case 'contacts': d = _cmpNum(a.contactCount ?? 0, b.contactCount ?? 0); break;
+        case 'notes': d = _cmpNum((a.noteCount ?? a.notesCount ?? 0), (b.noteCount ?? b.notesCount ?? 0)); break;
+        case 'priority': d = _cmpNum(a.priority ?? 0, b.priority ?? 0); break;
+        case 'activity': d = _cmpDate(a.lastActivity ?? null, b.lastActivity ?? null); break;
+        default: d = 0;
+      }
+      if (d !== 0) return dir * (d < 0 ? -1 : 1);
+      return String(a.id).localeCompare(String(b.id));
+    });
+    return arr;
+  };
+  const sortedClients = useMemo(() => _sortClients(visibleClients, sortState), [visibleClients, sortState]);
+`;
+  // insert before first useEffect or subscription comment
+  let anchor = /useEffect\s*\(/;
+  if (!anchor.test(code)) anchor = /\/\/\s*Subscribe to feature flag changes/;
+  return insertAfterFirst(code, anchor, insertion);
+}
+
+function ensureSetViewShim(code) {
+  if (/_setView\s*\(/.test(code) || /function\s+_setView/.test(code) || /const\s+_setView\s*=/.test(code)) return code;
+  const insertion = `
+  // Safe shim around setView: uses setView if callable, otherwise updates localSort
+  const _cycleSort = (prevSort, key) => {
+    if (!prevSort || prevSort.key !== key) return { key, direction: 'asc' };
+    if (prevSort.direction === 'asc') return { key, direction: 'desc' };
+    return { key: null, direction: null };
+  };
+  const _setView = (update) => {
+    try {
+      if (typeof setView === 'function') return setView(update);
+    } catch (_) {}
+    // fallback path: only care about sort updates
+    try {
+      const current = (view && view.sort) ? view.sort : localSort;
+      const next = (typeof update === 'function') ? update({ sort: current }) : update;
+      if (next && next.sort) setLocalSort(next.sort);
+    } catch (_) {}
+  };
+`;
+  // put after localSort declaration
+  const anchor = /const\s*\[\s*localSort\s*,\s*setLocalSort\s*\][\s\S]*?;\s*\n/;
+  return insertAfterFirst(code, anchor, insertion);
+}
+
+function replaceSetViewCalls(code) {
+  return code.replace(/(?<!_)setView\(/g, '_setView(');
+}
+
+function swapViewSortBindings(code) {
+  return code.replace(/view\.sort\./g, 'sortState.');
+}
+
+function useSortedClients(code) {
+  return code.replace(/clients=\{visibleClients\}/g, 'clients={sortedClients}');
+}
+
+function ensureLegacyAlias(code) {
+  if (/const\s+toggleSort\s*=\s*handleHeaderToggle/.test(code)) return code;
+  return code.replace(/function\s+Board\s*\(\)\s*\{/, (m) => m + "\n  const toggleSort = handleHeaderToggle; // legacy alias for stale calls\n");
 }
 
 function run() {
@@ -38,116 +145,14 @@ function run() {
   let code = fs.readFileSync(file, 'utf8');
   let before = code;
 
-  // 1) Ensure local sort state exists
-  if (!/const \\[localSort,\\s*setLocalSort\\]/.test(code)) {
-    // place after the virtualRowsEnabled state
-    const anchor = /const \\[virtualRowsEnabled[^;]+;\\s*/;
-    const insertion = "\n  const [localSort, setLocalSort] = useState<{ key: string | null; direction: 'asc' | 'desc' | null } | null>(null);\n";
-    code = insertAfter(code, anchor, insertion);
-  }
-
-  // 2) Define sortState and sortedClients (if not present)
-  if (!/const\\s+sortState\\s*=/.test(code)) {
-    const anchor = /const selectedSet = useMemo\\([^\\)]*\\);\\s*\\n\\s*const allIds = useMemo\\(/;
-    const insertion = "\n  const sortState = localSort ?? (view?.sort ?? { key: null, direction: null });\n";
-    code = insertAfter(code, anchor, insertion);
-  }
-
-  if (!/const\\s+sortedClients\\s*=/.test(code)) {
-    // Insert sorter helper and memo before "Derived values" or before the first return
-    const helper =
-`\n  // Local sort helper (pinned first → active column → id)\\n\
-  const formatNameForSort = (c:any) => {\\n\
-    const last = c.lastName ?? '';\\n\
-    const first = c.firstName ?? '';\\n\
-    const title = c.title ? \\` (\\${'c.title'})\\` : '';\\n\
-    const fallback = c.name ?? '' ;\\n\
-    const composed = (last || first) ? \\`\${last}, \${first}\${title}\\` : fallback;\\n\
-    return composed;\\n\
-  };\\n\
-  const getPinned = (c:any) => Boolean(c.isPinned ?? c.pinned ?? false);\\n\
-  const cmpStr = (a:string, b:string) => a.localeCompare(b, 'de', { sensitivity: 'base' });\\n\
-  const cmpDate = (a:string|null, b:string|null) => {\\n\
-    if (!a && !b) return 0; if (!a) return 1; if (!b) return -1;\\n\
-    return (a < b) ? -1 : (a > b ? 1 : 0);\\n\
-  };\\n\
-  const sortClients = (list:any[], sort:{ key:string|null; direction:'asc'|'desc'|null }) => {\\n\
-    const dir = sort?.direction === 'desc' ? -1 : 1;\\n\
-    const key = sort?.key;\\n\
-    const arr = [...list];\\n\
-    arr.sort((a,b) => {\\n\
-      // pinned first\\n\
-      const pa = getPinned(a), pb = getPinned(b);\\n\
-      if (pa !== pb) return pa ? -1 : 1;\\n\
-      // active column\\n\
-      if (!key) return (String(a.id).localeCompare(String(b.id)));\\n\
-      let delta = 0;\\n\
-      switch (key) {\\n\
-        case 'name': delta = cmpStr(formatNameForSort(a), formatNameForSort(b)); break;\\n\
-        case 'offer': delta = cmpStr(String(a.offer ?? ''), String(b.offer ?? '')); break;\\n\
-        case 'status': delta = cmpStr(String(a.status ?? ''), String(b.status ?? '')); break;\\n\
-        case 'result': delta = cmpStr(String(a.result ?? ''), String(b.result ?? '')); break;\\n\
-        case 'followUp': delta = cmpDate(a.followUp ?? null, b.followUp ?? null); break;\\n\
-        case 'assignedTo': delta = cmpStr(String(a.assignedTo ?? ''), String(b.assignedTo ?? '')); break;\\n\
-        case 'contacts': delta = (Number(a.contactCount ?? 0) - Number(b.contactCount ?? 0)); break;\\n\
-        case 'notes': delta = (Number(a.noteCount ?? a.notesCount ?? 0) - Number(b.noteCount ?? b.notesCount ?? 0)); break;\\n\
-        case 'priority': delta = (Number(a.priority ?? 0) - Number(b.priority ?? 0)); break;\\n\
-        case 'activity': delta = cmpDate(a.lastActivity ?? null, b.lastActivity ?? null); break;\\n\
-        default: delta = 0;\\n\
-      }\\n\
-      if (delta !== 0) return dir * (delta < 0 ? -1 : delta > 0 ? 1 : 0);\\n\
-      // tiebreaker id\\n\
-      return String(a.id).localeCompare(String(b.id));\\n\
-    });\\n\
-    return arr;\\n\
-  };\\n\
-  const sortedClients = useMemo(() => sortClients(visibleClients, sortState), [visibleClients, sortState]);\\n`;
-    // Insert before the comment "Subscribe to feature flag changes" or before first useEffect
-    const anchor = /\/\/ Subscribe to feature flag changes|useEffect\\s*\\(/;
-    code = insertAfter(code, anchor, helper);
-  }
-
-  // 3) Harden handleHeaderToggle: support lack of setView
-  code = code.replace(
-    /const\\s+handleHeaderToggle\\s*=\\s*useCallback\\([^]*?\\)\\s*;\\s*/m,
-    (m) => {
-      // Replace entire declaration with our hardened version
-      return `const handleHeaderToggle = useCallback((key: string) => {
-    const cycle = (prevSort: any) => {
-      if (prevSort?.key !== key) return { key, direction: 'asc' as const };
-      if (prevSort?.direction === 'asc') return { key, direction: 'desc' as const };
-      return { key: null, direction: null };
-    };
-    try {
-      if (typeof setView === 'function') {
-        setView((prev: any) => ({ ...prev, sort: cycle(prev?.sort) }));
-      } else {
-        // fallback: local sort state
-        setLocalSort((prev) => cycle(prev ?? (view?.sort ?? { key: null, direction: null })));
-      }
-    } catch (err) {
-      console.warn('[Board] setView not functional — using local sort fallback.', err);
-      setLocalSort((prev) => cycle(prev ?? (view?.sort ?? { key: null, direction: null })));
-    }
-  }, [setView, view]);\n`;
-    }
-  );
-
-  // 4) Replace header bindings: view.sort → sortState
-  code = code.replace(/view\\.sort\\./g, 'sortState.');
-
-  // 5) Feed sortedClients to lists
-  code = code.replace(/clients=\\{visibleClients\\}/g, 'clients={sortedClients}');
-
-  // 6) Provide legacy alias for toggleSort if any remains
-  if (!code.includes('const toggleSort = handleHeaderToggle')) {
-    const alias = '  const toggleSort = handleHeaderToggle; // legacy alias for stale calls\\n';
-    if (/const\\s+handleHeaderToggle\\s*=/.test(code)) {
-      code = code.replace(/const\\s+handleHeaderToggle[\\s\\S]*?\\n\\}\\s*,\\s*\\[.*?\\]\\);/, (block) => block + '\\n' + alias);
-    } else {
-      code = code.replace(/function Board\\s*\\(\\)\\s*\\{/, (m) => m + '\\n' + alias);
-    }
-  }
+  code = ensureLocalSort(code);
+  code = ensureSortState(code);
+  code = ensureSorterAndSortedClients(code);
+  code = ensureSetViewShim(code);
+  code = replaceSetViewCalls(code);
+  code = swapViewSortBindings(code);
+  code = useSortedClients(code);
+  code = ensureLegacyAlias(code);
 
   if (code !== before) {
     fs.writeFileSync(file, code, 'utf8');
