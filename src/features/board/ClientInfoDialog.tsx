@@ -57,7 +57,7 @@ function FieldRow({
   );
 }
 
-export function ClientInfoDialog({ isOpen, onClose, client }: Props) {
+export default function ClientInfoDialog({ isOpen, onClose, client }: Props) {
   if (!isOpen || !client) return null;
 
   const fmt = (v?: string) => (v ? String(v) : '—');
