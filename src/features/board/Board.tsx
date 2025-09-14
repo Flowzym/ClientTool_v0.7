@@ -107,6 +107,18 @@ function VirtualClientList({
   );
 }
 
+function useBoardActions() {
+  // Placeholder implementation
+  return {
+    update: (id: string, changes: any) => {},
+    bulkUpdate: (ids: string[], changes: any) => {},
+    bulkPin: (ids: string[]) => {},
+    bulkUnpin: (ids: string[]) => {},
+    undo: () => {},
+    redo: () => {}
+  };
+}
+
 function Board() {
   const renderCount = useRenderCount();
   const lastIndexRef = useRef<number | null>(null);
@@ -129,7 +141,7 @@ function Board() {
 
   const [localSort, setLocalSort] = useState<SortState>({ key: null, direction: null });
 
-  const sortState: SortState =
+  const sortStateResolved: SortState =
     (localSort && (localSort.key !== null || localSort.direction !== null))
       ? localSort
       : (view?.sort ?? { key: null, direction: null });
@@ -193,12 +205,13 @@ function Board() {
     [clients, view?.showArchived]
   );
 
+  const sortedClients = useMemo(() => {
     let sorted = [...visibleClients];
     
-    if (sortState.key && sortState.direction) {
-      const direction = sortState.direction === 'desc' ? -1 : 1;
+    if (sortStateResolved.key && sortStateResolved.direction) {
+      const direction = sortStateResolved.direction === 'desc' ? -1 : 1;
       
-      switch (sortState.key) {
+      switch (sortStateResolved.key) {
         case 'name':
           sorted.sort(withPinnedFirst((a, b) => byFullName()(a, b) * direction));
           break;
@@ -268,7 +281,7 @@ function Board() {
     }
     
     return sorted;
-  }, [visibleClients, sortState, users]);
+  }, [visibleClients, sortStateResolved, users]);
 
   // Selektion/IDs NACH sortedClients ableiten
   const allIds = useMemo(() => sortedClients.map((c: any) => c.id as string), [sortedClients]);
@@ -418,78 +431,78 @@ function Board() {
           <ColumnHeader
             columnKey="name"
             label="Kunde"
-            isActive={sortState.key==='name'}
-            direction={sortState.key==='name' ? sortState.direction : undefined}
+            isActive={sortStateResolved.key==='name'}
+            direction={sortStateResolved.key==='name' ? sortStateResolved.direction : undefined}
             onToggle={()=>handleHeaderToggle('name')}
           />
           <ColumnHeader
             columnKey="offer"
             label="Angebot"
-            isActive={sortState.key==='offer'}
-            direction={sortState.key==='offer' ? sortState.direction : undefined}
+            isActive={sortStateResolved.key==='offer'}
+            direction={sortStateResolved.key==='offer' ? sortStateResolved.direction : undefined}
             onToggle={()=>handleHeaderToggle('offer')}
           />
           <ColumnHeader
             columnKey="status"
             label="Status"
-            isActive={sortState.key==='status'}
-            direction={sortState.key==='status' ? sortState.direction : undefined}
+            isActive={sortStateResolved.key==='status'}
+            direction={sortStateResolved.key==='status' ? sortStateResolved.direction : undefined}
             onToggle={()=>handleHeaderToggle('status')}
           />
           <ColumnHeader
             columnKey="result"
             label="Ergebnis"
-            isActive={sortState.key==='result'}
-            direction={sortState.key==='result' ? sortState.direction : undefined}
+            isActive={sortStateResolved.key==='result'}
+            direction={sortStateResolved.key==='result' ? sortStateResolved.direction : undefined}
             onToggle={()=>handleHeaderToggle('result')}
           />
           <ColumnHeader
             columnKey="followUp"
             label="Follow-up"
-            isActive={sortState.key==='followUp'}
-            direction={sortState.key==='followUp' ? sortState.direction : undefined}
+            isActive={sortStateResolved.key==='followUp'}
+            direction={sortStateResolved.key==='followUp' ? sortStateResolved.direction : undefined}
             onToggle={()=>handleHeaderToggle('followUp')}
           />
           <ColumnHeader
             columnKey="assignedTo"
             label="Zuständigkeit"
-            isActive={sortState.key==='assignedTo'}
-            direction={sortState.key==='assignedTo' ? sortState.direction : undefined}
+            isActive={sortStateResolved.key==='assignedTo'}
+            direction={sortStateResolved.key==='assignedTo' ? sortStateResolved.direction : undefined}
             onToggle={()=>handleHeaderToggle('assignedTo')}
           />
           <ColumnHeader
             columnKey="contacts"
             label="Kontakt"
-            isActive={sortState.key==='contacts'}
-            direction={sortState.key==='contacts' ? sortState.direction : undefined}
+            isActive={sortStateResolved.key==='contacts'}
+            direction={sortStateResolved.key==='contacts' ? sortStateResolved.direction : undefined}
             onToggle={()=>handleHeaderToggle('contacts')}
           />
           <ColumnHeader
             columnKey="notes"
             label="Anmerkung"
-            isActive={sortState.key==='notes'}
-            direction={sortState.key==='notes' ? sortState.direction : undefined}
+            isActive={sortStateResolved.key==='notes'}
+            direction={sortStateResolved.key==='notes' ? sortStateResolved.direction : undefined}
             onToggle={()=>handleHeaderToggle('notes')}
           />
           <ColumnHeader
             columnKey="booking"
             label="Zubuchung"
-            isActive={sortState.key==='booking'}
-            direction={sortState.key==='booking' ? sortState.direction : undefined}
+            isActive={sortStateResolved.key==='booking'}
+            direction={sortStateResolved.key==='booking' ? sortStateResolved.direction : undefined}
             onToggle={()=>handleHeaderToggle('booking')}
           />
           <ColumnHeader
             columnKey="priority"
             label="Priorität"
-            isActive={sortState.key==='priority'}
-            direction={sortState.key==='priority' ? sortState.direction : undefined}
+            isActive={sortStateResolved.key==='priority'}
+            direction={sortStateResolved.key==='priority' ? sortStateResolved.direction : undefined}
             onToggle={()=>handleHeaderToggle('priority')}
           />
           <ColumnHeader
             columnKey="activity"
             label="Aktivität"
-            isActive={sortState.key==='activity'}
-            direction={sortState.key==='activity' ? sortState.direction : undefined}
+            isActive={sortStateResolved.key==='activity'}
+            direction={sortStateResolved.key==='activity' ? sortStateResolved.direction : undefined}
             onToggle={()=>handleHeaderToggle('activity')}
           />
           <div className="text-xs font-medium text-gray-600">Aktionen</div>
