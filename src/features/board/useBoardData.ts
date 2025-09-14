@@ -3,7 +3,7 @@
  */
 import { useState, useEffect, useMemo } from 'react';
 import { db } from '../../data/db';
-import { cryptoManager } from '../../data/crypto';
+import { cryptoManager } from '../../data/crypto'; // Keep this import
 import type { Client, User } from '../../domain/models';
 import type { 
   FilterChip, 
@@ -11,7 +11,7 @@ import type {
   BoardFilters, 
   BoardSort, 
   BoardColumnVisibility, 
-  BoardView 
+  BoardView, SortKey
 } from './useBoardData.helpers';
 import { defaultView, loadViewFromStorage, saveViewToStorage } from './useBoardData.helpers';
 
@@ -270,6 +270,26 @@ export function useBoardData() {
     });
   };
 
+  const toggleSort = (key: SortKey) => {
+    setView(prev => {
+      const currentSort = prev.sort;
+      
+      if (currentSort.key === key) {
+        // Same column: toggle direction or clear
+        if (currentSort.direction === 'asc') {
+          return { ...prev, sort: { key, direction: 'desc' } };
+        } else if (currentSort.direction === 'desc') {
+          return { ...prev, sort: { key: null, direction: null } };
+        } else {
+          return { ...prev, sort: { key, direction: 'asc' } };
+        }
+      } else {
+        // Different column: start with ascending
+        return { ...prev, sort: { key, direction: 'asc' } };
+      }
+    });
+  };
+
   // Daten-Updates
   const refreshData = async () => {
     try {
@@ -291,6 +311,7 @@ export function useBoardData() {
     toggleChip,
     toggleArchived,
     setCurrentUser,
+    toggleSort,
     setSortMode,
     setColumnVisibility,
     resetToDefaultView,
