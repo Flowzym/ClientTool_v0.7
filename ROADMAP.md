@@ -247,6 +247,11 @@
 
 ## 📝 Notizen
 
+### 2025-09-14 — Status
+- **Excel-Import Routing Fix bestätigt**: Routing-Konfusion behoben, Doku synchronisiert
+- **Verweis**: CHANGELOG 0.7.2, Model Context Summary
+- **Tests**: Routing-Tests validieren korrekte Handler-Zuordnung
+
 ### Architektur-Prinzipien
 - **Local-First**: Keine externen Dependencies für Core-Features
 - **Encryption-First**: Alle Daten standardmäßig verschlüsselt
