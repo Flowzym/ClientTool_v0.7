@@ -98,3 +98,16 @@ export function todayISO(): ISODateString {
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
+
+/**
+ * Format date to DD.MM.YYYY format
+ */
+export function formatDDMMYYYY(v?: string): string | undefined {
+  if (!v) return undefined;
+  const d = new Date(v);
+  if (!Number.isFinite(d.getTime())) return undefined;
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}.${mm}.${yyyy}`;
+}
