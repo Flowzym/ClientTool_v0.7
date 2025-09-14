@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { perfMark, perfMeasure } from '../../lib/perf/timer';
 import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
