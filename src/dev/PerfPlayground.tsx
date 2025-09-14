@@ -24,7 +24,7 @@ import { nextFrame, FPSEstimator } from './raf';
 import { featureManager } from '../config/features';
 import { useBoardData } from '../features/board/useBoardData';
 import { ClientRow } from '../features/board/components/ClientRow';
-import { VirtualizedBoardList } from '../features/board/components/VirtualizedBoardList';
+import VirtualizedBoardList from '../features/board/components/VirtualizedBoardList';
 
 interface PerfResult {
   dataset: DatasetSize;
