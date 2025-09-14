@@ -11,6 +11,7 @@ export { default as ContactDialog } from './ContactDialog';
 export { default as ClientInfoDialog } from './ClientInfoDialog';
 export { default as ExportCsvDialog } from './ExportCsvDialog';
 export { default as VirtualizedBoardList } from './VirtualizedBoardList';
+export { default as ColumnHeader } from './ColumnHeader';
 
 // Cell components
 export * from './cells';

@@ -7,6 +7,7 @@ import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import { ClientRow } from './components/ClientRow';
 import { BatchActionsBar } from './components/BatchActionsBar';
 import { BoardHeader } from './components/BoardHeader';
+import { ColumnHeader } from './components/ColumnHeader';
 import { featureManager } from '../../config/features';
 
 // Extracted components for stable hook order
@@ -102,7 +103,7 @@ function VirtualClientList({
 
 function Board() {
   // ALL HOOKS AT TOP LEVEL - NEVER CONDITIONAL
-  const { clients, users, isLoading } = useBoardData();
+  const { clients, users, isLoading, view, toggleSort } = useBoardData();
   const actions = useBoardActions();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
@@ -194,22 +195,41 @@ function Board() {
       )}
 
       {/* Sticky Header */}
-      <div className="min-w-[1480px] border rounded-t-lg bg-gray-50 border-b px-3 py-2 text-xs font-medium text-gray-600">
+      <div className="min-w-[1480px] border rounded-t-lg bg-gray-50 border-b px-3 py-2">
         <div className="grid grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px] gap-2">
-          <div>✓ • Pin</div>
-          <div>Kunde</div>
-          <div>Offer</div>
-          <div>Offer</div>
-          <div>Status</div>
-          <div>Ergebnis</div>
-          <div>Follow-up</div>
-          <div>Zuständigkeit</div>
-          <div>Kontakt</div>
-          <div>Anmerkung</div>
-          <div>Zubuchung</div>
-          <div>Priorität</div>
-          <div>Aktivität</div>
-          <div>Aktionen</div>
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={selectedIds.length === allIds.length && allIds.length > 0}
+              ref={(el) => {
+                if (el) {
+                  el.indeterminate = selectedIds.length > 0 && selectedIds.length < allIds.length;
+                }
+              }}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  selectAllVisible();
+                } else {
+                  clearSelection();
+                }
+              }}
+              aria-label="Alle auswählen"
+              className="mr-2"
+            />
+            <span className="text-xs font-medium text-gray-600">Pin</span>
+          </div>
+          <ColumnHeader columnKey="name" label="Kunde" isActive={view.sort.key === 'name'} direction={view.sort.direction} onToggle={() => toggleSort('name')} />
+          <ColumnHeader columnKey="offer" label="Angebot" isActive={view.sort.key === 'offer'} direction={view.sort.direction} onToggle={() => toggleSort('offer')} />
+          <ColumnHeader columnKey="status" label="Status" isActive={view.sort.key === 'status'} direction={view.sort.direction} onToggle={() => toggleSort('status')} />
+          <ColumnHeader columnKey="result" label="Ergebnis" isActive={view.sort.key === 'result'} direction={view.sort.direction} onToggle={() => toggleSort('result')} />
+          <ColumnHeader columnKey="followUp" label="Follow-up" isActive={view.sort.key === 'followUp'} direction={view.sort.direction} onToggle={() => toggleSort('followUp')} />
+          <ColumnHeader columnKey="assignedTo" label="Zuständigkeit" isActive={view.sort.key === 'assignedTo'} direction={view.sort.direction} onToggle={() => toggleSort('assignedTo')} />
+          <ColumnHeader columnKey="contacts" label="Kontakt" isActive={view.sort.key === 'contacts'} direction={view.sort.direction} onToggle={() => toggleSort('contacts')} />
+          <ColumnHeader columnKey="notes" label="Anmerkung" isActive={view.sort.key === 'notes'} direction={view.sort.direction} onToggle={() => toggleSort('notes')} />
+          <ColumnHeader columnKey="booking" label="Zubuchung" sortable={false} isActive={false} direction={undefined} onToggle={() => {}} />
+          <ColumnHeader columnKey="priority" label="Priorität" isActive={view.sort.key === 'priority'} direction={view.sort.direction} onToggle={() => toggleSort('priority')} />
+          <ColumnHeader columnKey="activity" label="Aktivität" sortable={false} isActive={false} direction={undefined} onToggle={() => {}} />
+          <div className="text-xs font-medium text-gray-600">Aktionen</div>
         </div>
       </div>
 
