@@ -1,14 +1,14 @@
 import React from 'react';
 import { ChevronUp, ChevronDown } from 'lucide-react';
 
-export interface ColumnHeaderProps {
+export type ColumnHeaderProps = {
   columnKey: string;
   label: string;
   sortable?: boolean;
   isActive?: boolean;
   direction?: 'asc' | 'desc' | undefined;
   onToggle: () => void;
-}
+};
 
 export default function ColumnHeader({
   columnKey,
@@ -19,8 +19,7 @@ export default function ColumnHeader({
   onToggle
 }: ColumnHeaderProps) {
   const getAriaSort = (): 'ascending' | 'descending' | 'none' => {
-    if (!sortable) return 'none';
-    if (!isActive || !direction) return 'none';
+    if (!sortable || !isActive || !direction) return 'none';
     return direction === 'asc' ? 'ascending' : 'descending';
   };
 

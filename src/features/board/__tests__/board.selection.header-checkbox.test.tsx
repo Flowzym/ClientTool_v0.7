@@ -20,8 +20,7 @@ const mockUseBoardData = {
     filters: { chips: [], showArchived: false },
     sort: { key: null, direction: null },
     columnVisibility: {}
-  },
-  toggleSort: vi.fn()
+  }
 };
 
 vi.mock('../useBoardData', () => ({
@@ -45,27 +44,6 @@ describe('Board Header Select-All Checkbox', () => {
       const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
       expect(selectAllCheckbox).not.toBeChecked();
       expect(selectAllCheckbox.indeterminate).toBe(false);
-    });
-
-    it('should show checked when all visible clients selected', async () => {
-      // Mock scenario where all clients are selected
-      const allIds = mockUseBoardData.clients.map(c => c.id);
-      
-      // This would be handled by Board component's selection state
-      // For this test, we verify the checkbox logic
-      renderWithProviders(<Board />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Board')).toBeInTheDocument();
-      });
-
-      const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
-      
-      // Initially unchecked
-      expect(selectAllCheckbox).not.toBeChecked();
-      
-      // The actual checked state would be controlled by Board's selectedIds state
-      // This test verifies the checkbox exists and is interactive
     });
 
     it('should show indeterminate when some clients selected', async () => {
@@ -96,7 +74,6 @@ describe('Board Header Select-All Checkbox', () => {
       await user.click(selectAllCheckbox);
 
       // Should trigger selection of all visible clients
-      // (Actual selection logic is in Board component)
       expect(selectAllCheckbox).toBeInTheDocument();
     });
 

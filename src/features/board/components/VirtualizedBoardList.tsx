@@ -205,7 +205,7 @@ function VirtualizedBoardList({
                   actions={actions}
                   selected={selectedIds.has(client.id)}
                   onToggleSelect={(withShift) => onToggleSelect(virtualItem.index, client.id, withShift)}
-                  onTogglePin={(event) => onTogglePin(virtualItem.index, client.id, event)}
+                  onTogglePin={onTogglePin}
                 />
               </div>
             );

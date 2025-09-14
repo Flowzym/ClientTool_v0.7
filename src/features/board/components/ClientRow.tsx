@@ -78,7 +78,7 @@ export function ClientRow({
             }
           }}
           onChange={() => {}}
-          aria-label="select row"
+          onTogglePin={onTogglePin}
         />
         <button
           className={`p-1 rounded hover:bg-gray-50 ${client.isPinned ? 'text-blue-600' : 'text-gray-400'}`}

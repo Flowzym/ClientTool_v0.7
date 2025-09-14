@@ -1,5 +1,36 @@
 # Changelog
 
+## [v0.7.3] - 2025-01-27
+
+### Added
+- feat(board): Shift-Range Pin/Unpin functionality with consistent target state application
+- feat(board): Enhanced accessibility with proper aria-sort and tri-state header checkbox
+- feat(board): Pinned-first sorting preservation across all sort modes
+- feat(board): Stable sort pipeline with view-shim fallback for missing setView
+- test(board): Comprehensive pin shift-range and accessibility header tests
+
+### Fixed
+- fix(board): Pin toggle now supports shift-click range operations
+- fix(board): Header checkbox tri-state behavior with aria-checked="mixed"
+- fix(board): Column headers now have correct aria-sort states for screen readers
+- fix(board): Pinned clients maintain top position in all sorting scenarios
+- fix(board): No more crashes on column header clicks when setView is missing
+- fix(board): Removed duplicate "Offer" header, now shows single "Angebot"
+
+### Changed
+- improve(board): PinCell component now passes mouse events for shift detection
+- improve(board): ColumnHeader component enhanced with proper accessibility attributes
+- improve(board): Board component maintains pin anchor index for range operations
+- improve(board): Headers now render in bold font for better visual hierarchy
+- improve(board): Sort state management with local fallback and view shim
+
+### Technical
+- Pin range operations use consistent target state (clicked element determines range action)
+- Accessibility compliance improved with proper ARIA attributes
+- Pinned-first sorting pipeline preserved across all column sorts
+- Sort fallback prevents crashes when view management is unavailable
+- Zero breaking changes to existing pin functionality
+
 ## [v0.7.2] - 2025-01-27
 
 ### Added

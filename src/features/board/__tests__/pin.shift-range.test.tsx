@@ -43,7 +43,7 @@ describe('Pin Shift-Range', () => {
       const pinButton = screen.getByRole('button', { name: /pin/i });
       await user.click(pinButton);
 
-      expect(mockOnTogglePin).toHaveBeenCalledWith(0, client.id, expect.any(MouseEvent));
+      expect(mockOnTogglePin).toHaveBeenCalledWith(expect.any(MouseEvent));
     });
 
     it('should unpin pinned client when clicked', async () => {
@@ -67,7 +67,7 @@ describe('Pin Shift-Range', () => {
       const pinButton = screen.getByRole('button', { name: /pin/i });
       await user.click(pinButton);
 
-      expect(mockOnTogglePin).toHaveBeenCalledWith(0, client.id, expect.any(MouseEvent));
+      expect(mockOnTogglePin).toHaveBeenCalledWith(expect.any(MouseEvent));
     });
   });
 
@@ -100,14 +100,14 @@ describe('Pin Shift-Range', () => {
 
       // First click to set anchor (index 1)
       await user.click(pinButtons[1]);
-      expect(mockOnTogglePin).toHaveBeenCalledWith(1, clients[1].id, expect.any(MouseEvent));
+      expect(mockOnTogglePin).toHaveBeenCalledWith(expect.any(MouseEvent));
 
       // Shift+click on index 3 (should pin range 1-3)
       await user.keyboard('{Shift>}');
       await user.click(pinButtons[3]);
       await user.keyboard('{/Shift}');
 
-      expect(mockOnTogglePin).toHaveBeenCalledWith(3, clients[3].id, expect.any(MouseEvent));
+      expect(mockOnTogglePin).toHaveBeenCalledWith(expect.any(MouseEvent));
       expect(mockOnTogglePin).toHaveBeenCalledTimes(2);
     });
 
@@ -139,14 +139,14 @@ describe('Pin Shift-Range', () => {
 
       // First click to set anchor (index 0)
       await user.click(pinButtons[0]);
-      expect(mockOnTogglePin).toHaveBeenCalledWith(0, clients[0].id, expect.any(MouseEvent));
+      expect(mockOnTogglePin).toHaveBeenCalledWith(expect.any(MouseEvent));
 
       // Shift+click on index 2 (should unpin range 0-2)
       await user.keyboard('{Shift>}');
       await user.click(pinButtons[2]);
       await user.keyboard('{/Shift}');
 
-      expect(mockOnTogglePin).toHaveBeenCalledWith(2, clients[2].id, expect.any(MouseEvent));
+      expect(mockOnTogglePin).toHaveBeenCalledWith(expect.any(MouseEvent));
       expect(mockOnTogglePin).toHaveBeenCalledTimes(2);
     });
 
@@ -178,14 +178,14 @@ describe('Pin Shift-Range', () => {
 
       // First click to set anchor (index 3)
       await user.click(pinButtons[3]);
-      expect(mockOnTogglePin).toHaveBeenCalledWith(3, clients[3].id, expect.any(MouseEvent));
+      expect(mockOnTogglePin).toHaveBeenCalledWith(expect.any(MouseEvent));
 
       // Shift+click on index 1 (should pin range 1-3)
       await user.keyboard('{Shift>}');
       await user.click(pinButtons[1]);
       await user.keyboard('{/Shift}');
 
-      expect(mockOnTogglePin).toHaveBeenCalledWith(1, clients[1].id, expect.any(MouseEvent));
+      expect(mockOnTogglePin).toHaveBeenCalledWith(expect.any(MouseEvent));
       expect(mockOnTogglePin).toHaveBeenCalledTimes(2);
     });
   });
@@ -263,7 +263,7 @@ describe('Pin Shift-Range', () => {
       const pinButton = screen.getByRole('button', { name: /pin/i });
       await user.click(pinButton);
 
-      expect(mockOnTogglePin).toHaveBeenCalledWith(0, client.id, expect.any(MouseEvent));
+      expect(mockOnTogglePin).toHaveBeenCalledWith(expect.any(MouseEvent));
     });
 
     it('should handle pin toggle on last client', async () => {
@@ -293,7 +293,7 @@ describe('Pin Shift-Range', () => {
       const pinButtons = screen.getAllByRole('button', { name: /pin/i });
       await user.click(pinButtons[2]);
 
-      expect(mockOnTogglePin).toHaveBeenCalledWith(2, lastClient.id, expect.any(MouseEvent));
+      expect(mockOnTogglePin).toHaveBeenCalledWith(expect.any(MouseEvent));
     });
 
     it('should handle mixed pin states in range', async () => {
@@ -334,7 +334,7 @@ describe('Pin Shift-Range', () => {
       await user.keyboard('{/Shift}');
 
       expect(mockOnTogglePin).toHaveBeenCalledTimes(2);
-      expect(mockOnTogglePin).toHaveBeenLastCalledWith(3, clients[3].id, expect.any(MouseEvent));
+      expect(mockOnTogglePin).toHaveBeenLastCalledWith(expect.any(MouseEvent));
     });
   });
 

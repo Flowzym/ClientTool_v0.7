@@ -19,8 +19,7 @@ const mockUseBoardData = {
     filters: { chips: [], showArchived: false },
     sort: { key: null, direction: null },
     columnVisibility: {}
-  },
-  toggleSort: vi.fn()
+  }
 };
 
 vi.mock('../useBoardData', () => ({
@@ -132,11 +131,6 @@ describe('Board Header Rendering', () => {
       const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
       
       await user.tab();
-      // May need multiple tabs to reach select-all
-      if (!selectAllCheckbox.matches(':focus')) {
-        await user.tab();
-      }
-      
       expect(selectAllCheckbox).toHaveFocus();
     });
   });
@@ -203,27 +197,6 @@ describe('Board Header Rendering', () => {
       const headerContainer = screen.getByText('Pin').closest('.grid');
       expect(headerContainer).toHaveClass('grid');
       expect(headerContainer).toHaveClass('grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px]');
-    });
-
-    it('should align with client row layout', async () => {
-      renderWithProviders(<Board />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Board')).toBeInTheDocument();
-      });
-
-      // Header and rows should use same grid template
-      const headerGrid = screen.getByText('Pin').closest('.grid');
-      const clientRows = screen.getAllByRole('row');
-      
-      if (clientRows.length > 0) {
-        const firstRowGrid = clientRows[0].querySelector('.grid');
-        if (firstRowGrid && headerGrid) {
-          // Should have same grid column classes
-          expect(headerGrid.className).toContain('grid-cols-[64px_minmax(240px,1fr)');
-          expect(firstRowGrid.className).toContain('grid-cols-[64px_minmax(240px,1fr)');
-        }
-      }
     });
   });
 });

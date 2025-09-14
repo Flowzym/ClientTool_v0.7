@@ -7,7 +7,7 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 ## Automatisierte Tests
 
 ### Unit Tests
-- **Abdeckung**: 85%+ lines, 85%+ functions, 80%+ branches
+- **Abdeckung**: 85%+ lines, 85%+ functions, 80% branches
 - **Framework**: Vitest mit React Testing Library
 - **Ausführung**: `npm test`
 
@@ -32,6 +32,27 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
   - Header checkbox tri-state behavior (false/true/mixed)
   - Keyboard navigation through sortable headers
   - Screen reader support validation
+
+### Board Header Tests
+- **Header Rendering**: `src/features/board/__tests__/board.header.render.test.tsx`
+  - No duplicate "Offer" headers
+  - Bold font headers
+  - Select-all checkbox functionality
+  - Grid layout consistency
+
+### Board Sorting Tests
+- **Sorting Contract**: `src/features/board/__tests__/board.sorting.contract.test.tsx`
+  - All sortable columns cycle through none → asc → desc → none
+  - Non-sortable columns remain non-interactive
+  - Pinned-first sorting preservation
+  - No crashes on header clicks
+
+### Board Selection Tests
+- **Header Checkbox**: `src/features/board/__tests__/board.selection.header-checkbox.test.tsx`
+  - Tri-state behavior (unchecked/checked/indeterminate)
+  - Select-all affects only visible/filtered clients
+  - Keyboard accessibility
+  - Performance with large datasets
 
 ### Performance Tests
 - **Virtual Rows**: `src/features/board/__tests__/perf.flag.test.ts`
@@ -81,6 +102,19 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
    - aria-pressed="true/false" je nach Pin-Status
    - Keyboard-Navigation (Tab + Enter/Space)
    - Beschreibende title-Attribute
+
+#### Sortierung
+1. **Spalten-Sortierung** ⭐ STABILISIERT
+   - Alle Spalten sortierbar (außer Zubuchung, Aktivität, Aktionen)
+   - Sortier-Zyklus: none → asc → desc → none
+   - Kein Crash bei fehlendem setView (lokaler Fallback)
+   - Pinned-first Pipeline in allen Modi
+
+2. **Header-Design** ⭐ VERBESSERT
+   - Alle Header in fett (font-bold)
+   - Kein doppeltes "Offer" mehr
+   - Konsistente Grid-Layout-Ausrichtung
+   - Sort-Pfeile nur bei aktiver Spalte
 
 ### Import-Pipeline
 
@@ -179,6 +213,18 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 3. Undo/Redo funktioniert
 4. Optimistic Updates korrekt
 
+### 5. Header-Sortierung ⭐ NEU
+1. Spalten-Header klicken → Sortierung wechselt
+2. aria-sort korrekt für Screen Reader
+3. Pinned-first bleibt in allen Modi erhalten
+4. Kein Crash bei fehlendem setView
+
+### 6. Header-Checkbox Tri-State ⭐ NEU
+1. Keine Auswahl → unchecked, aria-checked="false"
+2. Teilauswahl → indeterminate, aria-checked="mixed"
+3. Alle ausgewählt → checked, aria-checked="true"
+4. Klick-Verhalten funktioniert in allen Zuständen
+
 ## Browser-Kompatibilität
 
 ### Unterstützte Browser
@@ -212,6 +258,7 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 - **Crypto-Fehler**: Klare Fehlermeldungen
 - **Import-Fehler**: Validierung mit Korrektur-Hinweisen
 - **Browser-Limits**: Fallbacks für fehlende APIs
+- **Sort-Fehler**: Lokaler Fallback bei fehlendem setView
 
 ### Error Boundaries
 - **React Error Boundaries**: Verhindern kompletten App-Crash
@@ -268,6 +315,35 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 - **Error Tracking**: Lokale Error-Logs
 - **Performance**: Web Vitals Monitoring
 - **Usage**: Feature-Flag-Nutzung
+
+---
+
+## Neue Testfälle (v0.7.3)
+
+### Pin Shift-Range Tests
+- **Datei**: `src/features/board/__tests__/pin.shift-range.test.tsx`
+- **Abdeckung**: Shift-Range Pinning, Entpinnen, Bereich-Konsistenz
+- **Szenarien**: Einzeln, Range, Reverse-Range, Mixed-States
+
+### Accessibility Header Tests
+- **Datei**: `src/features/board/__tests__/a11y.headers.test.tsx`
+- **Abdeckung**: aria-sort Korrektheit, Header-Checkbox Tri-State
+- **Szenarien**: Sortable/Non-sortable Headers, Keyboard-Navigation, Screen-Reader-Support
+
+### Board Header Rendering Tests
+- **Datei**: `src/features/board/__tests__/board.header.render.test.tsx`
+- **Abdeckung**: Kein doppeltes "Offer", fette Header, Select-All
+- **Szenarien**: Header-Struktur, Grid-Layout, Font-Styling
+
+### Board Sorting Contract Tests
+- **Datei**: `src/features/board/__tests__/board.sorting.contract.test.tsx`
+- **Abdeckung**: Sortier-Zyklen, Pinned-First, Crash-Resistenz
+- **Szenarien**: Alle Spalten, Sort-States, Edge-Cases
+
+### Board Selection Header Tests
+- **Datei**: `src/features/board/__tests__/board.selection.header-checkbox.test.tsx`
+- **Abdeckung**: Tri-State Checkbox, Filtered Selection, Performance
+- **Szenarien**: Partial/Full Selection, Filter-Interaktion, Large Datasets
 
 ---
 

@@ -5,11 +5,11 @@ import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
 import { useBoardActions } from './hooks/useBoardActions';
 import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
+import ColumnHeader from './components/ColumnHeader';
 import { ClientInfoDialog } from './components';
 import { ClientRow } from './components/ClientRow';
 import BatchActionsBar from './components/BatchActionsBar';
 import { BoardHeader } from './components/BoardHeader';
-import ColumnHeader from './components/ColumnHeader';
 import { featureManager } from '../../config/features';
 
 // Extracted components for stable hook order
@@ -112,19 +112,86 @@ function VirtualClientList({
 function Board() {
   const renderCount = useRenderCount();
   const lastIndexRef = useRef<number | null>(null);
-  const lastPinAnchorIndex = useRef<number | null>(null);
+  const [lastPinAnchorIndex, setLastPinAnchorIndex] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [clientInfoDialogId, setClientInfoDialogId] = useState<string | null>(null);
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
+  const [localSort, setLocalSort] = useState<{key:string|null; direction:'asc'|'desc'|null}>({ key:null, direction:null });
 
   // All hooks must be called before any early returns
-  const { clients, users, isLoading, view, toggleSort } = useBoardData();
+  const { clients, users, isLoading, view } = useBoardData();
   const actions = useBoardActions();
 
   const clientsWithOverlay = useOptimisticOverlay(clients);
   const visibleClients = useMemo(() => clientsWithOverlay.filter((c: any) => !c.isArchived || view.showArchived), [clientsWithOverlay, view.showArchived]);
   const allIds = useMemo(() => visibleClients.map((c: any) => c.id), [visibleClients]);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const sortState = (localSort && (localSort.key!==null || localSort.direction!==null))
+    ? localSort
+    : (view?.sort ?? { key:null, direction:null });
+
+  // Sort helper functions
+  const _formatName = (c:any) => {
+    const last = c.lastName ?? ''; const first = c.firstName ?? '';
+    const title = c.title ? ` (${c.title})` : '';
+    const fallback = c.name ?? '';
+    return (last || first) ? `${last}, ${first}${title}` : fallback;
+  };
+  const _getPinned = (c:any) => Boolean(c.isPinned ?? c.pinned ?? false);
+  const _cmpStr = (a:any,b:any)=> String(a).localeCompare(String(b),'de',{sensitivity:'base'});
+  const _cmpNum = (a:any,b:any)=> Number(a)-Number(b);
+  const _cmpDate = (a?:string|null,b?:string|null)=>{
+    if(!a && !b) return 0; if(!a) return 1; if(!b) return -1;
+    return a<b?-1:a>b?1:0;
+  };
+  const _sortClients = (list:any[], sort:{key:string|null;direction:'asc'|'desc'|null})=>{
+    const dir = sort?.direction==='desc' ? -1 : 1;
+    const key = sort?.key;
+    const arr = [...list];
+    arr.sort((a,b)=>{
+      const pa=_getPinned(a), pb=_getPinned(b);
+      if(pa!==pb) return pa?-1:1;               // 1) pins first
+      let d=0;                                   // 2) active column
+      switch(key){
+        case 'name': d=_cmpStr(_formatName(a), _formatName(b)); break;
+        case 'offer': d=_cmpStr(a.angebot??'', b.angebot??''); break;
+        case 'status': d=_cmpStr(a.status??'', b.status??''); break;
+        case 'result': d=_cmpStr(a.result??'', b.result??''); break;
+        case 'followUp': d=_cmpDate(a.followUp??null,b.followUp??null); break;
+        case 'assignedTo': d=_cmpStr(a.assignedTo??'', b.assignedTo??''); break;
+        case 'contacts': d=_cmpNum(a.contactCount??0, b.contactCount??0); break;
+        case 'notes': d=_cmpNum((a.noteCount ?? a.notesCount ?? 0), (b.noteCount ?? b.notesCount ?? 0)); break;
+        case 'priority': d=_cmpNum(a.priority??0, b.priority??0); break;
+        case 'activity': d=_cmpDate(a.lastActivity??null,b.lastActivity??null); break;
+        default: d=0;
+      }
+      if(d!==0) return dir*(d<0?-1:1);
+      return String(a.id).localeCompare(String(b.id)); // 3) id tiebreaker
+    });
+    return arr;
+  };
+  const sortedClients = useMemo(()=>_sortClients(visibleClients, sortState),[visibleClients, sortState]);
+
+  // Safe shim around setView
+  const _cycle = (prev:{key:string|null;direction:'asc'|'desc'|null}|null, key:string)=>{
+    if(!prev || prev.key!==key) return { key, direction:'asc' as const };
+    if(prev.direction==='asc') return { key, direction:'desc' as const };
+    return { key:null, direction:null };
+  };
+  const _setView = (update:any)=>{
+    try {
+      if (typeof setView === 'function') return setView(update);
+    } catch {}
+    // fallback: nur Sort in localSort aktualisieren
+    try {
+      const current = view?.sort ?? localSort;
+      const next = (typeof update==='function') ? update({ ...view, sort: current }) : update;
+      if (next?.sort) setLocalSort(next.sort);
+    } catch {}
+  };
+  const handleHeaderToggle = useCallback((key:string)=>{
+    _setView((prev:any)=>({ ...prev, sort: _cycle(prev?.sort ?? null, key) }));
+  },[]);
 
   // Subscribe to feature flag changes
   useEffect(() => {
@@ -166,23 +233,23 @@ function Board() {
     const currentClient = visibleClients.find((c: any) => c.id === id);
     const targetPinState = !currentClient?.isPinned;
 
-    if (!withShift || lastPinAnchorIndex.current == null) {
+    if (!withShift || lastPinAnchorIndex == null) {
       // Single pin toggle
       actions.update(id, { isPinned: targetPinState });
-      lastPinAnchorIndex.current = index;
+      setLastPinAnchorIndex(index);
       return;
     }
 
     // Shift-range pin toggle
-    const start = Math.min(lastPinAnchorIndex.current, index);
-    const end = Math.max(lastPinAnchorIndex.current, index);
+    const start = Math.min(lastPinAnchorIndex, index);
+    const end = Math.max(lastPinAnchorIndex, index);
     const idsInRange = allIds.slice(start, end + 1);
     
     // Apply target state to all in range
     const changes = { isPinned: targetPinState };
     actions.bulkUpdate(idsInRange, changes);
     
-    lastPinAnchorIndex.current = index;
+    setLastPinAnchorIndex(index);
   };
   // Keyboard shortcuts
   useEffect(() => {
@@ -258,17 +325,85 @@ function Board() {
             />
             <span className="text-xs font-medium text-gray-600">Pin</span>
           </div>
-          <ColumnHeader columnKey="name" label="Kunde" isActive={view.sort.key === 'name'} direction={view.sort.direction} onToggle={() => toggleSort('name')} />
-          <ColumnHeader columnKey="offer" label="Angebot" isActive={view.sort.key === 'offer'} direction={view.sort.direction} onToggle={() => toggleSort('offer')} />
-          <ColumnHeader columnKey="status" label="Status" isActive={view.sort.key === 'status'} direction={view.sort.direction} onToggle={() => toggleSort('status')} />
-          <ColumnHeader columnKey="result" label="Ergebnis" isActive={view.sort.key === 'result'} direction={view.sort.direction} onToggle={() => toggleSort('result')} />
-          <ColumnHeader columnKey="followUp" label="Follow-up" isActive={view.sort.key === 'followUp'} direction={view.sort.direction} onToggle={() => toggleSort('followUp')} />
-          <ColumnHeader columnKey="assignedTo" label="Zuständigkeit" isActive={view.sort.key === 'assignedTo'} direction={view.sort.direction} onToggle={() => toggleSort('assignedTo')} />
-          <ColumnHeader columnKey="contacts" label="Kontakt" isActive={view.sort.key === 'contacts'} direction={view.sort.direction} onToggle={() => toggleSort('contacts')} />
-          <ColumnHeader columnKey="notes" label="Anmerkung" isActive={view.sort.key === 'notes'} direction={view.sort.direction} onToggle={() => toggleSort('notes')} />
-          <ColumnHeader columnKey="booking" label="Zubuchung" sortable={false} isActive={false} direction={undefined} onToggle={() => {}} />
-          <ColumnHeader columnKey="priority" label="Priorität" isActive={view.sort.key === 'priority'} direction={view.sort.direction} onToggle={() => toggleSort('priority')} />
-          <ColumnHeader columnKey="activity" label="Aktivität" sortable={false} isActive={false} direction={undefined} onToggle={() => {}} />
+          <ColumnHeader
+            columnKey="name"
+            label="Kunde"
+            isActive={sortState.key==='name'}
+            direction={sortState.key==='name' ? sortState.direction : undefined}
+            onToggle={()=>handleHeaderToggle('name')}
+          />
+          <ColumnHeader
+            columnKey="offer"
+            label="Angebot"
+            isActive={sortState.key==='offer'}
+            direction={sortState.key==='offer' ? sortState.direction : undefined}
+            onToggle={()=>handleHeaderToggle('offer')}
+          />
+          <ColumnHeader
+            columnKey="status"
+            label="Status"
+            isActive={sortState.key==='status'}
+            direction={sortState.key==='status' ? sortState.direction : undefined}
+            onToggle={()=>handleHeaderToggle('status')}
+          />
+          <ColumnHeader
+            columnKey="result"
+            label="Ergebnis"
+            isActive={sortState.key==='result'}
+            direction={sortState.key==='result' ? sortState.direction : undefined}
+            onToggle={()=>handleHeaderToggle('result')}
+          />
+          <ColumnHeader
+            columnKey="followUp"
+            label="Follow-up"
+            isActive={sortState.key==='followUp'}
+            direction={sortState.key==='followUp' ? sortState.direction : undefined}
+            onToggle={()=>handleHeaderToggle('followUp')}
+          />
+          <ColumnHeader
+            columnKey="assignedTo"
+            label="Zuständigkeit"
+            isActive={sortState.key==='assignedTo'}
+            direction={sortState.key==='assignedTo' ? sortState.direction : undefined}
+            onToggle={()=>handleHeaderToggle('assignedTo')}
+          />
+          <ColumnHeader
+            columnKey="contacts"
+            label="Kontakt"
+            isActive={sortState.key==='contacts'}
+            direction={sortState.key==='contacts' ? sortState.direction : undefined}
+            onToggle={()=>handleHeaderToggle('contacts')}
+          />
+          <ColumnHeader
+            columnKey="notes"
+            label="Anmerkung"
+            isActive={sortState.key==='notes'}
+            direction={sortState.key==='notes' ? sortState.direction : undefined}
+            onToggle={()=>handleHeaderToggle('notes')}
+          />
+          <ColumnHeader
+            columnKey="booking"
+            label="Zubuchung"
+            sortable={false}
+            isActive={false}
+            direction={undefined}
+            onToggle={()=>{}}
+          />
+          <ColumnHeader
+            columnKey="priority"
+            label="Priorität"
+            isActive={sortState.key==='priority'}
+            direction={sortState.key==='priority' ? sortState.direction : undefined}
+            onToggle={()=>handleHeaderToggle('priority')}
+          />
+          <ColumnHeader
+            columnKey="activity"
+            label="Aktivität"
+            sortable={false}
+            isActive={false}
+            direction={undefined}
+            onToggle={()=>{}}
+          />
           <div className="text-xs font-medium text-gray-600">Aktionen</div>
         </div>
       </div>
@@ -276,7 +411,7 @@ function Board() {
       {/* Client List (virtualized or classic) */}
       {virtualRowsEnabled ? (
         <VirtualClientList
-          clients={visibleClients}
+          clients={sortedClients}
           users={users}
           actions={actions}
           selectedSet={selectedSet}
@@ -285,7 +420,7 @@ function Board() {
         />
       ) : (
         <ClassicClientList
-          clients={visibleClients}
+          clients={sortedClients}
           users={users}
           actions={actions}
           selectedSet={selectedSet}
@@ -301,12 +436,12 @@ function Board() {
             <input
               type="checkbox"
               checked={virtualRowsEnabled}
-              onChange={(e) => featureManager.toggle('virtualRows')}
+              onChange={(e) => featureManager.setFeature('virtualRows', e.target.checked)}
               className="rounded border-gray-300"
             />
             <span>Virtualized Rows (Performance)</span>
             <span className="text-xs text-gray-500">
-              ({virtualRowsEnabled ? 'ON' : 'OFF'}) - {visibleClients.length} clients
+              ({virtualRowsEnabled ? 'ON' : 'OFF'}) - {sortedClients.length} clients
             </span>
           </label>
         </div>
@@ -316,7 +451,7 @@ function Board() {
       <ClientInfoDialog
         isOpen={!!clientInfoDialogId}
         onClose={() => setClientInfoDialogId(null)}
-        client={clientInfoDialogId ? visibleClients.find((c: any) => c.id === clientInfoDialogId) || null : null}
+        client={clientInfoDialogId ? sortedClients.find((c: any) => c.id === clientInfoDialogId) || null : null}
       />
     </div>
   );
