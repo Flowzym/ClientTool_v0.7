@@ -42,6 +42,7 @@ import {
     clients: filteredClients,
     users,
     view,
+    setView,
     counts,
     isLoading,
     selectedIds,
@@ -49,10 +50,8 @@ import {
     toggleChip,
     toggleArchived,
     setCurrentUser,
-    toggleSort,
     setColumnVisibility,
-    toggleSort,
     resetToDefaultView,
-    toggleSort
+    refreshData
   };
 }

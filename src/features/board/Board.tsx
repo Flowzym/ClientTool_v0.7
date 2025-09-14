@@ -103,7 +103,7 @@ function VirtualClientList({
 
 function Board() {
   // ALL HOOKS AT TOP LEVEL - NEVER CONDITIONAL
-  const { clients, users, isLoading, view, toggleSort } = useBoardData();
+  const { clients, users, isLoading, view, setView } = useBoardData();
   const actions = useBoardActions();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
@@ -113,6 +113,27 @@ function Board() {
   const renderCount = useRenderCount('Board');
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const allIds = useMemo(() => visibleClients.map((c:any) => c.id as string), [visibleClients]);
+
+  // Local sort handler with proper closure
+  const handleHeaderToggle = useCallback((key: string) => {
+    setView(prev => {
+      const currentSort = prev.sort;
+      
+      if (currentSort.key === key) {
+        // Same column: cycle through asc → desc → none
+        if (currentSort.direction === 'asc') {
+          return { ...prev, sort: { key, direction: 'desc' } };
+        } else if (currentSort.direction === 'desc') {
+          return { ...prev, sort: { key: null, direction: null } };
+        } else {
+          return { ...prev, sort: { key, direction: 'asc' } };
+        }
+      } else {
+        // Different column: start with ascending
+        return { ...prev, sort: { key, direction: 'asc' } };
+      }
+    });
+  }, [setView]);
 
   // Subscribe to feature flag changes
   useEffect(() => {
@@ -219,15 +240,15 @@ function Board() {
             <span className="text-xs font-medium text-gray-600">Pin</span>
           </div>
           <ColumnHeader columnKey="name" label="Kunde" isActive={view.sort.key === 'name'} direction={view.sort.direction} onToggle={() => toggleSort('name')} />
-          <ColumnHeader columnKey="offer" label="Angebot" isActive={view.sort.key === 'offer'} direction={view.sort.direction} onToggle={() => toggleSort('offer')} />
-          <ColumnHeader columnKey="status" label="Status" isActive={view.sort.key === 'status'} direction={view.sort.direction} onToggle={() => toggleSort('status')} />
-          <ColumnHeader columnKey="result" label="Ergebnis" isActive={view.sort.key === 'result'} direction={view.sort.direction} onToggle={() => toggleSort('result')} />
-          <ColumnHeader columnKey="followUp" label="Follow-up" isActive={view.sort.key === 'followUp'} direction={view.sort.direction} onToggle={() => toggleSort('followUp')} />
-          <ColumnHeader columnKey="assignedTo" label="Zuständigkeit" isActive={view.sort.key === 'assignedTo'} direction={view.sort.direction} onToggle={() => toggleSort('assignedTo')} />
-          <ColumnHeader columnKey="contacts" label="Kontakt" isActive={view.sort.key === 'contacts'} direction={view.sort.direction} onToggle={() => toggleSort('contacts')} />
-          <ColumnHeader columnKey="notes" label="Anmerkung" isActive={view.sort.key === 'notes'} direction={view.sort.direction} onToggle={() => toggleSort('notes')} />
+          <ColumnHeader columnKey="offer" label="Angebot" isActive={view.sort.key === 'offer'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('offer')} />
+          <ColumnHeader columnKey="status" label="Status" isActive={view.sort.key === 'status'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('status')} />
+          <ColumnHeader columnKey="result" label="Ergebnis" isActive={view.sort.key === 'result'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('result')} />
+          <ColumnHeader columnKey="followUp" label="Follow-up" isActive={view.sort.key === 'followUp'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('followUp')} />
+          <ColumnHeader columnKey="assignedTo" label="Zuständigkeit" isActive={view.sort.key === 'assignedTo'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('assignedTo')} />
+          <ColumnHeader columnKey="contacts" label="Kontakt" isActive={view.sort.key === 'contacts'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('contacts')} />
+          <ColumnHeader columnKey="notes" label="Anmerkung" isActive={view.sort.key === 'notes'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('notes')} />
           <ColumnHeader columnKey="booking" label="Zubuchung" sortable={false} isActive={false} direction={undefined} onToggle={() => {}} />
-          <ColumnHeader columnKey="priority" label="Priorität" isActive={view.sort.key === 'priority'} direction={view.sort.direction} onToggle={() => toggleSort('priority')} />
+          <ColumnHeader columnKey="priority" label="Priorität" isActive={view.sort.key === 'priority'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('priority')} />
           <ColumnHeader columnKey="activity" label="Aktivität" sortable={false} isActive={false} direction={undefined} onToggle={() => {}} />
           <div className="text-xs font-medium text-gray-600">Aktionen</div>
         </div>

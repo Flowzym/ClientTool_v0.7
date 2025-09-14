@@ -53,5 +53,3 @@ export default function ColumnHeader({
     </button>
   );
 }
-
-export { ColumnHeader }
