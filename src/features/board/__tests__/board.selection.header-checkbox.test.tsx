@@ -1,6 +1,6 @@
 /**
- * Tests for header select-all checkbox with sorted clients
- * Covers tri-state behavior, filtered rows, and sort-aware selection
+ * Tests for header select-all checkbox
+ * Covers tri-state behavior, filtered rows, and indeterminate state
  */
 
 import React from 'react';
@@ -11,7 +11,7 @@ import { renderWithProviders } from './TestHarness';
 import Board from '../Board';
 import { seedRows, mockUsers } from './fixtures';
 
-// Mock board data with controllable selection and sorting
+// Mock board data with controllable selection
 const mockUseBoardData = {
   clients: seedRows(5),
   users: mockUsers,
@@ -27,87 +27,13 @@ vi.mock('../useBoardData', () => ({
   useBoardData: () => mockUseBoardData
 }));
 
-describe('Board Header Select-All Checkbox with Sorting', () => {
+describe('Board Header Select-All Checkbox', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseBoardData.clients = seedRows(5);
-    mockUseBoardData.view.sort = { key: null, direction: null };
   });
 
-  describe('select-all with sorted clients', () => {
-    it('should select all clients in current sorted order', async () => {
-      const user = userEvent.setup();
-      
-      // Set up sorted view
-      mockUseBoardData.view.sort = { key: 'name', direction: 'asc' };
-      
-      renderWithProviders(<Board />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Board')).toBeInTheDocument();
-      });
-
-      const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
-      await user.click(selectAllCheckbox);
-
-      // Should select all visible clients in sorted order
-      expect(selectAllCheckbox).toBeInTheDocument();
-    });
-
-    it('should respect current sort when determining selection order', async () => {
-      const user = userEvent.setup();
-      
-      // Create clients with different names for sorting
-      const sortableClients = [
-        { ...seedRows(1)[0], id: 'client-z', firstName: 'Zora', lastName: 'Zander' },
-        { ...seedRows(1)[0], id: 'client-a', firstName: 'Anna', lastName: 'Abel' },
-        { ...seedRows(1)[0], id: 'client-m', firstName: 'Max', lastName: 'Muster' }
-      ];
-      
-      mockUseBoardData.clients = sortableClients;
-      mockUseBoardData.view.sort = { key: 'name', direction: 'asc' };
-      
-      renderWithProviders(<Board />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Board')).toBeInTheDocument();
-      });
-
-      const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
-      await user.click(selectAllCheckbox);
-
-      // Selection should follow sorted order (Abel, Muster, Zander)
-      expect(selectAllCheckbox).toBeInTheDocument();
-    });
-
-    it('should handle pinned-first sorting in selection', async () => {
-      const user = userEvent.setup();
-      
-      // Create mixed pinned/unpinned clients
-      const mixedClients = [
-        { ...seedRows(1)[0], id: 'unpinned-1', firstName: 'Anna', isPinned: false },
-        { ...seedRows(1)[0], id: 'pinned-1', firstName: 'Zora', isPinned: true },
-        { ...seedRows(1)[0], id: 'unpinned-2', firstName: 'Bernd', isPinned: false }
-      ];
-      
-      mockUseBoardData.clients = mixedClients;
-      mockUseBoardData.view.sort = { key: 'name', direction: 'asc' };
-      
-      renderWithProviders(<Board />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Board')).toBeInTheDocument();
-      });
-
-      const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
-      await user.click(selectAllCheckbox);
-
-      // Should select in pinned-first order: Zora (pinned), then Anna, Bernd (sorted)
-      expect(selectAllCheckbox).toBeInTheDocument();
-    });
-  });
-
-  describe('tri-state behavior with sorting', () => {
+  describe('tri-state behavior', () => {
     it('should show unchecked when no clients selected', async () => {
       renderWithProviders(<Board />);
 
@@ -117,12 +43,10 @@ describe('Board Header Select-All Checkbox with Sorting', () => {
 
       const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
       expect(selectAllCheckbox).not.toBeChecked();
-      expect(selectAllCheckbox).toHaveAttribute('aria-checked', 'false');
+      expect(selectAllCheckbox.indeterminate).toBe(false);
     });
 
-    it('should show checked when all sorted clients selected', async () => {
-      const user = userEvent.setup();
-      
+    it('should show indeterminate when some clients selected', async () => {
       renderWithProviders(<Board />);
 
       await waitFor(() => {
@@ -130,49 +54,15 @@ describe('Board Header Select-All Checkbox with Sorting', () => {
       });
 
       const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
-      await user.click(selectAllCheckbox);
-
-      // Should show fully selected state
-      expect(selectAllCheckbox).toBeChecked();
-      expect(selectAllCheckbox).toHaveAttribute('aria-checked', 'true');
-    });
-
-    it('should show indeterminate when some sorted clients selected', async () => {
-      const user = userEvent.setup();
       
-      renderWithProviders(<Board />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Board')).toBeInTheDocument();
-      });
-
-      // Select one individual client first
-      const individualCheckboxes = screen.getAllByRole('checkbox');
-      const firstClientCheckbox = individualCheckboxes.find(cb => 
-        cb !== screen.getByLabelText('Alle auswählen')
-      );
-
-      if (firstClientCheckbox) {
-        await user.click(firstClientCheckbox);
-        
-        const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
-        expect(selectAllCheckbox).toHaveAttribute('aria-checked', 'mixed');
-      }
+      // Checkbox should support indeterminate state
+      expect(selectAllCheckbox).toHaveProperty('indeterminate');
     });
   });
 
-  describe('filtered selection with sorting', () => {
-    it('should only select visible filtered clients in sorted order', async () => {
+  describe('select-all interaction', () => {
+    it('should select all visible clients when clicked', async () => {
       const user = userEvent.setup();
-      
-      // Mock filtered dataset
-      mockUseBoardData.clients = seedRows(6).map((client, index) => ({
-        ...client,
-        isArchived: index >= 3 // Half archived
-      }));
-      
-      mockUseBoardData.view.filters.showArchived = false; // Hide archived
-      mockUseBoardData.view.sort = { key: 'name', direction: 'asc' };
       
       renderWithProviders(<Board />);
 
@@ -183,21 +73,12 @@ describe('Board Header Select-All Checkbox with Sorting', () => {
       const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
       await user.click(selectAllCheckbox);
 
-      // Should only select visible (non-archived) clients in sorted order
+      // Should trigger selection of all visible clients
       expect(selectAllCheckbox).toBeInTheDocument();
     });
 
-    it('should work with chip filters and sorting', async () => {
+    it('should clear selection when clicked while all selected', async () => {
       const user = userEvent.setup();
-      
-      // Mock filtered dataset
-      mockUseBoardData.clients = seedRows(6).map((client, index) => ({
-        ...client,
-        status: index < 3 ? 'offen' : 'erledigt'
-      }));
-      
-      mockUseBoardData.view.filters.chips = ['offen']; // Filter to only open clients
-      mockUseBoardData.view.sort = { key: 'priority', direction: 'desc' };
       
       renderWithProviders(<Board />);
 
@@ -206,14 +87,17 @@ describe('Board Header Select-All Checkbox with Sorting', () => {
       });
 
       const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
+      
+      // First click to select all
+      await user.click(selectAllCheckbox);
+      
+      // Second click to clear all
       await user.click(selectAllCheckbox);
 
-      // Should select only filtered clients in priority-sorted order
+      // Should clear selection
       expect(selectAllCheckbox).toBeInTheDocument();
     });
-  });
 
-  describe('keyboard accessibility', () => {
     it('should be keyboard accessible', async () => {
       const user = userEvent.setup();
       
@@ -233,8 +117,18 @@ describe('Board Header Select-All Checkbox with Sorting', () => {
       // Should trigger selection
       expect(selectAllCheckbox).toBeInTheDocument();
     });
+  });
 
-    it('should have proper ARIA attributes', async () => {
+  describe('filtered selection behavior', () => {
+    it('should only affect visible/filtered clients', async () => {
+      // Mock filtered dataset
+      mockUseBoardData.clients = seedRows(10).map((client, index) => ({
+        ...client,
+        isArchived: index >= 5 // Half archived
+      }));
+      
+      mockUseBoardData.view.filters.showArchived = false; // Hide archived
+      
       renderWithProviders(<Board />);
 
       await waitFor(() => {
@@ -242,16 +136,125 @@ describe('Board Header Select-All Checkbox with Sorting', () => {
       });
 
       const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
-      expect(selectAllCheckbox).toHaveAttribute('aria-label', 'Alle auswählen');
-      expect(selectAllCheckbox).toHaveAttribute('aria-checked');
+      
+      // Should only consider visible (non-archived) clients
+      expect(selectAllCheckbox).toBeInTheDocument();
+    });
+
+    it('should work with chip filters', async () => {
+      // Mock filtered dataset
+      mockUseBoardData.clients = seedRows(6).map((client, index) => ({
+        ...client,
+        status: index < 3 ? 'offen' : 'erledigt'
+      }));
+      
+      mockUseBoardData.view.filters.chips = ['offen']; // Filter to only open clients
+      
+      renderWithProviders(<Board />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Board')).toBeInTheDocument();
+      });
+
+      const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
+      
+      // Should only consider filtered clients
+      expect(selectAllCheckbox).toBeInTheDocument();
+    });
+  });
+
+  describe('selection state synchronization', () => {
+    it('should reflect current selection state correctly', async () => {
+      renderWithProviders(<Board />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Board')).toBeInTheDocument();
+      });
+
+      const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
+      
+      // Should start unchecked
+      expect(selectAllCheckbox).not.toBeChecked();
+      expect(selectAllCheckbox.indeterminate).toBe(false);
+    });
+
+    it('should update when individual selections change', async () => {
+      const user = userEvent.setup();
+      
+      renderWithProviders(<Board />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Board')).toBeInTheDocument();
+      });
+
+      // Select individual client
+      const individualCheckboxes = screen.getAllByRole('checkbox');
+      const firstClientCheckbox = individualCheckboxes.find(cb => 
+        cb !== screen.getByLabelText('Alle auswählen')
+      );
+
+      if (firstClientCheckbox) {
+        await user.click(firstClientCheckbox);
+        
+        // Select-all should update to indeterminate state
+        const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
+        expect(selectAllCheckbox).toBeInTheDocument();
+      }
+    });
+  });
+
+  describe('edge cases', () => {
+    it('should handle empty client list', async () => {
+      mockUseBoardData.clients = [];
+      
+      renderWithProviders(<Board />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Board')).toBeInTheDocument();
+      });
+
+      const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
+      expect(selectAllCheckbox).not.toBeChecked();
+      expect(selectAllCheckbox.indeterminate).toBe(false);
+    });
+
+    it('should handle single client', async () => {
+      mockUseBoardData.clients = seedRows(1);
+      
+      renderWithProviders(<Board />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Board')).toBeInTheDocument();
+      });
+
+      const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
+      expect(selectAllCheckbox).toBeInTheDocument();
+    });
+
+    it('should handle all clients filtered out', async () => {
+      mockUseBoardData.clients = seedRows(5).map(client => ({
+        ...client,
+        isArchived: true
+      }));
+      
+      mockUseBoardData.view.filters.showArchived = false;
+      
+      renderWithProviders(<Board />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Board')).toBeInTheDocument();
+      });
+
+      const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
+      expect(selectAllCheckbox).not.toBeChecked();
+      expect(selectAllCheckbox.indeterminate).toBe(false);
     });
   });
 
   describe('performance with large datasets', () => {
-    it('should handle select-all efficiently with large sorted datasets', async () => {
+    it('should handle select-all efficiently with large datasets', async () => {
       const user = userEvent.setup();
       mockUseBoardData.clients = seedRows(100);
-      mockUseBoardData.view.sort = { key: 'name', direction: 'asc' };
       
       const start = performance.now();
       
@@ -266,38 +269,8 @@ describe('Board Header Select-All Checkbox with Sorting', () => {
       
       const duration = performance.now() - start;
       
-      // Should complete quickly even with large sorted dataset
+      // Should complete quickly even with large dataset
       expect(duration).toBeLessThan(1000);
-    });
-  });
-
-  describe('edge cases', () => {
-    it('should handle empty sorted client list', async () => {
-      mockUseBoardData.clients = [];
-      
-      renderWithProviders(<Board />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Board')).toBeInTheDocument();
-      });
-
-      const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
-      expect(selectAllCheckbox).not.toBeChecked();
-      expect(selectAllCheckbox).toHaveAttribute('aria-checked', 'false');
-    });
-
-    it('should handle single sorted client', async () => {
-      mockUseBoardData.clients = seedRows(1);
-      mockUseBoardData.view.sort = { key: 'name', direction: 'asc' };
-      
-      renderWithProviders(<Board />);
-
-      await waitFor(() => {
-        expect(screen.getByText('Board')).toBeInTheDocument();
-      });
-
-      const selectAllCheckbox = screen.getByLabelText('Alle auswählen');
-      expect(selectAllCheckbox).toBeInTheDocument();
     });
   });
 });

@@ -124,6 +124,7 @@ function Board() {
 
   const clientsWithOverlay = useOptimisticOverlay(clients);
   const visibleClients = useMemo(() => clientsWithOverlay.filter((c: any) => !c.isArchived || view.showArchived), [clientsWithOverlay, view.showArchived]);
+  const allIds = useMemo(() => visibleClients.map((c: any) => c.id), [visibleClients]);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const sortState = (localSort && (localSort.key!==null || localSort.direction!==null))
     ? localSort
@@ -170,8 +171,6 @@ function Board() {
     return arr;
   };
   const sortedClients = useMemo(()=>_sortClients(visibleClients, sortState),[visibleClients, sortState]);
-
-  const allIds = useMemo(() => sortedClients.map((c: any) => c.id as string), [sortedClients]);
 
   // Safe shim around setView
   const _cycle = (prev:{key:string|null;direction:'asc'|'desc'|null}|null, key:string)=>{
