@@ -1,5 +1,13 @@
 import { safeParseToISO } from '../../utils/date/safeParseToISO';
 
+const isDev = import.meta.env.DEV;
+
+function devWarn(message: string, data?: any): void {
+  if (isDev) {
+    console.warn(`[validators] ${message}`, data);
+  }
+}
+
 export type ValidationResult = { ok: boolean; errors: string[]; warnings: string[] };
 
 /**
@@ -24,9 +32,11 @@ export function validateRow(row: Record<string, unknown>): ValidationResult {
         (row as any).followUp = iso;
       } else {
         warnings.push('Could not parse follow-up date');
+        devWarn('Follow-up date parse failed', { input: rawFollowUp, row: row.name || 'unknown' });
       }
     } catch {
       warnings.push('Could not parse follow-up date');
+      devWarn('Follow-up date parse exception', { input: rawFollowUp, row: row.name || 'unknown' });
     }
   }
 

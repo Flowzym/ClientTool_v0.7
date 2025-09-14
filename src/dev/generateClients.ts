@@ -49,13 +49,13 @@ export function generateClients(n: number, seed: number = 12345): Client[] {
   const rng = new SimpleRandom(seed);
   const clients: Client[] = [];
   
-  const now = new Date();
-  const baseTime = now.getTime();
+  // Fixed base time for deterministic tests
+  const baseTime = new Date('2024-01-15T10:00:00Z').getTime();
   
   for (let i = 0; i < n; i++) {
     const firstName = rng.pick(firstNames);
     const lastName = rng.pick(lastNames);
-    const amsId = `A${String(10000 + i).padStart(5, '0')}`;
+    const amsId = `A${String(10000 + i).padStart(5, '0')}`; // A10000, A10001, etc.
     
     // Random dates within last year
     const dayOffset = rng.nextInt(365);
@@ -72,10 +72,10 @@ export function generateClients(n: number, seed: number = 12345): Client[] {
     
     // Notes (0-3)
     const noteCount = rng.nextInt(4);
-    const notes = Array.from({ length: noteCount }, (_, j) => `Notiz ${j + 1} für ${firstName}`);
+    const notes = Array.from({ length: noteCount }, (_, j) => `Notiz ${j + 1} für ${firstName} (seed:${seed})`);
     
     const client: Client = {
-      id: `perf-client-${i}`,
+      id: `perf-client-${seed}-${i}`, // Include seed for uniqueness
       amsId,
       firstName,
       lastName,

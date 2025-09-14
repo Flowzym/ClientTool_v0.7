@@ -76,11 +76,15 @@ export async function seedTestData(mode: SeedMode = 'skip'): Promise<{ clients: 
   const now = new Date();
   const toISO = (d: Date) => new Date(d).toISOString();
 
+  // Fixed base time for deterministic tests
+  const baseTime = new Date('2024-01-15T10:00:00Z');
+  const toISOFixed = (offsetDays: number) => new Date(baseTime.getTime() + offsetDays * 24 * 60 * 60 * 1000).toISOString();
+
   const rows: Partial<Client & { sourceId?: string; rowKey?: string; source?: any }>[] = Array.from({ length: 16 }).map((_, i) => {
     const fn = firstNames[i % firstNames.length];
     const ln = lastNames[i % lastNames.length];
-    const id = mode === 'newIds' ? `seed-${Date.now()}-${i}` : `seed-${i+1}`;
-    const fu = (i % 3 === 0) ? toISO(new Date(now.getTime() + (i+1) * 24*3600*1000)) : undefined;
+    const id = mode === 'newIds' ? `seed-${baseTime.getTime()}-${i}` : `seed-${i+1}`;
+    const fu = (i % 3 === 0) ? toISOFixed(i + 1) : undefined;
     const angebot = (['BAM','LL/B+','BwB','NB'] as const)[i % 4];
 
     return {
@@ -94,7 +98,7 @@ export async function seedTestData(mode: SeedMode = 'skip'): Promise<{ clients: 
       status: (i % 5 === 0) ? 'terminVereinbart' as any : ((i % 4 === 0) ? 'inBearbeitung' as any : 'offen' as any),
       angebot,
       followUp: fu,
-      lastActivity: toISO(now),
+      lastActivity: toISOFixed(0), // Base time
       contactCount: 0,
       contactLog: [],
       isArchived: false,
@@ -107,7 +111,7 @@ export async function seedTestData(mode: SeedMode = 'skip'): Promise<{ clients: 
       pinnedAt: i % 7 === 0 ? toISO(now) : undefined,
       sourceId: 'seed',
       rowKey: `seed-row-${i+1}`,
-      source: { fileName: 'seedTestData', importedAt: toISO(now), mappingPreset: 'demo' }
+      source: { fileName: 'seedTestData', importedAt: toISOFixed(0), mappingPreset: 'demo' }
     };
   });
 

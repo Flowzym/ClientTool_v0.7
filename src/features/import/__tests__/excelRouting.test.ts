@@ -60,6 +60,18 @@ describe('Excel Import Routing', () => {
       expect(detectFileType('EXPORT.CSV')).toBe('csv');
     });
 
+    it('should detect Excel via MIME type with missing extension', () => {
+      expect(detectFileType('download', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')).toBe('xlsx');
+      expect(detectFileType('export', 'application/vnd.ms-excel')).toBe('xls');
+      expect(detectFileType('data', 'text/csv')).toBe('csv');
+    });
+
+    it('should handle compound extensions correctly', () => {
+      expect(detectFileType('backup.clients.xlsx')).toBe('xlsx');
+      expect(detectFileType('data.2024.csv')).toBe('csv');
+      expect(detectFileType('archive.old.xls')).toBe('xls');
+    });
+
     it('should detect via MIME type when extension ambiguous', () => {
       expect(detectFileType('file', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')).toBe('xlsx');
       expect(detectFileType('file', 'application/vnd.ms-excel')).toBe('xls');

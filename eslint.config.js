@@ -64,6 +64,7 @@ export default [
       
       // React Hooks rules (hardened)
       'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       
       // Export/Import conventions
       'no-restricted-syntax': [
