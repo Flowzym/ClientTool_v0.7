@@ -1,4 +1,5 @@
 import React from 'react';
+import { Pin } from 'lucide-react';
 
 export default function PinCell({ 
   pinned, 
@@ -13,12 +14,12 @@ export default function PinCell({
 
   return (
     <button
-      className={`px-2 py-1 text-xs border rounded ${pinned ? 'bg-yellow-100 border-yellow-300' : 'bg-white border-gray-300'}`}
+      className={`p-1 rounded hover:bg-gray-50 ${pinned ? 'text-blue-600' : 'text-gray-400'}`}
       onClick={handleClick}
       title={pinned ? 'Gepinnt' : 'Anpinnen'}
       aria-pressed={pinned}
     >
-      {pinned ? '📌' : '📍'}
+      <Pin size={14} />
     </button>
   );
 }
