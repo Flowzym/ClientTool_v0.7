@@ -134,6 +134,8 @@ function Board() {
       }
     });
   }, [setView]);
+  const toggleSort = handleHeaderToggle; // legacy alias to guard against stale calls
+
 
   // Subscribe to feature flag changes
   useEffect(() => {
@@ -239,7 +241,7 @@ function Board() {
             />
             <span className="text-xs font-medium text-gray-600">Pin</span>
           </div>
-          <ColumnHeader columnKey="name" label="Kunde" isActive={view.sort.key === 'name'} direction={view.sort.direction} onToggle={() => toggleSort('name')} />
+          <ColumnHeader columnKey="name" label="Kunde" isActive={view.sort.key === 'name'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('name')} />
           <ColumnHeader columnKey="offer" label="Angebot" isActive={view.sort.key === 'offer'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('offer')} />
           <ColumnHeader columnKey="status" label="Status" isActive={view.sort.key === 'status'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('status')} />
           <ColumnHeader columnKey="result" label="Ergebnis" isActive={view.sort.key === 'result'} direction={view.sort.direction} onToggle={() => handleHeaderToggle('result')} />
