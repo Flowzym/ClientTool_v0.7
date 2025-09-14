@@ -476,6 +476,7 @@ export function useBoardData() {
   return {
     clients: view.sort.key ? sortedClients : legacySortedClients,
     users,
+    view,
     counts,
     isLoading,
     selectedIds,
