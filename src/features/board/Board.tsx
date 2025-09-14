@@ -233,7 +233,11 @@ function Board() {
     const start = Math.min(lastIndexRef.current, index);
     const end = Math.max(lastIndexRef.current, index);
     const idsInRange = allIds.slice(start, end + 1);
-    setSelectedIds(prev => Array.from(new Set([...prev, ...idsInRange])));
+    setSelectedIds(prev => {
+      const newSet = new Set(prev);
+      idsInRange.forEach(id => newSet.add(id));
+      return Array.from(newSet);
+    });
     lastIndexRef.current = index;
   };
 
