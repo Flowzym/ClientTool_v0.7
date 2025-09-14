@@ -60,7 +60,7 @@
 **Next Review**: 2025-03-15
 
 ### R005: Import Routing Confusion
-**Status**: Fixed  
+**Status**: RESOLVED  
 **Impact**: Excel files processed by PDF handler (or vice versa)  
 **Probability**: Low  
 **Mitigation**:
@@ -71,7 +71,6 @@
 
 **Test Reference**: `src/features/import/__tests__/excelRouting.test.ts`  
 **Last Review**: 2025-01-27  
-**Status**: RESOLVED
 
 ## 🟢 Low Priority Risks
 

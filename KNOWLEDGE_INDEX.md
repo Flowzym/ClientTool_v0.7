@@ -17,6 +17,11 @@
 **File**: `docs/ADR-0003-export-policy.md`  
 **Summary**: Automated enforcement of export policy through contract tests, usage validation, and ESLint flat config rules. Prevents mixed export patterns and ensures consistent module structure.
 
+### ADR-0004: Performance Flag Safeguards
+**Status**: Accepted and Implemented  
+**File**: `docs/ADR-0002-virtual-rows.md`  
+**Summary**: Virtual rows implementation behind feature flag (default: off) with comprehensive fallback to classic rendering. Includes performance playground for validation and opt-in testing framework.
+
 ## Technical Documentation
 
 ### Security & Encryption

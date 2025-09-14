@@ -36,9 +36,27 @@
 ### ✅ Phase 5: CI/CD & Quality Gates (2025-01-27)
 - [x] GitHub Actions Workflow (build/test/lint)
 - [x] Vitest Coverage Gate (85% lines, 85% functions, 80% branches)
-- [x] Status Gate Script mit Red-Flag-Detection
-- [x] ESLint Autofix (0 warnings erreicht)
+- [x] Status Gate Script with automated red/yellow flag detection
+- [x] ESLint Autofix (0 warnings achieved)
 - [x] Artifact-Upload für Debug-Logs
+
+### Phase 6: Documentation & Release Preparation (2025-01-27)
+**Status**: In Progress
+**Ziel**: Comprehensive documentation consolidation and v0.7.1 release preparation
+
+#### 6.1 Documentation Consolidation
+- [x] ADR updates (Virtual Rows, Export Policy)
+- [x] Knowledge Index with all technical documentation
+- [x] Risk Log updates (Import Routing resolved)
+- [x] Refactoring Tasks alignment
+- [x] Status Gate how-to documentation
+
+#### 6.2 Release Preparation
+- [x] Changelog v0.7.1 comprehensive entries
+- [x] Implementation Log technical details
+- [x] Performance safeguards documentation
+- [ ] Final quality gate validation
+- [ ] Release notes preparation
 
 ### ✅ Phase 6: Board Stabilization (v0.7.1)
 - [x] setOffer Patch-Flow Implementation
