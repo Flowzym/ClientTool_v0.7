@@ -75,6 +75,14 @@ export default [
         {
           selector: 'ExportDefaultDeclaration[declaration.type="ArrowFunctionExpression"]',
           message: 'Use function declarations for default exports, not arrow functions'
+        },
+        {
+          selector: 'ImportDefaultSpecifier[parent.source.value=/\\.(hook|service|util)\\.(ts|tsx)$/]',
+          message: 'Hooks, services, and utilities should use named imports only, not default imports'
+        },
+        {
+          selector: 'ExportDefaultDeclaration[parent.parent.parent.source.value=/\\.(hook|service|util)\\.(ts|tsx)$/]',
+          message: 'Hooks, services, and utilities should use named exports only, not default exports'
         }
       ]
     },
