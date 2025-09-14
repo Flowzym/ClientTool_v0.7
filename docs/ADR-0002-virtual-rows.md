@@ -1,7 +1,7 @@
 # ADR-0002: Virtualized Board Rows for Performance
 
 ## Status
-Implemented
+Accepted and Implemented
 
 ## Context
 
@@ -27,7 +27,7 @@ Implement **optional virtualization** behind a feature flag with complete fallba
 
 ```typescript
 // Feature flag control
-featureManager.setFeature('virtualRows', false) // Default off
+featureManager.setFeature('virtualRows', false) // CRITICAL: Default off for stability
 
 // Virtualization parameters
 rowHeight: 44px (fixed)
@@ -134,7 +134,8 @@ viewport: dynamic based on container size
 - ✅ **Tests comprehensive**: Unit, integration, guard tests
 - ✅ **Performance validated**: 10x+ improvement with large datasets
 - ✅ **Zero regressions**: Classic mode unchanged
-- 🔄 **Rollout phase**: Opt-in testing in development
+- ✅ **Default off**: Stable flat rendering by default
+- 🔄 **Rollout phase**: Opt-in testing in development builds only
 ## Future Considerations
 
 ### Potential Enhancements

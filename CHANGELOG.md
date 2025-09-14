@@ -3,12 +3,18 @@
 ## [v0.7.1] - 2025-01-27
 
 ### Added
+- test(export): CSV injection guards, separator/escaping/UTF8+BOM, deterministic ZIP bundling
+- test(ui): Board rendering contracts (NameCell, notes badge, blue booked chip, offer column, archive icon, ARIA pin, hover/RTL)
+- test(integration): Follow-up↔status auto & undo/redo pending→reconcile with service mocks
+- test(policy): Export policy guards (tests + ESLint); components=default, helpers=named-only; barrel re-exports
+- chore(dx): Board cleanup, ESLint harden, validators try/catch stabilize, excel-route verify, deterministic seeds
 - feat(ci): GitHub Actions status workflow with build/test/lint gates
 - feat(test): Vitest coverage gate with thresholds (85% lines, 85% functions, 80% branches)
 - feat(tools): Status gate script with automated red/yellow flag detection
 - test(board): Comprehensive test suite for optimistic updates, CSV/ZIP utils, rendering
 - test(integration): Status↔Follow-up, Undo/Redo, Selection/Batch operation tests
 - test(guards): Export policy contract tests and import usage validation
+- test(perf): Virtual rows behind feature flag (default off) + sticky/focus smokes
 
 ### Fixed
 - fix(board): setOffer patch flow implementation and OfferCell wiring

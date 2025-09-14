@@ -1,7 +1,7 @@
 # ADR-0003: Export Policy for Consistent Module Structure
 
 ## Status
-Accepted
+Accepted and Enforced
 
 ## Context
 
@@ -52,10 +52,11 @@ export * from './useBoardData';
 ## Implementation
 
 ### Enforcement Mechanisms
-1. **Contract tests**: `exports.contract.test.ts` validates export shapes
-2. **Usage tests**: `imports.usage.test.ts` validates actual import patterns
-3. **ESLint rules**: Enforces consistent export patterns
+1. **Contract tests**: `src/__tests__/exports.contract.test.ts` validates export shapes
+2. **Usage tests**: `src/__tests__/imports.usage.test.ts` validates actual import patterns
+3. **ESLint rules**: Flat config enforces consistent export patterns
 4. **Build gates**: TypeScript compilation catches violations
+5. **CI enforcement**: Status gate prevents policy violations
 
 ### Migration Strategy
 - **Phase 1**: Fix critical build-breaking inconsistencies

@@ -13,7 +13,7 @@ export interface FeatureFlags {
 }
 
 const DEFAULT_FEATURES: FeatureFlags = {
-  virtualRows: false, // Default: off for stability
+  virtualRows: false, // CRITICAL: Default off for stability - only enable for testing
   virtualRowsAuto: false, // Auto-enable based on dataset size
   virtualRowsThreshold: 1500, // Threshold for auto-enable
   advancedFilters: true,
