@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { countNotes } from './utils/notes';
 import { perfMark, perfMeasure } from '../../lib/perf/timer';
 import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
@@ -196,18 +197,24 @@ function Board() {
       let d = 0;
       switch (key) {
         case 'name': d = _cmpStr(_formatName(a), _formatName(b)); break;
-        case 'offer': d = _cmpStr(a.offer ?? '', b.offer ?? ''); break;
+        case 'offer': d = _cmpStr(a.angebot ?? '', b.angebot ?? ''); break;
         case 'status': d = _cmpStr(a.status ?? '', b.status ?? ''); break;
         case 'result': d = _cmpStr(a.result ?? '', b.result ?? ''); break;
         case 'followUp': d = _cmpDate(a.followUp ?? null, b.followUp ?? null); break;
         case 'assignedTo': d = _cmpStr(a.assignedTo ?? '', b.assignedTo ?? ''); break;
         case 'contacts': d = _cmpNum(a.contactCount ?? 0, b.contactCount ?? 0); break;
-        case 'notes': d = _cmpNum((a.noteCount ?? a.notesCount ?? 0), (b.noteCount ?? b.notesCount ?? 0)); break;
-        case 'priority': d = _cmpNum(a.priority ?? 0, b.priority ?? 0); break;
+        case 'notes': d = _cmpNum(countNotes(a), countNotes(b)); break;
+        case 'priority': {
+          const priorityOrder = { niedrig: 1, normal: 2, hoch: 3, dringend: 4 };
+          const aVal = priorityOrder[a.priority] ?? 0;
+          const bVal = priorityOrder[b.priority] ?? 0;
+          d = aVal - bVal;
+          break;
+        }
         case 'activity': d = _cmpDate(a.lastActivity ?? null, b.lastActivity ?? null); break;
         default: d = 0;
       }
-      if (d !== 0) return dir * (d < 0 ? -1 : 1);
+      if (d !== 0) return dir * d;
       return String(a.id).localeCompare(String(b.id));
     });
     return arr;
