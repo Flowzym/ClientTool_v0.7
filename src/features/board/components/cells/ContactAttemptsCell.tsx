@@ -36,7 +36,7 @@ export default function ContactAttemptsCell({
   );
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-0.5">
       <ContactButton label="phone" count={phone} icon={<Phone size={18} />} />
       <ContactButton label="sms" count={sms} icon={<MessageSquare size={18} />} />
       <ContactButton label="email" count={email} icon={<Mail size={18} />} />
