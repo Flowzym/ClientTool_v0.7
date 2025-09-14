@@ -2,6 +2,7 @@
  * Board-Datenlogik: Filter, Sortierung, Persistenz
  */
 import { useState, useEffect, useMemo } from 'react';
+import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import { db } from '../../data/db';
 import { cryptoManager } from '../../data/crypto'; // Keep this import
 import type { Client, User } from '../../domain/models';
@@ -17,6 +18,19 @@ import type {
 import { defaultView, loadViewFromStorage, saveViewToStorage } from './useBoardData.helpers';
 
 // Sorting helper functions
+const byFullName = () => (a: any, b: any) => {
+  const aName = `${a?.lastName ?? ''} ${a?.firstName ?? ''}`.trim();
+  const bName = `${b?.lastName ?? ''} ${b?.firstName ?? ''}`.trim();
+  return aName.localeCompare(bName, 'de', { sensitivity: 'base' });
+};
+
+const byNoteText = () => (a: any, b: any) => {
+  const aText = String(a?.note ?? '');
+  const bText = String(b?.note ?? '');
+  if (aText.length !== bText.length) return aText.length - bText.length;
+  return aText.localeCompare(bText, 'de', { sensitivity: 'base', numeric: true });
+};
+
 const byString = (key: string) => (a: any, b: any) => {
   const aVal = String(a?.[key] ?? '');
   const bVal = String(b?.[key] ?? '');
@@ -35,20 +49,6 @@ const byEnum = (key: string, order: string[]) => (a: any, b: any) => {
   const aName = `${a?.lastName ?? ''} ${a?.firstName ?? ''}`.trim();
   const bName = `${b?.lastName ?? ''} ${b?.firstName ?? ''}`.trim();
   return aName.localeCompare(bName, 'de', { sensitivity: 'base' });
-};
-
-const byFullName = () => (a: any, b: any) => {
-  const aName = `${a?.lastName ?? ''} ${a?.firstName ?? ''}`.trim();
-  const bName = `${b?.lastName ?? ''} ${b?.firstName ?? ''}`.trim();
-  return aName.localeCompare(bName, 'de', { sensitivity: 'base' });
-};
-
-const byNoteText = () => (a: any, b: any) => {
-  const aText = String(a?.note ?? '');
-  const bText = String(b?.note ?? '');
-  // Sort by presence/length first to make changes visible, then lexically
-  if (aText.length !== bText.length) return aText.length - bText.length;
-  return aText.localeCompare(bText, 'de', { sensitivity: 'base', numeric: true });
 };
 
 const byDateISO = (key: string) => (a: any, b: any) => {
@@ -75,6 +75,7 @@ const countNotes = (client: Client) => {
 
 export function useBoardData() {
   const [clients, setClients] = useState<Client[]>([]);
+  const overlayedClients = useOptimisticOverlay(clients);
   const [users, setUsers] = useState<User[]>([]);
   const [view, setView] = useState<BoardView>(defaultView);
   const [isLoading, setIsLoading] = useState(true);
@@ -109,7 +110,7 @@ export function useBoardData() {
               ...defaultView.columnVisibility,
               ...savedView.columnVisibility
             }
-          }));
+          });
         }
         
         // Daten laden
@@ -184,7 +185,7 @@ export function useBoardData() {
 
   // Gefilterte und sortierte Clients
   const filteredClients = useMemo(() => {
-    let filtered = clients;
+    let filtered = overlayedClients;
     
     // Archiv-Filter
     if (!view.filters.showArchived) {
@@ -254,7 +255,7 @@ export function useBoardData() {
           // Wird durch separates Popup gehandhabt
           break;
       }
-    }));
+    });
     
     return filtered;
   }, [clients, users, view, assignedToFilter]);
@@ -302,7 +303,7 @@ export function useBoardData() {
           sorted.sort(withPinnedFirst((a, b) => byDateISO('amsBookingDate')(a, b) * direction));
           break;
         case 'offer':
-          const angebotOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch'];
+          const angebotOrder = ['BAM', 'LL/B+', 'BwB', 'NB'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('angebot', angebotOrder)(a, b) * direction));
           break;
         case 'result':
@@ -369,7 +370,7 @@ export function useBoardData() {
           if (a.lastActivity && !b.lastActivity) return -1;
           if (!a.lastActivity && b.lastActivity) return 1;
           return 0;
-        }));
+        });
         break;
         
       case 'assignee':
@@ -389,7 +390,7 @@ export function useBoardData() {
           const bPrio = priorityOrder[b.priority] || 0;
           
           return bPrio - aPrio;
-        }));
+        });
         break;
     }
     
@@ -462,7 +463,7 @@ export function useBoardData() {
         ...defaultView.filters,
         currentUserId: view.filters.currentUserId // Behalte aktuellen User
       }
-    }));
+    });
   };
 
   const toggleSort = (key: SortKey) => {
@@ -482,7 +483,7 @@ export function useBoardData() {
         // Different column: start with ascending
         return { ...prev, sort: { key, direction: 'asc' } };
       }
-    }));
+    });
   };
 
   // Daten-Updates
