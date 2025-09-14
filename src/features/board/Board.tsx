@@ -124,11 +124,66 @@ function Board() {
 
   const clientsWithOverlay = useOptimisticOverlay(clients);
   const visibleClients = useMemo(() => clientsWithOverlay.filter((c: any) => !c.isArchived || view.showArchived), [clientsWithOverlay, view.showArchived]);
-  const allIds = useMemo(() => sortedClients.map((c:any) => c.id as string), [sortedClients]);
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
+  // —— Sort-State (lokaler Fallback) ——
+  const [localSort, setLocalSort] = useState<{key:string|null; direction:'asc'|'desc'|null}>({ key:null, direction:null });
   const sortState = (localSort && (localSort.key!==null || localSort.direction!==null))
     ? localSort
     : (view?.sort ?? { key:null, direction:null });
+
+  // —— Sort-Helper & sortiertes Array ——
+  const _formatName = (c:any) => {
+    const last = c.lastName ?? ''; const first = c.firstName ?? '';
+    const title = c.title ? ` (${c.title})` : '';
+    const fallback = c.name ?? '';
+    return (last || first) ? `${last}, ${first}${title}` : fallback;
+  };
+  const _getPinned = (c:any) => Boolean(c.isPinned ?? c.pinned ?? false);
+  const _cmpStr  = (a:any,b:any)=> String(a).localeCompare(String(b),'de',{sensitivity:'base'});
+  const _cmpNum  = (a:any,b:any)=> Number(a)-Number(b);
+  const _cmpDate = (a?:string|null,b?:string|null)=>{
+    if(!a && !b) return 0; if(!a) return 1; if(!b) return -1;
+    return a<b?-1:a>b?1:0;
+  };
+  const _sortClients = (list:any[], sort:{key:string|null;direction:'asc'|'desc'|null})=>{
+    const dir = sort?.direction==='desc' ? -1 : 1;
+    const key = sort?.key;
+    const arr = [...list];
+    arr.sort((a,b)=>{
+      const pa=_getPinned(a), pb=_getPinned(b);
+      if (pa!==pb) return pa?-1:1; // 1) Pins zuerst
+      let d=0;                      // 2) aktive Spalte
+      switch (key) {
+        case 'name':      d=_cmpStr(_formatName(a), _formatName(b)); break;
+        case 'offer':     d=_cmpStr(a.offer??'', b.offer??''); break;
+        case 'status':    d=_cmpStr(a.status??'', b.status??''); break;
+        case 'result':    d=_cmpStr(a.result??'', b.result??''); break;
+        case 'followUp':  d=_cmpDate(a.followUp??null,b.followUp??null); break;
+        case 'assignedTo':d=_cmpStr(a.assignedTo??'', b.assignedTo??''); break;
+        case 'contacts':  d=_cmpNum(a.contactCount??0, b.contactCount??0); break;
+        case 'notes':     d=_cmpNum((a.noteCount ?? a.notesCount ?? 0), (b.noteCount ?? b.notesCount ?? 0)); break;
+        case 'priority':  d=_cmpNum(a.priority??0, b.priority??0); break;
+        case 'activity':  d=_cmpDate(a.lastActivity??null, b.lastActivity??null); break;
+        case 'booking': {
+          const av = (a.booking ?? a.hasBooking ?? a.bookingLabel ?? '');
+          const bv = (b.booking ?? b.hasBooking ?? b.bookingLabel ?? '');
+          if (typeof av === 'boolean' || typeof bv === 'boolean')      d = _cmpNum(av?1:0, bv?1:0);
+          else if (typeof av === 'number' || typeof bv === 'number')   d = _cmpNum(Number(av)||0, Number(bv)||0);
+          else                                                         d = _cmpStr(String(av), String(bv));
+          break;
+        }
+        default: d=0;
+      }
+      if (d!==0) return dir*(d<0?-1:1);
+      return String(a.id).localeCompare(String(b.id)); // 3) id Tiebreaker
+    });
+    return arr;
+  };
+  const sortedClients = useMemo(()=>_sortClients(visibleClients, sortState), [visibleClients, sortState]);
+
+  // —— Ableitungen nach sortedClients ——
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const allIds = useMemo(() => sortedClients.map((c:any) => c.id as string), [sortedClients]);
 
   // Sort helper functions
   const _formatName = (c:any) => {
@@ -278,7 +333,7 @@ function Board() {
   }, [actions, allIds]);
 
   // Derived values
-  const selectedRowsProvider = () => visibleClients.filter((c: any) => selectedSet.has(c.id));
+  const selectedRowsProvider = () => sortedClients.filter((c: any) => selectedSet.has(c.id));
 
   // Early return AFTER all hooks
   if (isLoading) return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;
@@ -397,10 +452,9 @@ function Board() {
           <ColumnHeader
             columnKey="booking"
             label="Zubuchung"
-            sortable={false}
-            isActive={false}
-            direction={undefined}
-            onToggle={()=>{}}
+            isActive={sortState.key==='booking'}
+            direction={sortState.key==='booking' ? sortState.direction : undefined}
+            onToggle={()=>handleHeaderToggle('booking')}
           />
           <ColumnHeader
             columnKey="priority"
@@ -412,10 +466,9 @@ function Board() {
           <ColumnHeader
             columnKey="activity"
             label="Aktivität"
-            sortable={false}
-            isActive={false}
-            direction={undefined}
-            onToggle={()=>{}}
+            isActive={sortState.key==='activity'}
+            direction={sortState.key==='activity' ? sortState.direction : undefined}
+            onToggle={()=>handleHeaderToggle('activity')}
           />
           <div className="text-xs font-medium text-gray-600">Aktionen</div>
         </div>
