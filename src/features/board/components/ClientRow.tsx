@@ -33,7 +33,7 @@ type Actions = {
 };
 
 export function ClientRow({
-  client, users, actions, selected, onToggleSelect
+  client, users, actions, selected, onToggleSelect,
   onTogglePin
 }: {
   client: any;
