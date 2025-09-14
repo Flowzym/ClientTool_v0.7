@@ -158,8 +158,6 @@ function Board() {
   const toggleSort = handleHeaderToggle; // legacy alias to guard against stale calls
 
 
-  // Subscribe to feature flag changes
-  useEffect(
   // Sort helper: pinned first -> active column -> id
   const _formatName = (c) => {
     const last = c.lastName || '';
@@ -203,7 +201,9 @@ function Board() {
     return arr;
   };
   const sortedClients = useMemo(() => _sortClients(visibleClients, sortState), [visibleClients, sortState]);
-() => {
+
+  // Subscribe to feature flag changes
+  useEffect(() => {
     perfMark('board:render:start');
     return featureManager.subscribe((features) => {
       setVirtualRowsEnabled(features.virtualRows);
