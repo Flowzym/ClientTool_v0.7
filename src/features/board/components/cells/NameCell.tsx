@@ -19,9 +19,24 @@ function countNotes(client: any): number {
   return 0;
 }
 
-export default function NameCell({ client, onOpenNotes }: { client: any; onOpenNotes: (id: string) => void; }) {
-  const name = [client?.lastName, client?.firstName].filter(Boolean).join(', ');
+function openClientInfo(clientId: string) {
+  window.dispatchEvent(new CustomEvent('board:open-client-info', { detail: { id: clientId } }));
+}
+
+export default function NameCell({ client, onOpenNotes }: { 
+  client: any; 
+  onOpenNotes: (id: string) => void; 
+}) {
+  const lastName = client?.lastName || '';
+  const firstName = client?.firstName || '';
   const title = client?.title ? ` (${client.title})` : '';
+  const phone = client?.phone || '—';
+  
+  // Format: "Nachname, Vorname (Titel)"
+  const nameDisplay = lastName && firstName 
+    ? `${lastName}, ${firstName}${title}`
+    : lastName || firstName || '—';
+  
   const count = countNotes(client);
   const muted = count === 0;
 
@@ -42,7 +57,16 @@ export default function NameCell({ client, onOpenNotes }: { client: any; onOpenN
           </span>
         )}
       </div>
-      <div className="truncate">{name}{title}</div>
+      <div className="flex-1 min-w-0">
+        <button
+          className="text-left w-full hover:text-blue-600 transition-colors"
+          onClick={() => openClientInfo(client?.id)}
+          aria-label={`Kundeninfo für ${nameDisplay} öffnen`}
+        >
+          <div className="font-medium truncate">{nameDisplay}</div>
+          <div className="text-xs text-gray-500 truncate">{phone}</div>
+        </button>
+      </div>
     </div>
   );
 }

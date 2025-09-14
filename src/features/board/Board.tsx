@@ -4,6 +4,7 @@ import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
 import { useBoardActions } from './hooks/useBoardActions';
 import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
+import { ClientInfoDialog } from './components/ClientInfoDialog';
 import { ClientRow } from './components/ClientRow';
 import { BatchActionsBar } from './components/BatchActionsBar';
 import { BoardHeader } from './components/BoardHeader';
@@ -107,6 +108,7 @@ function Board() {
   const actions = useBoardActions();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
+  const [clientInfoDialogId, setClientInfoDialogId] = useState<string | null>(null);
 
   const [localSort, setLocalSort] = useState({ key: null, direction: null });
 
@@ -133,6 +135,16 @@ function Board() {
   const renderCount = useRenderCount('Board');
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const allIds = useMemo(() => visibleClients.map((c:any) => c.id as string), [visibleClients]);
+
+  // Client info dialog handler
+  useEffect(() => {
+    const handleOpenClientInfo = (event: CustomEvent) => {
+      setClientInfoDialogId(event.detail.id);
+    };
+    
+    window.addEventListener('board:open-client-info', handleOpenClientInfo as EventListener);
+    return () => window.removeEventListener('board:open-client-info', handleOpenClientInfo as EventListener);
+  }, []);
 
   const sortState = (localSort && (localSort.key !== null || localSort.direction !== null)) ? localSort : (view && view.sort ? view.sort : { key: null, direction: null });
   // Local sort handler with proper closure
@@ -357,6 +369,13 @@ function Board() {
           </label>
         </div>
       )}
+
+      {/* Client Info Dialog */}
+      <ClientInfoDialog
+        isOpen={!!clientInfoDialogId}
+        onClose={() => setClientInfoDialogId(null)}
+        client={clientInfoDialogId ? visibleClients.find((c: any) => c.id === clientInfoDialogId) || null : null}
+      />
     </div>
   );
 }

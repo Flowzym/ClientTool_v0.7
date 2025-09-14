@@ -1,19 +1,27 @@
 import React from 'react';
 
+const PRIORITY_CONFIG = {
+  niedrig: { color: 'bg-green-500', label: 'Niedrig' },
+  normal: { color: 'bg-gray-400', label: 'Normal' },
+  hoch: { color: 'bg-yellow-500', label: 'Hoch' },
+  dringend: { color: 'bg-red-500', label: 'Dringend' }
+};
+
 export default function PriorityCell({ value, onCycle }: {
   value?: string | null;
   onCycle: () => void;
 }) {
-  const dot = (active: boolean, color: string) => (
-    <span className={`inline-block w-2.5 h-2.5 rounded-full ${active ? color : 'bg-gray-300'}`} />
-  );
+  const priority = value || 'normal';
+  const config = PRIORITY_CONFIG[priority as keyof typeof PRIORITY_CONFIG] || PRIORITY_CONFIG.normal;
 
-  const v = value ?? null;
   return (
-    <button className="flex items-center gap-1 px-2 py-1 rounded border hover:bg-gray-50" onClick={onCycle} title="Priorität wechseln">
-      {dot(v === 'niedrig', 'bg-green-500')}
-      {dot(v === 'mittel', 'bg-yellow-400')}
-      {dot(v === 'hoch', 'bg-red-500')}
+    <button 
+      className="flex items-center justify-center p-2 rounded border hover:bg-gray-50" 
+      onClick={onCycle} 
+      title={`Priorität: ${config.label} (klicken zum Wechseln)`}
+      aria-label={`Priorität ${config.label}, klicken zum Wechseln`}
+    >
+      <span className={`w-3 h-3 rounded-full ${config.color}`} />
     </button>
   );
 }
