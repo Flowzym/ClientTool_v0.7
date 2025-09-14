@@ -380,8 +380,7 @@ export function useBoardData() {
     const filtered = sortedClients.length;
     const archived = clients.filter(c => c.isArchived).length;
     
-    return {
-    toggleSort, total, filtered, archived };
+    return { total, filtered, archived };
   }, [clients, sortedClients]);
 
   // Filter-Updates
@@ -489,6 +488,7 @@ export function useBoardData() {
     setColumnVisibility,
     resetToDefaultView,
     refreshData,
+    toggleSort,
     setAssignedToFilter
   };
 }
