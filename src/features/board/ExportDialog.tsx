@@ -67,7 +67,7 @@ const categoryLabels = {
   internal: 'Interne Daten'
 };
 
-export function ExportDialog({ isOpen, onClose, selectedClients, users }: ExportDialogProps) {
+export default function ExportDialog({ isOpen, onClose, selectedClients, users }: ExportDialogProps) {
   const [selectedFields, setSelectedFields] = useState<string[]>([
     'fullName', 'phone', 'email', 'status', 'assignedToName', 'contactCount'
   ]);
