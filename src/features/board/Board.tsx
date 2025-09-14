@@ -151,7 +151,7 @@ function Board() {
   // Local sort handler with proper closure
   const handleHeaderToggle = useCallback((key: string) => {
     _setView(prev => {
-      const currentSort = prev.sort;
+      const currentSort = prev?.sort || sortState;
       
       if (currentSort.key === key) {
         // Same column: cycle through asc → desc → none
@@ -167,7 +167,7 @@ function Board() {
         return { ...prev, sort: { key, direction: 'asc' } };
       }
     });
-  }, [setView]);
+  }, [_setView, sortState]);
   const toggleSort = handleHeaderToggle; // legacy alias to guard against stale calls
 
 
