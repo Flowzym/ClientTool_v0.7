@@ -328,6 +328,79 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 - **Hook Order**: Guard-Tests
 - **API-Kompatibilität**: Integration-Tests
 
+## Contract-Tests (Export-Policy)
+
+### Export Policy Compliance
+- **Datei**: `src/__tests__/exports.contract.test.ts`
+- **Abdeckung**: Default-Export bei Komponenten; Barrels re-exportieren named; Hooks/Services/Utils nur named
+- **Validierung**: Automatische Überprüfung der Export-Patterns
+- **Verweis**: ADR-00xx Export-Policy
+
+### Import Usage Validation
+- **Datei**: `src/__tests__/imports.usage.test.ts`
+- **Abdeckung**: Konsumenten importieren korrekt, keine doppelten Re-Exports
+- **Szenarien**: Mixed-Pattern Prevention, Named-Import Validation
+- **Verweis**: ADR-00xx Export-Policy
+
+## Visual Regression (Storybook/Snapshots)
+
+### Minimal-Stories
+- **NameCell**: Name-Format, Telefon-Untertitel, Notiz-Badge
+- **StatusCell**: Status-Chips, Blue-Variants, Dropdown-Interaktion
+- **ContactAttemptsCell**: CounterBadge-Sichtbarkeit, Icon-Größe, Kanal-Buttons
+- **FollowUpCell**: Icon-only Modus, Date-Picker, Auto-Status
+- **PriorityCell**: Single-Dot Rendering, Level-Farben, Cycle-Funktionalität
+
+### Screenshot-Baselines
+- **CI-Check**: Automatische Screenshot-Vergleiche
+- **A11y-Check**: Accessibility-Tests pro Story
+- **Responsive**: Mobile/Desktop-Varianten
+
+## Seeds & Admin (E2E)
+
+### Deterministische Fixtures
+- **Seed-Funktion**: `seedTestData()` mit fixen Timestamps
+- **Reproduzierbare IDs**: Deterministische Client-/User-IDs
+- **Stabile States**: Konsistente Status/Priorität/Angebot-Verteilung
+
+### Admin-Wechsel
+- **User-Switcher**: Stabiler Rollenwechsel (admin/editor/user)
+- **Berechtigungen**: UI-Sichtbarkeit je Rolle
+- **Session-Persistenz**: Reload-robuste Authentifizierung
+
+## Coverage & Gates
+
+### Coverage-Schwellen
+- **Lines**: ≥85% minimum coverage
+- **Functions**: ≥85% minimum coverage
+- **Statements**: ≥85% minimum coverage
+- **Branches**: ≥80% minimum coverage
+
+### Status-Gate
+- **Ein-Kommando**: `npm run status` (build/test/lint + Red-Flag-Scan)
+- **Bruch bei Unterschreitung**: CI bricht ab bei Coverage-/Quality-Problemen
+- **Red-Flag-Detection**: Hook-Order-Violations, Import-Resolver-Fehler, Duplicate-Declarations
+- **Verweis**: Model Context Summary, `scripts/status-gate.mjs`
+
+## Performance (Virtual Rows, Feature-Flag)
+
+### Test-Szenarien
+- **Datasets**: 1k–5k Clients für Virtualisierung-Tests
+- **A/B-Vergleich**: Virtual Rows ON/OFF
+- **Messsetup**: `/dev/perf` Performance-Playground
+
+### Akzeptanz-Metriken
+- **FPS**: ≥50 bei Scroll-Performance
+- **Commit-Zeit**: ≤16ms Median für Render-Updates
+- **Jank-Vermeidung**: Keine Frames >50ms
+- **DOM-Reduktion**: >90% bei Virtual Rows (1000+ Datensätze)
+
+### Vergleich mit/ohne Virtual Rows
+- **Mount-Zeit**: Vergleichbar oder besser
+- **Memory-Effizienz**: Nur sichtbare Zeilen im DOM
+- **Scroll-Smoothness**: Konsistente Frame-Rates
+- **Verweis**: ADR-00xy Virtual Rows
+
 ## Testdaten
 
 ### Demo-Clients

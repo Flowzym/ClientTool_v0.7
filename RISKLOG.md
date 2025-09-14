@@ -60,7 +60,7 @@
 **Next Review**: 2025-03-15
 
 ### R011: UI Component Regression
-**Status**: Mitigated  
+**Status**: Mitigation gesetzt  
 **Impact**: Board cell components break during refactoring or feature changes  
 **Probability**: Low  
 **Mitigation**:
@@ -70,13 +70,14 @@
 - ✅ Accessibility tests for header sorting and tri-state checkbox
 - ✅ Pin shift-range operation tests with edge cases
 - ✅ Visual regression prevention via rendering contract tests
+- 🔄 Storybook + Snapshot-Baselines + CI geplant
 
 **Test Reference**: `src/features/board/__tests__/followup.icononly.test.tsx`, `contact.badge-visibility.test.tsx`, `priority.single-dot.test.tsx`, `pin.shift-range.test.tsx`  
 **Last Review**: 2025-01-27  
 **Next Review**: 2025-02-15
 
 ### R005: Import Routing Confusion
-**Status**: RESOLVED  
+**Status**: Mitigiert  
 **Impact**: Excel files processed by PDF handler (or vice versa)  
 **Probability**: Low  
 **Mitigation**:
@@ -87,6 +88,14 @@
 
 **Test Reference**: `src/features/import/__tests__/excelRouting.test.ts`  
 **Last Review**: 2025-01-27  
+
+## 🔄 2025-09-14 — Mitigation Updates
+
+### Excel-Import Routing Fix bestätigt
+- **Status**: Import-Routing-Konfusion (R005) von "RESOLVED" → "Mitigiert"
+- **Bestätigung**: Excel-Dateien werden korrekt zum Excel-Handler geroutet, nicht zum PDF-Pipeline
+- **Dokumentation**: Synchronisiert mit CHANGELOG 0.7.2
+- **Verweis**: Model Context Summary & Routing-Tests
 
 ## 🟢 Low Priority Risks
 

@@ -1,5 +1,22 @@
 # TODOs - Klient:innendaten-Tool
 
+## 🚀 2025-09-14 — Konsistenz & Qualität (P0–P2)
+
+### P0: Kritische Fixes & Validierung
+- [x] Excel-Import Routing **bestätigt korrigiert** (kein PDF-Redirect; Verweis auf CHANGELOG 0.7.2 und Model Context Summary)
+- [ ] TESTPLAN um **Contract-Tests für Export-Policy** erweitert (ADR-00xx)
+- [ ] TESTPLAN **Coverage-Gates** explizit dokumentieren (≥85% lines/functions/statements, ≥80% branches)
+
+### P1: Test-Infrastruktur
+- [ ] Storybook-Minimal-Stories (Name/Status/ContactAttempts/Follow-up/Priority)
+- [ ] Snapshots in CI
+- [ ] Seeds/Admin-E2E
+
+### P2: Performance & Monitoring
+- [ ] Perf-Playground /dev/perf (Metriken/Criteria)
+- [ ] Virtual Rows (>1000 Zeilen, Sticky Header)
+- [ ] Status-Gate prüfen & verlinken
+
 ## 🚀 Sofortige Prioritäten (v0.7.2)
 
 ### Board-Features finalisieren

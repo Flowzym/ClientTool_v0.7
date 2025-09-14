@@ -39,6 +39,9 @@
 - [x] Status Gate Script with automated red/yellow flag detection
 - [x] ESLint Autofix (0 warnings achieved)
 - [x] Artifact-Upload für Debug-Logs
+- [ ] Contract-Tests (Export-Policy)
+- [ ] Visual Regression (Storybook+Snapshots)
+- [ ] Seeds/Admin
 
 ### Phase 6: Documentation & Release Preparation (2025-01-27)
 **Status**: In Progress
@@ -57,6 +60,7 @@
 - [x] Performance safeguards documentation
 - [ ] Final quality gate validation
 - [ ] Release notes preparation
+- [ ] Status-Gate dokumentieren (Ein-Kommando Health-Check) und in README/CI referenzieren
 
 ### ✅ Phase 6: Board Stabilization (v0.7.1)
 - [x] setOffer Patch-Flow Implementation

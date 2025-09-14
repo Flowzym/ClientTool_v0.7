@@ -62,6 +62,7 @@
 - fix(board): Header checkbox tri-state behavior with aria-checked="mixed"
 - fix(board): Column headers now have correct aria-sort states for screen readers
 - fix(board): Pinned clients maintain top position in all sorting scenarios
+- Import: **Excel-Import Routing bestätigt korrigiert** (kein PDF-Redirect); Doku-Sync mit TODOS/RISKLOG
 
 ### Changed
 - improve(board): PinCell component now passes mouse events for shift detection
