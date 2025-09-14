@@ -92,7 +92,7 @@ export default function ClientInfoDialog({ isOpen, onClose, client }: Props) {
           </div>
 
           {/* Name, Titel, Geschlecht */}
-          <div className="grid grid-cols-3 gap-4 text-sm">
+          <div className="grid grid-cols-2 gap-4 text-sm">
             <FieldRow value={name} label="Name">
               <div>
                 <div className="text-gray-500 text-xs">Name</div>
