@@ -14,7 +14,7 @@ import type {
   BoardColumnVisibility, 
   BoardView
 } from './useBoardData.helpers';
-import { defaultView, loadViewFromStorage, saveViewToStorage, withPinnedFirst } from './useBoardData.helpers';
+import { defaultView, loadViewFromStorage, saveViewToStorage } from './useBoardData.helpers';
 
 // Sorting helper functions
 const byString = (key: string) => (a: any, b: any) => {
@@ -24,9 +24,18 @@ const byString = (key: string) => (a: any, b: any) => {
 };
 
 const byEnum = (key: string, order: string[]) => (a: any, b: any) => {
-  const aIndex = order.indexOf(a[key]) || 0;
-  const bIndex = order.indexOf(b[key]) || 0;
-  return aIndex - bIndex;
+  const orderNorm = order.map(o => String(o).toLowerCase());
+  const unknown = orderNorm.length;
+  const av = String(a?.[key] ?? '').toLowerCase();
+  const bv = String(b?.[key] ?? '').toLowerCase();
+  const ax = orderNorm.indexOf(av);
+  const bx = orderNorm.indexOf(bv);
+  const aIndex = ax === -1 ? unknown : ax;
+  const bIndex = bx === -1 ? unknown : bx;
+  if (aIndex !== bIndex) return aIndex - bIndex;
+  const aName = `${a?.lastName ?? ''} ${a?.firstName ?? ''}`.trim();
+  const bName = `${b?.lastName ?? ''} ${b?.firstName ?? ''}`.trim();
+  return aName.localeCompare(bName, 'de', { sensitivity: 'base' });
 };
 
 const byDateISO = (key: string) => (a: any, b: any) => {
@@ -473,7 +482,7 @@ export function useBoardData() {
   };
 
   return {
-    clients: sortedClients,
+    clients: view.sort.key ? sortedClients : legacySortedClients,
     users,
     view,
     counts,
