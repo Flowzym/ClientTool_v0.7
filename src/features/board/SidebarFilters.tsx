@@ -57,10 +57,9 @@ export function SidebarFilters() {
     
     setSelectedAssignedUsers(newSelectedUsers);
     
-    const event = new CustomEvent('board:filterAssignedTo', {
+    window.dispatchEvent(new CustomEvent('board:filterAssignedTo', {
       detail: newSelectedUsers
-    });
-    window.dispatchEvent(event);
+    }));
   };
 
   const filterButtons: Array<{ key: FilterChip; label: string }> = [

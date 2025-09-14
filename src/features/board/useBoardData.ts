@@ -12,9 +12,44 @@ import type {
   BoardFilters, 
   BoardSort, 
   BoardColumnVisibility, 
-  BoardView, SortKey
+  BoardView
 } from './useBoardData.helpers';
 import { defaultView, loadViewFromStorage, saveViewToStorage } from './useBoardData.helpers';
+
+// Sorting helper functions
+const byString = (key: string) => (a: any, b: any) => {
+  const aVal = a[key] || '';
+  const bVal = b[key] || '';
+  return aVal.localeCompare(bVal);
+};
+
+const byEnum = (key: string, order: string[]) => (a: any, b: any) => {
+  const aIndex = order.indexOf(a[key]) || 0;
+  const bIndex = order.indexOf(b[key]) || 0;
+  return aIndex - bIndex;
+};
+
+const byDateISO = (key: string) => (a: any, b: any) => {
+  const aDate = a[key] ? new Date(a[key]).getTime() : 0;
+  const bDate = b[key] ? new Date(b[key]).getTime() : 0;
+  return aDate - bDate;
+};
+
+const byNumber = (key: string) => (a: any, b: any) => {
+  const aVal = a[key] || 0;
+  const bVal = b[key] || 0;
+  return aVal - bVal;
+};
+
+const withPinnedFirst = (sortFn: (a: any, b: any) => number) => (a: any, b: any) => {
+  if (a.isPinned && !b.isPinned) return -1;
+  if (!a.isPinned && b.isPinned) return 1;
+  return sortFn(a, b);
+};
+
+const countNotes = (client: Client) => {
+  return (client.notes || []).length;
+};
 
 export function useBoardData() {
   const [clients, setClients] = useState<Client[]>([]);
@@ -22,6 +57,7 @@ export function useBoardData() {
   const [view, setView] = useState<BoardView>(defaultView);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [assignedToFilter, setAssignedToFilter] = useState<string[]>([]);
 
   // Daten laden
   useEffect(() => {
@@ -63,7 +99,51 @@ export function useBoardData() {
   // View-Änderungen persistieren
   useEffect(() => {
     saveViewToStorage(view);
+    
+    // Dispatch view update event
+    window.dispatchEvent(new CustomEvent('board:viewUpdated', {
+      detail: {
+        chips: view.filters.chips,
+        showArchived: view.filters.showArchived
+      }
+    }));
   }, [view]);
+
+  // Listen for view update requests
+  useEffect(() => {
+    const handleRequestViewUpdate = () => {
+      window.dispatchEvent(new CustomEvent('board:viewUpdated', {
+        detail: {
+          chips: view.filters.chips,
+          showArchived: view.filters.showArchived
+        }
+      }));
+    };
+
+    const handleToggleChip = (event: CustomEvent) => {
+      toggleChip(event.detail);
+    };
+
+    const handleToggleArchived = () => {
+      toggleArchived();
+    };
+
+    const handleFilterAssignedTo = (event: CustomEvent) => {
+      setAssignedToFilter(event.detail);
+    };
+
+    window.addEventListener('board:requestViewUpdate', handleRequestViewUpdate);
+    window.addEventListener('board:toggleChip', handleToggleChip as EventListener);
+    window.addEventListener('board:toggleArchived', handleToggleArchived);
+    window.addEventListener('board:filterAssignedTo', handleFilterAssignedTo as EventListener);
+
+    return () => {
+      window.removeEventListener('board:requestViewUpdate', handleRequestViewUpdate);
+      window.removeEventListener('board:toggleChip', handleToggleChip as EventListener);
+      window.removeEventListener('board:toggleArchived', handleToggleArchived);
+      window.removeEventListener('board:filterAssignedTo', handleFilterAssignedTo as EventListener);
+    };
+  }, [view.filters.chips, view.filters.showArchived]);
 
   // Gefilterte und sortierte Clients
   const filteredClients = useMemo(() => {
@@ -74,18 +154,25 @@ export function useBoardData() {
       filtered = filtered.filter(c => !c.isArchived);
     }
     
+    // Assigned to filter
+    if (assignedToFilter.length > 0) {
+      filtered = filtered.filter(c => 
+        c.assignedTo && assignedToFilter.includes(c.assignedTo)
+      );
+    }
+    
     // Chip-Filter
     
     view.filters.chips.forEach(chip => {
       switch (chip) {
         case 'bam':
-          filtered = filtered.filter(c => c.result === 'bam');
+          filtered = filtered.filter(c => c.angebot === 'bam');
           break;
         case 'lebenslauf':
-          filtered = filtered.filter(c => c.result === 'lebenslauf');
+          filtered = filtered.filter(c => c.angebot === 'lebenslauf');
           break;
         case 'bewerbungsbuero':
-          filtered = filtered.filter(c => c.result === 'bewerbungsbuero');
+          filtered = filtered.filter(c => c.angebot === 'bewerbungsbuero');
           break;
         case 'km-termin':
           filtered = filtered.filter(c => c.result === 'gesundheitlicheMassnahme');
@@ -132,35 +219,105 @@ export function useBoardData() {
       }
     });
     
+    return filtered;
+  }, [clients, users, view, assignedToFilter]);
+
+  // Sortierte Clients
+  const sortedClients = useMemo(() => {
+    let sorted = [...filteredClients];
+    
     // Sortierung
+    if (view.sort.key && view.sort.direction) {
+      const direction = view.sort.direction === 'desc' ? -1 : 1;
+      
+      switch (view.sort.key) {
+        case 'name':
+          sorted.sort(withPinnedFirst((a, b) => byString('name')(a, b) * direction));
+          break;
+        case 'status':
+          const statusOrder = ['offen', 'terminVereinbart', 'inBearbeitung', 'wartetRueckmeldung', 'erledigt', 'nichtErreichbar', 'abgebrochen'];
+          sorted.sort(withPinnedFirst((a, b) => byEnum('status', statusOrder)(a, b) * direction));
+          break;
+        case 'priority':
+          const priorityOrder = ['niedrig', 'normal', 'hoch', 'dringend'];
+          sorted.sort(withPinnedFirst((a, b) => byEnum('priority', priorityOrder)(a, b) * direction));
+          break;
+        case 'assignedTo':
+          sorted.sort(withPinnedFirst((a, b) => {
+            const aUser = users.find(u => u.id === a.assignedTo)?.name || '';
+            const bUser = users.find(u => u.id === b.assignedTo)?.name || '';
+            return aUser.localeCompare(bUser) * direction;
+          }));
+          break;
+        case 'lastActivity':
+          sorted.sort(withPinnedFirst((a, b) => byDateISO('lastActivity')(a, b) * direction));
+          break;
+        case 'followUp':
+          sorted.sort(withPinnedFirst((a, b) => byDateISO('followUp')(a, b) * direction));
+          break;
+        case 'contactCount':
+          sorted.sort(withPinnedFirst((a, b) => byNumber('contactCount')(a, b) * direction));
+          break;
+        case 'notes':
+          sorted.sort(withPinnedFirst((a, b) => (countNotes(a) - countNotes(b)) * direction));
+          break;
+        case 'angebot':
+          const angebotOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch'];
+          sorted.sort(withPinnedFirst((a, b) => byEnum('angebot', angebotOrder)(a, b) * direction));
+          break;
+        case 'result':
+          const resultOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch', 'keineReaktion'];
+          sorted.sort(withPinnedFirst((a, b) => byEnum('result', resultOrder)(a, b) * direction));
+          break;
+        case 'bookingDate':
+          sorted.sort(withPinnedFirst((a, b) => byDateISO('bookingDate')(a, b) * direction));
+          break;
+      }
+    } else {
+      // Default sorting by urgency when no specific sort is applied
+      sorted.sort((a, b) => {
+        // Gepinnte Clients immer oben
+        if (a.isPinned && !b.isPinned) return -1;
+        if (!a.isPinned && b.isPinned) return 1;
+        
+        // Priority: dringend > hoch > normal > niedrig
+        const priorityOrder = { dringend: 4, hoch: 3, normal: 2, niedrig: 1 };
+        const aPrio = priorityOrder[a.priority] || 0;
+        const bPrio = priorityOrder[b.priority] || 0;
+        
+        if (aPrio !== bPrio) return bPrio - aPrio;
+        
+        // Follow-up: frühere Termine zuerst
+        if (a.followUp && b.followUp) {
+          return new Date(a.followUp).getTime() - new Date(b.followUp).getTime();
+        }
+        if (a.followUp && !b.followUp) return -1;
+        if (!a.followUp && b.followUp) return 1;
+        
+        // Last activity: ältere zuerst
+        if (a.lastActivity && b.lastActivity) {
+          return new Date(a.lastActivity).getTime() - new Date(b.lastActivity).getTime();
+        }
+        
+        return 0;
+      });
+    }
+    
+    return sorted;
+  }, [filteredClients, view.sort, users]);
+
+  // Legacy sorting modes for backward compatibility
+  const legacySortedClients = useMemo(() => {
+    let filtered = [...filteredClients];
+    
+    // Only apply legacy sorting if no new sort is active
+    if (view.sort.key) {
+      return sortedClients;
+    }
+    
     switch (view.sort.mode) {
       case 'urgency':
-        filtered.sort((a, b) => {
-          // Gepinnte Clients immer oben
-          if (a.isPinned && !b.isPinned) return -1;
-          if (!a.isPinned && b.isPinned) return 1;
-          
-          // Priority: dringend > hoch > normal > niedrig
-          const priorityOrder = { dringend: 4, hoch: 3, normal: 2, niedrig: 1 };
-          const aPrio = priorityOrder[a.priority] || 0;
-          const bPrio = priorityOrder[b.priority] || 0;
-          
-          if (aPrio !== bPrio) return bPrio - aPrio;
-          
-          // Follow-up: frühere Termine zuerst
-          if (a.followUp && b.followUp) {
-            return new Date(a.followUp).getTime() - new Date(b.followUp).getTime();
-          }
-          if (a.followUp && !b.followUp) return -1;
-          if (!a.followUp && b.followUp) return 1;
-          
-          // Last activity: ältere zuerst
-          if (a.lastActivity && b.lastActivity) {
-            return new Date(a.lastActivity).getTime() - new Date(b.lastActivity).getTime();
-          }
-          
-          return 0;
-        });
+        // Already handled in default case above
         break;
         
       case 'activity':
@@ -200,16 +357,16 @@ export function useBoardData() {
     }
     
     return filtered;
-  }, [clients, users, view]);
+  }, [filteredClients, sortedClients, view.sort, users]);
 
   // Zähler
   const counts = useMemo(() => {
     const total = clients.length;
-    const filtered = filteredClients.length;
+    const filtered = sortedClients.length;
     const archived = clients.filter(c => c.isArchived).length;
     
     return { total, filtered, archived };
-  }, [clients, filteredClients]);
+  }, [clients, sortedClients]);
 
   // Filter-Updates
   const toggleChip = (chip: FilterChip) => {
@@ -244,7 +401,7 @@ export function useBoardData() {
     }));
   };
 
-  const setSortMode = (mode: SortMode) => {
+  const setSortMode = (mode: any) => {
     setView(prev => ({
       ...prev,
       sort: { mode }
@@ -302,7 +459,7 @@ export function useBoardData() {
   };
 
   return {
-    clients: sortedClients,
+    clients: view.sort.key ? sortedClients : legacySortedClients,
     users,
     counts,
     isLoading,
@@ -312,10 +469,10 @@ export function useBoardData() {
     toggleArchived,
     setCurrentUser,
     toggleSort,
-    toggleSort,
     setSortMode,
     setColumnVisibility,
     resetToDefaultView,
-    refreshData
+    refreshData,
+    setAssignedToFilter
   };
 }
