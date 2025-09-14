@@ -24,9 +24,15 @@ const byString = (key: string) => (a: any, b: any) => {
 };
 
 const byEnum = (key: string, order: string[]) => (a: any, b: any) => {
-  const aIndex = order.indexOf(a[key]) || 0;
-  const bIndex = order.indexOf(b[key]) || 0;
-  return aIndex - bIndex;
+  
+  const unknown = order.length;
+  const ax = order.indexOf(a?.[key] as any);
+  const bx = order.indexOf(b?.[key] as any);
+  const aIndex = ax === -1 ? unknown : ax;
+  const bIndex = bx === -1 ? unknown : bx;
+  if (aIndex !== bIndex) return aIndex - bIndex;
+  // stable secondary key to make ordering visible even when many unknowns
+  return (a?.name ?? '').localeCompare(b?.name ?? '');
 };
 
 const byDateISO = (key: string) => (a: any, b: any) => {
