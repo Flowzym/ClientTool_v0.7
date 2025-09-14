@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ExportCsvDialog } from './ExportCsvDialog';
+import { ExportCsvDialog } from './index';
 
 export function BoardHeader({
   selectedCount,

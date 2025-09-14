@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { Patch } from '../../../types/patch';
-import { ExportCsvDialog } from './ExportCsvDialog';
+import { ExportCsvDialog } from './index';
 
 type Props = {
   selectedCount: number;
