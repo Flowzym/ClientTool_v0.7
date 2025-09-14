@@ -28,7 +28,7 @@ interface VirtualItem {
   size: number;
 }
 
-export function VirtualizedBoardList({
+function VirtualizedBoardList({
   clients,
   users,
   actions,
@@ -239,3 +239,5 @@ function ClientRowVirtualized(props: any) {
     </React.Suspense>
   );
 }
+
+export default VirtualizedBoardList;

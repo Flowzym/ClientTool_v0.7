@@ -85,7 +85,7 @@ function VirtualClientList({
   onToggleSelect: (index: number, id: string, withShift: boolean) => void;
 }) {
   // Import VirtualizedBoardList dynamically to avoid circular deps
-  const VirtualizedBoardList = React.lazy(() => import('./components/VirtualizedBoardList').then(m => ({ default: m.VirtualizedBoardList })));
+  const VirtualizedBoardList = React.lazy(() => import('./components/VirtualizedBoardList'));
   
   return (
     <React.Suspense fallback={<div className="min-w-[1480px] border rounded-lg overflow-hidden h-[520px] bg-gray-50 animate-pulse" />}>
