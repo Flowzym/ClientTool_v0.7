@@ -100,6 +100,26 @@ function VirtualClientList({
         className="min-w-[1480px] border rounded-lg overflow-hidden"
       />
     </React.Suspense>
+  );
+}
+
+function Board() {
+  const renderCount = useRenderCount();
+  const lastIndexRef = useRef<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [clientInfoDialogId, setClientInfoDialogId] = useState<string | null>(null);
+  const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.getFeature('virtualRows'));
+
+  // All hooks must be called before any early returns
+  const { data, isLoading, view, toggleSort } = useBoardData();
+  const actions = useBoardActions();
+  const { overlay } = useOptimisticOverlay();
+
+  const { clients = [], users = [] } = data || {};
+  const visibleClients = useMemo(() => clients.filter((c: any) => !c.isArchived || view.showArchived), [clients, view.showArchived]);
+  const allIds = useMemo(() => visibleClients.map((c: any) => c.id), [visibleClients]);
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+
   // Subscribe to feature flag changes
   useEffect(() => {
     perfMark('board:render:start');
