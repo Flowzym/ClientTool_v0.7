@@ -1,0 +1,27 @@
+// vite.config.ts
+import { defineConfig } from "file:///home/project/node_modules/vite/dist/node/index.js";
+import react from "file:///home/project/node_modules/@vitejs/plugin-react/dist/index.js";
+import { VitePWA } from "file:///home/project/node_modules/vite-plugin-pwa/dist/index.js";
+if (process.env.NODE_ENV === "production" && process.env.VITE_ENCRYPTION_MODE === "plain") {
+  throw new Error(
+    "\u274C PLAIN-Modus im Production-Build verboten!\nSetzen Sie VITE_ENCRYPTION_MODE=prod-enc in .env.production oder als CI-Variable.\nF\xFCr Development verwenden Sie dev-enc (siehe .env.development).\nBeispiel: VITE_ENCRYPTION_MODE=prod-enc npm run build"
+  );
+}
+var vite_config_default = defineConfig({
+  plugins: [
+    VitePWA({ registerType: "autoUpdate", workbox: { navigateFallback: "/index.html" } }),
+    react()
+  ],
+  optimizeDeps: {
+    exclude: ["lucide-react"]
+  },
+  test: {
+    environment: "jsdom",
+    globals: true,
+    setupFiles: []
+  }
+});
+export {
+  vite_config_default as default
+};
+//# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsidml0ZS5jb25maWcudHMiXSwKICAic291cmNlc0NvbnRlbnQiOiBbImNvbnN0IF9fdml0ZV9pbmplY3RlZF9vcmlnaW5hbF9kaXJuYW1lID0gXCIvaG9tZS9wcm9qZWN0XCI7Y29uc3QgX192aXRlX2luamVjdGVkX29yaWdpbmFsX2ZpbGVuYW1lID0gXCIvaG9tZS9wcm9qZWN0L3ZpdGUuY29uZmlnLnRzXCI7Y29uc3QgX192aXRlX2luamVjdGVkX29yaWdpbmFsX2ltcG9ydF9tZXRhX3VybCA9IFwiZmlsZTovLy9ob21lL3Byb2plY3Qvdml0ZS5jb25maWcudHNcIjtpbXBvcnQgeyBkZWZpbmVDb25maWcgfSBmcm9tICd2aXRlJztcbmltcG9ydCByZWFjdCBmcm9tICdAdml0ZWpzL3BsdWdpbi1yZWFjdCc7XG5pbXBvcnQgeyBWaXRlUFdBIH0gZnJvbSAndml0ZS1wbHVnaW4tcHdhJ1xuXG4vLyBCdWlsZC1HdWFyZDogUExBSU4gaW0gUHJvZC1CdWlsZCB2ZXJiaWV0ZW5cbmlmIChwcm9jZXNzLmVudi5OT0RFX0VOViA9PT0gJ3Byb2R1Y3Rpb24nICYmIHByb2Nlc3MuZW52LlZJVEVfRU5DUllQVElPTl9NT0RFID09PSAncGxhaW4nKSB7XG4gIHRocm93IG5ldyBFcnJvcihcbiAgICAnXHUyNzRDIFBMQUlOLU1vZHVzIGltIFByb2R1Y3Rpb24tQnVpbGQgdmVyYm90ZW4hXFxuJyArXG4gICAgJ1NldHplbiBTaWUgVklURV9FTkNSWVBUSU9OX01PREU9cHJvZC1lbmMgaW4gLmVudi5wcm9kdWN0aW9uIG9kZXIgYWxzIENJLVZhcmlhYmxlLlxcbicgK1xuICAgICdGXHUwMEZDciBEZXZlbG9wbWVudCB2ZXJ3ZW5kZW4gU2llIGRldi1lbmMgKHNpZWhlIC5lbnYuZGV2ZWxvcG1lbnQpLlxcbicgK1xuICAgICdCZWlzcGllbDogVklURV9FTkNSWVBUSU9OX01PREU9cHJvZC1lbmMgbnBtIHJ1biBidWlsZCdcbiAgKTtcbn1cblxuLy8gaHR0cHM6Ly92aXRlanMuZGV2L2NvbmZpZy9cbmV4cG9ydCBkZWZhdWx0IGRlZmluZUNvbmZpZyh7XG4gIHBsdWdpbnM6IFtcbiAgICBWaXRlUFdBKHsgcmVnaXN0ZXJUeXBlOiAnYXV0b1VwZGF0ZScsIHdvcmtib3g6IHsgbmF2aWdhdGVGYWxsYmFjazogJy9pbmRleC5odG1sJyB9IH0pLHJlYWN0KCldLFxuICBvcHRpbWl6ZURlcHM6IHtcbiAgICBleGNsdWRlOiBbJ2x1Y2lkZS1yZWFjdCddLFxuICB9LFxuICB0ZXN0OiB7XG4gICAgZW52aXJvbm1lbnQ6ICdqc2RvbScsXG4gICAgZ2xvYmFsczogdHJ1ZSxcbiAgICBzZXR1cEZpbGVzOiBbXVxuICB9XG59KTsiXSwKICAibWFwcGluZ3MiOiAiO0FBQXlOLFNBQVMsb0JBQW9CO0FBQ3RQLE9BQU8sV0FBVztBQUNsQixTQUFTLGVBQWU7QUFHeEIsSUFBSSxRQUFRLElBQUksYUFBYSxnQkFBZ0IsUUFBUSxJQUFJLHlCQUF5QixTQUFTO0FBQ3pGLFFBQU0sSUFBSTtBQUFBLElBQ1I7QUFBQSxFQUlGO0FBQ0Y7QUFHQSxJQUFPLHNCQUFRLGFBQWE7QUFBQSxFQUMxQixTQUFTO0FBQUEsSUFDUCxRQUFRLEVBQUUsY0FBYyxjQUFjLFNBQVMsRUFBRSxrQkFBa0IsY0FBYyxFQUFFLENBQUM7QUFBQSxJQUFFLE1BQU07QUFBQSxFQUFDO0FBQUEsRUFDL0YsY0FBYztBQUFBLElBQ1osU0FBUyxDQUFDLGNBQWM7QUFBQSxFQUMxQjtBQUFBLEVBQ0EsTUFBTTtBQUFBLElBQ0osYUFBYTtBQUFBLElBQ2IsU0FBUztBQUFBLElBQ1QsWUFBWSxDQUFDO0FBQUEsRUFDZjtBQUNGLENBQUM7IiwKICAibmFtZXMiOiBbXQp9Cg==
