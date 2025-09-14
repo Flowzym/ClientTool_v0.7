@@ -111,10 +111,9 @@ function Board() {
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
 
   // All hooks must be called before any early returns
-  const { data, isLoading, view, toggleSort } = useBoardData();
+  const { clients, users, isLoading, view, toggleSort } = useBoardData();
   const actions = useBoardActions();
 
-  const { clients = [], users = [] } = data || {};
   const clientsWithOverlay = useOptimisticOverlay(clients);
   const visibleClients = useMemo(() => clientsWithOverlay.filter((c: any) => !c.isArchived || view.showArchived), [clientsWithOverlay, view.showArchived]);
   const allIds = useMemo(() => visibleClients.map((c: any) => c.id), [visibleClients]);
