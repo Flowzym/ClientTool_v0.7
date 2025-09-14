@@ -4,7 +4,7 @@ import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
 import { useBoardActions } from './hooks/useBoardActions';
 import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
-import { ClientInfoDialog } from './components/ClientInfoDialog';
+import { ClientInfoDialog } from './components';
 import { ClientRow } from './components/ClientRow';
 import { BatchActionsBar } from './components/BatchActionsBar';
 import { BoardHeader } from './components/BoardHeader';
