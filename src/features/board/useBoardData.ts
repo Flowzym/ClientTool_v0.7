@@ -72,7 +72,22 @@ export function useBoardData() {
         const savedView = await loadViewFromStorage();
         if (cancelled) return;
         if (savedView) {
-          setView(savedView);
+          setView({
+            ...defaultView,
+            ...savedView,
+            filters: {
+              ...defaultView.filters,
+              ...savedView.filters
+            },
+            sort: {
+              ...defaultView.sort,
+              ...savedView.sort
+            },
+            columnVisibility: {
+              ...defaultView.columnVisibility,
+              ...savedView.columnVisibility
+            }
+          });
         }
         
         // Daten laden
