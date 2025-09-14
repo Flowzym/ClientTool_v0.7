@@ -116,7 +116,13 @@ export function ClientRow({
 
       <ResultCell id={id} value={client.result} onChange={(r?: string) => actions.setResult?.(id, r)} />
 
-      <FollowupCell id={id} followUp={client.followUp} onChange={(d?: string) => (actions.setFollowup ? actions.setFollowup(id, d) : actions.update(id, { followUp: d }))} />
+      <FollowupCell id={id} followUp={client.followUp} onChange={(d?: string) => {
+          const changes = { 
+            followUp: d ?? null,
+            status: d ? 'terminVereinbart' : 'offen'
+          };
+          actions.update(id, changes);
+        }} />
 
       <AssignCell id={id} value={client.assignedTo} users={users} onChange={(u?: string) => actions.setAssignedTo?.(id, u)} />
 
