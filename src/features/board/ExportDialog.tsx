@@ -4,7 +4,7 @@
 import React, { useState } from 'react';
 import { Button } from '../../components/Button';
 import { X, Download } from 'lucide-react';
-import { formatDDMMYYYY } from '../../utils/date';
+import { formatDDMMYYYY } from './utils/date';
 import { supportsFSAccess } from '../../utils/env';
 import type { Client, User } from '../../domain/models';
 
