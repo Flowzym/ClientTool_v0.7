@@ -3,7 +3,6 @@ import { countNotes } from './utils/notes';
 import { perfMark, perfMeasure } from '../../lib/perf/timer';
 import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
-import { useBoardActions } from './hooks/useBoardActions';
 import ColumnHeader from './components/ColumnHeader';
 import { ClientInfoDialog } from './components';
 import { ClientRow } from './components/ClientRow';
@@ -124,10 +123,159 @@ function Board() {
 
   function handleHeaderToggle(key: string){ try { toggleSort?.(key as any); } catch {} }
 
-  const clients = useOptimisticOverlay(clients);
-  const visibleClients = useMemo(() => clients.filter((c: any) => !c.isArchived || view.showArchived), [clients, view.showArchived]);
-  const sortedClients = visibleClients;
+  // ==== SORT BLOCK (canonical) ====
+
+  type SortState = { key: string | null; direction: 'asc' | 'desc' | null };
+
+  const [localSort, setLocalSort] = useState<SortState>({ key: null, direction: null });
+
+  const sortState: SortState =
+    (localSort && (localSort.key !== null || localSort.direction !== null))
+      ? localSort
+      : (view?.sort ?? { key: null, direction: null });
+
+  const _formatName = (c: any) => {
+    const last = c.lastName ?? '';
+    const first = c.firstName ?? '';
+    const title = c.title ? ` (${c.title})` : '';
+    const fallback = c.name ?? '';
+    return (last || first) ? `${last}, ${first}${title}` : fallback;
+  };
+
+  const _getPinned = (c: any) => Boolean(c.isPinned ?? c.pinned ?? false);
+  const _cmpStr  = (a: any, b: any) => String(a).localeCompare(String(b), 'de', { sensitivity: 'base' });
+  const _cmpNum  = (a: any, b: any) => Number(a) - Number(b);
+  const _cmpDate = (a?: string | null, b?: string | null) => {
+    if (!a && !b) return 0; if (!a) return 1; if (!b) return -1;
+    return a < b ? -1 : a > b ? 1 : 0;
+  };
+
+  const withPinnedFirst = (sortFn: (a: any, b: any) => number) => (a: any, b: any) => {
+    const pa = _getPinned(a), pb = _getPinned(b);
+    if (pa !== pb) return pa ? -1 : 1;
+    return sortFn(a, b);
+  };
+
+  const byFullName = () => (a: any, b: any) => {
+    const aName = _formatName(a);
+    const bName = _formatName(b);
+    return _cmpStr(aName, bName);
+  };
+
+  const byEnum = (key: string, order: string[]) => (a: any, b: any) => {
+    const ord = order.map(v => String(v).toLowerCase());
+    const unknown = ord.length;
+    const av = String(a?.[key] ?? '').toLowerCase();
+    const bv = String(b?.[key] ?? '').toLowerCase();
+    const ai = ord.indexOf(av); const bi = ord.indexOf(bv);
+    const aIndex = ai === -1 ? unknown : ai;
+    const bIndex = bi === -1 ? unknown : bi;
+    if (aIndex !== bIndex) return aIndex - bIndex;
+    // Secondary sort by name for stability
+    return byFullName()(a, b);
+  };
+
+  const byDateISO = (key: string) => (a: any, b: any) => {
+    const aDate = a?.[key] ? new Date(a[key]).getTime() : Number.POSITIVE_INFINITY;
+    const bDate = b?.[key] ? new Date(b[key]).getTime() : Number.POSITIVE_INFINITY;
+    return aDate - bDate;
+  };
+
+  const byNoteText = () => (a: any, b: any) => {
+    const aText = String(a?.note ?? '');
+    const bText = String(b?.note ?? '');
+    if (aText.length !== bText.length) return aText.length - bText.length;
+    return _cmpStr(aText, bText);
+  };
+
+  const visibleClients = useMemo(() => 
+    clients.filter((c: any) => !c.isArchived || view?.showArchived), 
+    [clients, view?.showArchived]
+  );
+
+  const sortedClients = useMemo(() => {
+    let sorted = [...visibleClients];
+    
+    if (sortState.key && sortState.direction) {
+      const direction = sortState.direction === 'desc' ? -1 : 1;
+      
+      switch (sortState.key) {
+        case 'name':
+          sorted.sort(withPinnedFirst((a, b) => byFullName()(a, b) * direction));
+          break;
+        case 'status':
+          const statusOrder = ['offen', 'terminVereinbart', 'inBearbeitung', 'wartetRueckmeldung', 'erledigt', 'nichtErreichbar', 'abgebrochen'];
+          sorted.sort(withPinnedFirst((a, b) => byEnum('status', statusOrder)(a, b) * direction));
+          break;
+        case 'priority':
+          const priorityOrder = ['niedrig', 'normal', 'hoch', 'dringend'];
+          sorted.sort(withPinnedFirst((a, b) => byEnum('priority', priorityOrder)(a, b) * direction));
+          break;
+        case 'assignedTo':
+          sorted.sort(withPinnedFirst((a, b) => {
+            const aUser = users.find(u => u.id === a.assignedTo)?.name || '';
+            const bUser = users.find(u => u.id === b.assignedTo)?.name || '';
+            return _cmpStr(aUser, bUser) * direction;
+          }));
+          break;
+        case 'activity':
+          sorted.sort(withPinnedFirst((a, b) => byDateISO('lastActivity')(a, b) * direction));
+          break;
+        case 'followUp':
+          sorted.sort(withPinnedFirst((a, b) => byDateISO('followUp')(a, b) * direction));
+          break;
+        case 'contacts':
+          sorted.sort(withPinnedFirst((a, b) => _cmpNum(a.contactCount ?? 0, b.contactCount ?? 0) * direction));
+          break;
+        case 'notes':
+          sorted.sort(withPinnedFirst((a, b) => byNoteText()(a, b) * direction));
+          break;
+        case 'booking':
+          sorted.sort(withPinnedFirst((a, b) => byDateISO('amsBookingDate')(a, b) * direction));
+          break;
+        case 'offer':
+          const angebotOrder = ['BAM', 'LL/B+', 'BwB', 'NB'];
+          sorted.sort(withPinnedFirst((a, b) => byEnum('angebot', angebotOrder)(a, b) * direction));
+          break;
+        case 'result':
+          const resultOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch', 'keineReaktion'];
+          sorted.sort(withPinnedFirst((a, b) => byEnum('result', resultOrder)(a, b) * direction));
+          break;
+      }
+    } else {
+      // Default sorting by urgency when no specific sort is applied
+      sorted.sort(withPinnedFirst((a, b) => {
+        // Priority: dringend > hoch > normal > niedrig
+        const priorityOrder = { dringend: 4, hoch: 3, normal: 2, niedrig: 1 };
+        const aPrio = priorityOrder[a.priority] || 0;
+        const bPrio = priorityOrder[b.priority] || 0;
+        
+        if (aPrio !== bPrio) return bPrio - aPrio;
+        
+        // Follow-up: frühere Termine zuerst
+        if (a.followUp && b.followUp) {
+          return new Date(a.followUp).getTime() - new Date(b.followUp).getTime();
+        }
+        if (a.followUp && !b.followUp) return -1;
+        if (!a.followUp && b.followUp) return 1;
+        
+        // Last activity: ältere zuerst
+        if (a.lastActivity && b.lastActivity) {
+          return new Date(a.lastActivity).getTime() - new Date(b.lastActivity).getTime();
+        }
+        
+        return 0;
+      }));
+    }
+    
+    return sorted;
+  }, [visibleClients, sortState, users]);
+
+  // Selektion/IDs NACH sortedClients ableiten
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const allIds = useMemo(() => sortedClients.map((c: any) => c.id as string), [sortedClients]);
+
+  // ==== SORT BLOCK (canonical) END ====
 
   
   // Performance measurement after render
