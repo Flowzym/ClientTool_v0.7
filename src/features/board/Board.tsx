@@ -9,7 +9,7 @@ import ColumnHeader from './components/ColumnHeader';
 import { ClientInfoDialog } from './components';
 import { ClientRow } from './components/ClientRow';
 import BatchActionsBar from './components/BatchActionsBar';
-import { BoardHeader } from './components/BoardHeader';
+import { BoardHeader } from './components';
 import { featureManager } from '../../config/features';
 
 // Extracted components for stable hook order
