@@ -124,7 +124,7 @@ function Board() {
 
   const clientsWithOverlay = useOptimisticOverlay(clients);
   const visibleClients = useMemo(() => clientsWithOverlay.filter((c: any) => !c.isArchived || view.showArchived), [clientsWithOverlay, view.showArchived]);
-  const allIds = useMemo(() => visibleClients.map((c: any) => c.id), [visibleClients]);
+  const allIds = useMemo(() => sortedClients.map((c:any) => c.id as string), [sortedClients]);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const sortState = (localSort && (localSort.key!==null || localSort.direction!==null))
     ? localSort

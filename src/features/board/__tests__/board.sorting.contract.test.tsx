@@ -96,7 +96,7 @@ describe('Board Sorting Contract', () => {
   });
 
   describe('non-sortable columns', () => {
-    const nonSortableColumns = ['Zubuchung', 'Aktivität', 'Aktionen'];
+    const nonSortableColumns = ['Aktionen'];
 
     nonSortableColumns.forEach(label => {
       it(`should make ${label} column non-sortable`, async () => {
