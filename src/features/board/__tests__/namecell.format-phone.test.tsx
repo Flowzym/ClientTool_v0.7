@@ -154,6 +154,95 @@ describe('NameCell Format and Phone', () => {
     });
   });
 
+  describe('phone field robustness', () => {
+    it('should display phoneNumber when phone is missing', () => {
+      const client = makeRow({
+        firstName: 'Max',
+        lastName: 'Mustermann',
+        phone: undefined,
+        phoneNumber: '+43 699 123456'
+      });
+
+      const mockOnOpenNotes = vi.fn();
+      const mockOnOpenClient = vi.fn();
+      renderWithProviders(
+        <NameCell 
+          client={client} 
+          onOpenNotes={mockOnOpenNotes}
+          onOpenClient={mockOnOpenClient}
+        />
+      );
+
+      expect(screen.getByText('+43 699 123456')).toBeInTheDocument();
+    });
+
+    it('should prefer phone over phoneNumber when both exist', () => {
+      const client = makeRow({
+        firstName: 'Anna',
+        lastName: 'Schmidt',
+        phone: '+43 1 234 5678',
+        phoneNumber: '+43 699 987654'
+      });
+
+      const mockOnOpenNotes = vi.fn();
+      const mockOnOpenClient = vi.fn();
+      renderWithProviders(
+        <NameCell 
+          client={client} 
+          onOpenNotes={mockOnOpenNotes}
+          onOpenClient={mockOnOpenClient}
+        />
+      );
+
+      // Should show phone (first in fallback chain)
+      expect(screen.getByText('+43 1 234 5678')).toBeInTheDocument();
+      expect(screen.queryByText('+43 699 987654')).not.toBeInTheDocument();
+    });
+
+    it('should show "—" when both phone fields are missing', () => {
+      const client = makeRow({
+        firstName: 'Thomas',
+        lastName: 'Weber',
+        phone: undefined,
+        phoneNumber: undefined
+      });
+
+      const mockOnOpenNotes = vi.fn();
+      const mockOnOpenClient = vi.fn();
+      renderWithProviders(
+        <NameCell 
+          client={client} 
+          onOpenNotes={mockOnOpenNotes}
+          onOpenClient={mockOnOpenClient}
+        />
+      );
+
+      expect(screen.getByText('—')).toBeInTheDocument();
+    });
+
+    it('should handle empty string phone fields', () => {
+      const client = makeRow({
+        firstName: 'Maria',
+        lastName: 'Fischer',
+        phone: '',
+        phoneNumber: '+43 664 111222'
+      });
+
+      const mockOnOpenNotes = vi.fn();
+      const mockOnOpenClient = vi.fn();
+      renderWithProviders(
+        <NameCell 
+          client={client} 
+          onOpenNotes={mockOnOpenNotes}
+          onOpenClient={mockOnOpenClient}
+        />
+      );
+
+      // Should fallback to phoneNumber when phone is empty
+      expect(screen.getByText('+43 664 111222')).toBeInTheDocument();
+    });
+  });
+
   describe('client info card interaction', () => {
     it('should trigger client info dialog when name clicked', async () => {
       const user = userEvent.setup();

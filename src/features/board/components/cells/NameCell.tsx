@@ -31,7 +31,7 @@ export default function NameCell({
   const lastName = client?.lastName || '';
   const firstName = client?.firstName || '';
   const title = client?.title ? ` (${client.title})` : '';
-  const phone = client?.phone || '—';
+  const phone = client?.phone ?? client?.phoneNumber ?? '—';
   
   // Format: "Nachname, Vorname (Titel)"
   const nameDisplay = lastName && firstName 
