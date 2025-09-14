@@ -193,7 +193,6 @@ function Board() {
     [clients, view?.showArchived]
   );
 
-  const sortedClients = useMemo(() => {
     let sorted = [...visibleClients];
     
     if (sortState.key && sortState.direction) {
@@ -272,7 +271,6 @@ function Board() {
   }, [visibleClients, sortState, users]);
 
   // Selektion/IDs NACH sortedClients ableiten
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const allIds = useMemo(() => sortedClients.map((c: any) => c.id as string), [sortedClients]);
 
   // ==== SORT BLOCK (canonical) END ====
