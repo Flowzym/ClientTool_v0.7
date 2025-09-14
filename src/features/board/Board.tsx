@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { countNotes } from './utils/notes';
 import { perfMark, perfMeasure } from '../../lib/perf/timer';
 import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
@@ -27,33 +28,51 @@ function ClassicClientList({
   onToggleSelect: (index: number, id: string, withShift: boolean) => void;
   onTogglePin: (index: number, id: string, event?: React.MouseEvent) => void;
 }) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [scrollTop, setScrollTop] = useState(0);
   
-  // Simple non-virtualized list rendering
+  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop((e.target as HTMLDivElement).scrollTop);
+  };
+  
+  const ROW_HEIGHT = 44;
+  const viewportHeight = 520;
+  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 5);
+  const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT) + 10;
+  const endIndex = Math.min(clients.length, startIndex + visibleCount);
+  const topPad = startIndex * ROW_HEIGHT;
+  const bottomPad = Math.max(0, (clients.length - endIndex) * ROW_HEIGHT);
+
   return (
-    <div className="relative">
-      <div className="min-w-[1480px] border rounded-lg overflow-hidden">
-        {clients.map((client, index) => (
-          <div key={client.id} role="row" aria-rowindex={index + 1}>
-            <ClientRow
-              client={client}
-              index={index}
-              users={users}
-              actions={actions}
-              selected={selectedSet.has(client.id)}
-              onToggleSelect={(withShift) => onToggleSelect(index, client.id, withShift)}
-              onTogglePin={(e) => onTogglePin(index, client.id, e)}
-            />
-          </div>
-        ))}
-        {clients.length === 0 && (
-          <div className="px-3 py-6 text-sm text-gray-500 hover:bg-gray-50">
-            Keine Einträge für die aktuelle Ansicht.
-          </div>
-        )}
+    <div className="min-w-[1480px] border rounded-lg overflow-hidden">
+      <div ref={containerRef} onScroll={onScroll} style={{ maxHeight: viewportHeight, overflowY: 'auto' }}>
+        <div style={{ height: topPad }} />
+        <div className="divide-y">
+          {clients.slice(startIndex, endIndex).map((c: any, idx: number) => {
+            const realIndex = startIndex + idx;
+            return (
+              <ClientRow
+                key={c.id}
+                client={c}
+                index={realIndex}
+                users={users}
+                actions={actions}
+                selected={selectedSet.has(c.id)}
+                onToggleSelect={(withShift: boolean) => onToggleSelect(realIndex, c.id, withShift)}
+                onTogglePin={(event?: React.MouseEvent) => onTogglePin(realIndex, c.id, event)}
+              />
+            );
+          })}
+          {clients.length === 0 && (
+            <div className="px-3 py-6 text-sm text-gray-500 hover:bg-gray-50">
+              Keine Einträge für die aktuelle Ansicht.
+            </div>
+          )}
+        </div>
+        <div style={{ height: bottomPad }} />
       </div>
     </div>
   );
-
 }
 
 function VirtualClientList({ 
@@ -91,7 +110,7 @@ function VirtualClientList({
 }
 
 function Board() {
-  const renderCount = useRenderCount('Board');
+  const renderCount = useRenderCount();
   const lastIndexRef = useRef<number | null>(null);
   const [lastPinAnchorIndex, setLastPinAnchorIndex] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -99,110 +118,17 @@ function Board() {
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
 
   // All hooks must be called before any early returns
-  const { clients, users, isLoading, view, setView } = useBoardData();
+  const { clients, users, isLoading, view, toggleSort } = useBoardData();
   const actions = useBoardActions();
+
+  function handleHeaderToggle(key: string){ try { toggleSort?.(key as any); } catch {} }
 
   const clientsWithOverlay = useOptimisticOverlay(clients);
   const visibleClients = useMemo(() => clientsWithOverlay.filter((c: any) => !c.isArchived || view.showArchived), [clientsWithOverlay, view.showArchived]);
-
-  // ==== SORT BLOCK (canonical) ====
-  type SortState = { key: string | null; direction: 'asc' | 'desc' | null };
-const sortState: SortState = (view?.sort ?? { key: null, direction: null });
-
-  const _formatName = (c: any) => {
-    const last = c.lastName ?? '';
-    const first = c.firstName ?? '';
-    const title = c.title ? ` (${c.title})` : '';
-    const fallback = c.name ?? '';
-    return (last || first) ? `${last}, ${first}${title}` : fallback;
-  };
-
-  const _userName = (id?: string|null) => {
-    if (!id) return '';
-    const u = Array.isArray(users) ? users.find((x:any)=>x?.id===id) : null;
-    return u?.name ?? '';
-  };
-
-
-  const _getPinned = (c: any) => Boolean(c.isPinned ?? c.pinned ?? false);
-  const _cmpStr  = (a: any, b: any) => String(a).localeCompare(String(b), 'de', { sensitivity: 'base' });
-  const _cmpNum  = (a: any, b: any) => Number(a) - Number(b);
-  const _cmpDate = (a?: string | null, b?: string | null) => {
-    if (!a && !b) return 0; if (!a) return 1; if (!b) return -1;
-    return a < b ? -1 : a > b ? 1 : 0;
-  };
-
-  const _sortClients = (list: any[], sort: SortState) => {
-    const dir = sort?.direction === 'desc' ? -1 : 1;
-    const key = sort?.key;
-    const arr = [...list];
-    arr.sort((a, b) => {
-      // 1) Pins immer zuerst
-      const pa = _getPinned(a), pb = _getPinned(b);
-      if (pa !== pb) return pa ? -1 : 1;
-
-      // 2) Aktive Spalte
-      let d = 0;
-      switch (key) {
-        case 'name':       d = _cmpStr(_formatName(a), _formatName(b)); break;
-        case 'offer':      d = _cmpStr(a.offer ?? '', b.offer ?? ''); break;
-        case 'status':     d = _cmpStr(a.status ?? '', b.status ?? ''); break;
-        case 'result':     d = _cmpStr(a.result ?? '', b.result ?? ''); break;
-        case 'followUp':   d = _cmpDate(a.followUp ?? null, b.followUp ?? null); break;
-        case 'assignedTo': d = _cmpStr(_userName(a.assignedTo), _userName(b.assignedTo)); break;
-        case 'contacts':   d = _cmpNum(a.contactCount ?? 0, b.contactCount ?? 0); break;
-        case 'notes':      d = _cmpNum((a.noteCount ?? a.notesCount ?? 0), (b.noteCount ?? b.notesCount ?? 0)); break;
-        case 'priority':   d = _cmpNum(_priorityRank(a.priority), _priorityRank(b.priority)); break;
-        case 'activity':   d = _cmpDate(a.lastActivity ?? null, b.lastActivity ?? null); break;
-        case 'booking': {
-          const av = (a.booking ?? a.hasBooking ?? a.bookingLabel ?? '');
-          const bv = (b.booking ?? b.hasBooking ?? b.bookingLabel ?? '');
-          if (typeof av === 'boolean' || typeof bv === 'boolean')      d = _cmpNum(av ? 1 : 0, bv ? 1 : 0);
-          else if (typeof av === 'number' || typeof bv === 'number')   d = _cmpNum(Number(av) || 0, Number(bv) || 0);
-          else                                                         d = _cmpStr(String(av), String(bv));
-          break;
-        }
-        default: d = 0;
-      }
-
-      if (d !== 0) return dir * (d < 0 ? -1 : 1);
-
-      // 3) Stabile Tiebreaker: id
-      return String(a.id).localeCompare(String(b.id));
-    });
-    return arr;
-  };
-
-  const sortedClients = useMemo(
-    () => _sortClients(visibleClients, sortState),
-    [visibleClients, sortState]
-  );
-
-  // Selektion/IDs NACH sortedClients ableiten
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const sortedClients = visibleClients;
   const allIds = useMemo(() => sortedClients.map((c: any) => c.id as string), [sortedClients]);
 
-  // ==== SORT BLOCK (canonical) END ====
-
-  // Safe shim around setView
-  const _cycle = (prev:{key:string|null;direction:'asc'|'desc'|null}|null, key:string)=>{
-    if(!prev || prev.key!==key) return { key, direction:'asc' as const };
-    if(prev.direction==='asc') return { key, direction:'desc' as const };
-    return { key:null, direction:null };
-  };
-  const _setView = (update:any) => { try { setView(update); } catch {} };
-  const handleHeaderToggle = useCallback((key:string)=>{
-    _setView((prev:any)=>({ ...prev, sort: _cycle(prev?.sort ?? null, key) }));
-  },[]);
-
-  // Subscribe to feature flag changes
-  useEffect(() => {
-    perfMark('board:render:start');
-    return featureManager.subscribe((features) => {
-      setVirtualRowsEnabled(featureManager.isEnabled('virtualRows'));
-    });
-  }, []);
-
+  
   // Performance measurement after render
   useEffect(() => {
     perfMark('board:render:end');
