@@ -18,35 +18,48 @@ import { defaultView, loadViewFromStorage, saveViewToStorage } from './useBoardD
 
 // Sorting helper functions
 const byString = (key: string) => (a: any, b: any) => {
-  const aVal = a[key] || '';
-  const bVal = b[key] || '';
-  return aVal.localeCompare(bVal);
+  const aVal = String(a?.[key] ?? '');
+  const bVal = String(b?.[key] ?? '');
+  return aVal.localeCompare(bVal, 'de', { sensitivity: 'base', numeric: true });
 };
 
 const byEnum = (key: string, order: string[]) => (a: any, b: any) => {
-  const orderNorm = order.map(o => String(o).toLowerCase());
-  const unknown = orderNorm.length;
+  const ord = order.map(v => String(v).toLowerCase());
+  const unknown = ord.length;
   const av = String(a?.[key] ?? '').toLowerCase();
   const bv = String(b?.[key] ?? '').toLowerCase();
-  const ax = orderNorm.indexOf(av);
-  const bx = orderNorm.indexOf(bv);
-  const aIndex = ax === -1 ? unknown : ax;
-  const bIndex = bx === -1 ? unknown : bx;
+  const ai = ord.indexOf(av); const bi = ord.indexOf(bv);
+  const aIndex = ai === -1 ? unknown : ai;
+  const bIndex = bi === -1 ? unknown : bi;
   if (aIndex !== bIndex) return aIndex - bIndex;
   const aName = `${a?.lastName ?? ''} ${a?.firstName ?? ''}`.trim();
   const bName = `${b?.lastName ?? ''} ${b?.firstName ?? ''}`.trim();
   return aName.localeCompare(bName, 'de', { sensitivity: 'base' });
 };
 
+const byFullName = () => (a: any, b: any) => {
+  const aName = `${a?.lastName ?? ''} ${a?.firstName ?? ''}`.trim();
+  const bName = `${b?.lastName ?? ''} ${b?.firstName ?? ''}`.trim();
+  return aName.localeCompare(bName, 'de', { sensitivity: 'base' });
+};
+
+const byNoteText = () => (a: any, b: any) => {
+  const aText = String(a?.note ?? '');
+  const bText = String(b?.note ?? '');
+  // Sort by presence/length first to make changes visible, then lexically
+  if (aText.length !== bText.length) return aText.length - bText.length;
+  return aText.localeCompare(bText, 'de', { sensitivity: 'base', numeric: true });
+};
+
 const byDateISO = (key: string) => (a: any, b: any) => {
-  const aDate = a[key] ? new Date(a[key]).getTime() : 0;
-  const bDate = b[key] ? new Date(b[key]).getTime() : 0;
+  const aDate = a?.[key] ? new Date(a[key]).getTime() : Number.POSITIVE_INFINITY;
+  const bDate = b?.[key] ? new Date(b[key]).getTime() : Number.POSITIVE_INFINITY;
   return aDate - bDate;
 };
 
 const byNumber = (key: string) => (a: any, b: any) => {
-  const aVal = a[key] || 0;
-  const bVal = b[key] || 0;
+  const aVal = Number(a?.[key] ?? 0);
+  const bVal = Number(b?.[key] ?? 0);
   return aVal - bVal;
 };
 
@@ -256,7 +269,7 @@ export function useBoardData() {
       
       switch (view.sort.key) {
         case 'name':
-          sorted.sort(withPinnedFirst((a, b) => byString('name')(a, b) * direction));
+          sorted.sort(withPinnedFirst((a, b) => byFullName()(a, b) * direction));
           break;
         case 'status':
           const statusOrder = ['offen', 'terminVereinbart', 'inBearbeitung', 'wartetRueckmeldung', 'erledigt', 'nichtErreichbar', 'abgebrochen'];
@@ -283,6 +296,7 @@ export function useBoardData() {
           sorted.sort(withPinnedFirst((a, b) => byNumber('contactCount')(a, b) * direction));
           break;
         case 'notes':
+          sorted.sort(withPinnedFirst((a, b) => byNoteText()(a, b) * direction));
           break;
         case 'booking':
           sorted.sort(withPinnedFirst((a, b) => byDateISO('amsBookingDate')(a, b) * direction));
@@ -298,7 +312,7 @@ export function useBoardData() {
       }
     } else {
       // Default sorting by urgency when no specific sort is applied
-      sorted.sort((a, b) => {
+      sorted.sort(withPinnedFirst((a, b) => {
         // Gepinnte Clients immer oben
         if (a.isPinned && !b.isPinned) return -1;
         if (!a.isPinned && b.isPinned) return 1;
@@ -482,7 +496,7 @@ export function useBoardData() {
   };
 
   return {
-    clients: view.sort.key ? sortedClients : legacySortedClients,
+    clients: sortedClients,
     users,
     view,
     counts,
