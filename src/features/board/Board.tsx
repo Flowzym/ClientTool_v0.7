@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { countNotes } from './utils/notes';
 import { perfMark, perfMeasure } from '../../lib/perf/timer';
 import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
@@ -28,51 +27,33 @@ function ClassicClientList({
   onToggleSelect: (index: number, id: string, withShift: boolean) => void;
   onTogglePin: (index: number, id: string, event?: React.MouseEvent) => void;
 }) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [scrollTop, setScrollTop] = useState(0);
   
-  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    setScrollTop((e.target as HTMLDivElement).scrollTop);
-  };
-  
-  const ROW_HEIGHT = 44;
-  const viewportHeight = 520;
-  const startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 5);
-  const visibleCount = Math.ceil(viewportHeight / ROW_HEIGHT) + 10;
-  const endIndex = Math.min(clients.length, startIndex + visibleCount);
-  const topPad = startIndex * ROW_HEIGHT;
-  const bottomPad = Math.max(0, (clients.length - endIndex) * ROW_HEIGHT);
-
+  // Simple non-virtualized list rendering
   return (
-    <div className="min-w-[1480px] border rounded-lg overflow-hidden">
-      <div ref={containerRef} onScroll={onScroll} style={{ maxHeight: viewportHeight, overflowY: 'auto' }}>
-        <div style={{ height: topPad }} />
-        <div className="divide-y">
-          {clients.slice(startIndex, endIndex).map((c: any, idx: number) => {
-            const realIndex = startIndex + idx;
-            return (
-              <ClientRow
-                key={c.id}
-                client={c}
-                index={realIndex}
-                users={users}
-                actions={actions}
-                selected={selectedSet.has(c.id)}
-                onToggleSelect={(withShift: boolean) => onToggleSelect(realIndex, c.id, withShift)}
-                onTogglePin={(event?: React.MouseEvent) => onTogglePin(realIndex, c.id, event)}
-              />
-            );
-          })}
-          {clients.length === 0 && (
-            <div className="px-3 py-6 text-sm text-gray-500 hover:bg-gray-50">
-              Keine Einträge für die aktuelle Ansicht.
-            </div>
-          )}
-        </div>
-        <div style={{ height: bottomPad }} />
+    <div className="relative">
+      <div className="min-w-[1480px] border rounded-lg overflow-hidden">
+        {clients.map((client, index) => (
+          <div key={client.id} role="row" aria-rowindex={index + 1}>
+            <ClientRow
+              client={client}
+              index={index}
+              users={users}
+              actions={actions}
+              selected={selectedSet.has(client.id)}
+              onToggleSelect={(withShift) => onToggleSelect(index, client.id, withShift)}
+              onTogglePin={(e) => onTogglePin(index, client.id, e)}
+            />
+          </div>
+        ))}
+        {clients.length === 0 && (
+          <div className="px-3 py-6 text-sm text-gray-500 hover:bg-gray-50">
+            Keine Einträge für die aktuelle Ansicht.
+          </div>
+        )}
       </div>
     </div>
   );
+
 }
 
 function VirtualClientList({ 
@@ -110,7 +91,7 @@ function VirtualClientList({
 }
 
 function Board() {
-  const renderCount = useRenderCount();
+  const renderCount = useRenderCount('Board');
   const lastIndexRef = useRef<number | null>(null);
   const [lastPinAnchorIndex, setLastPinAnchorIndex] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -118,22 +99,15 @@ function Board() {
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
 
   // All hooks must be called before any early returns
-  const { clients, users, isLoading, view } = useBoardData();
+  const { clients, users, isLoading, view, setView } = useBoardData();
   const actions = useBoardActions();
 
   const clientsWithOverlay = useOptimisticOverlay(clients);
   const visibleClients = useMemo(() => clientsWithOverlay.filter((c: any) => !c.isArchived || view.showArchived), [clientsWithOverlay, view.showArchived]);
 
   // ==== SORT BLOCK (canonical) ====
-
   type SortState = { key: string | null; direction: 'asc' | 'desc' | null };
-
-  const [localSort, setLocalSort] = useState<SortState>({ key: null, direction: null });
-
-  const sortState: SortState =
-    (localSort && (localSort.key !== null || localSort.direction !== null))
-      ? localSort
-      : (view?.sort ?? { key: null, direction: null });
+const sortState: SortState = (view?.sort ?? { key: null, direction: null });
 
   const _formatName = (c: any) => {
     const last = c.lastName ?? '';
@@ -142,6 +116,13 @@ function Board() {
     const fallback = c.name ?? '';
     return (last || first) ? `${last}, ${first}${title}` : fallback;
   };
+
+  const _userName = (id?: string|null) => {
+    if (!id) return '';
+    const u = Array.isArray(users) ? users.find((x:any)=>x?.id===id) : null;
+    return u?.name ?? '';
+  };
+
 
   const _getPinned = (c: any) => Boolean(c.isPinned ?? c.pinned ?? false);
   const _cmpStr  = (a: any, b: any) => String(a).localeCompare(String(b), 'de', { sensitivity: 'base' });
@@ -168,10 +149,10 @@ function Board() {
         case 'status':     d = _cmpStr(a.status ?? '', b.status ?? ''); break;
         case 'result':     d = _cmpStr(a.result ?? '', b.result ?? ''); break;
         case 'followUp':   d = _cmpDate(a.followUp ?? null, b.followUp ?? null); break;
-        case 'assignedTo': d = _cmpStr(a.assignedTo ?? '', b.assignedTo ?? ''); break;
+        case 'assignedTo': d = _cmpStr(_userName(a.assignedTo), _userName(b.assignedTo)); break;
         case 'contacts':   d = _cmpNum(a.contactCount ?? 0, b.contactCount ?? 0); break;
         case 'notes':      d = _cmpNum((a.noteCount ?? a.notesCount ?? 0), (b.noteCount ?? b.notesCount ?? 0)); break;
-        case 'priority':   d = _cmpNum(a.priority ?? 0, b.priority ?? 0); break;
+        case 'priority':   d = _cmpNum(_priorityRank(a.priority), _priorityRank(b.priority)); break;
         case 'activity':   d = _cmpDate(a.lastActivity ?? null, b.lastActivity ?? null); break;
         case 'booking': {
           const av = (a.booking ?? a.hasBooking ?? a.bookingLabel ?? '');
@@ -209,17 +190,7 @@ function Board() {
     if(prev.direction==='asc') return { key, direction:'desc' as const };
     return { key:null, direction:null };
   };
-  const _setView = (update:any)=>{
-    try {
-      if (typeof setView === 'function') return setView(update);
-    } catch {}
-    // fallback: nur Sort in localSort aktualisieren
-    try {
-      const current = view?.sort ?? localSort;
-      const next = (typeof update==='function') ? update({ ...view, sort: current }) : update;
-      if (next?.sort) setLocalSort(next.sort);
-    } catch {}
-  };
+  const _setView = (update:any) => { try { setView(update); } catch {} };
   const handleHeaderToggle = useCallback((key:string)=>{
     _setView((prev:any)=>({ ...prev, sort: _cycle(prev?.sort ?? null, key) }));
   },[]);
