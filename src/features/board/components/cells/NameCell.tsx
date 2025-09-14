@@ -19,13 +19,14 @@ function countNotes(client: any): number {
   return 0;
 }
 
-function openClientInfo(clientId: string) {
-  window.dispatchEvent(new CustomEvent('board:open-client-info', { detail: { id: clientId } }));
-}
-
-export default function NameCell({ client, onOpenNotes }: { 
+export default function NameCell({ 
+  client, 
+  onOpenNotes,
+  onOpenClient 
+}: { 
   client: any; 
-  onOpenNotes: (id: string) => void; 
+  onOpenNotes: (id: string) => void;
+  onOpenClient: (id: string) => void;
 }) {
   const lastName = client?.lastName || '';
   const firstName = client?.firstName || '';
@@ -60,7 +61,7 @@ export default function NameCell({ client, onOpenNotes }: {
       <div className="flex-1 min-w-0">
         <button
           className="text-left w-full hover:text-blue-600 transition-colors"
-          onClick={() => openClientInfo(client?.id)}
+          onClick={() => onOpenClient(client?.id)}
           aria-label={`Kundeninfo für ${nameDisplay} öffnen`}
         >
           <div className="font-medium truncate">{nameDisplay}</div>

@@ -6,6 +6,7 @@ import { useBoardData } from './useBoardData';
 import { useBoardActions } from './hooks/useBoardActions';
 import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import ColumnHeader from './components/ColumnHeader';
+import ColumnHeader from './components/ColumnHeader';
 import { ClientInfoDialog } from './components';
 import { ClientRow } from './components/ClientRow';
 import BatchActionsBar from './components/BatchActionsBar';
@@ -207,6 +208,15 @@ function Board() {
     perfMeasure('board:render', 'board:render:start', 'board:render:end');
   });
 
+  // Listen for ClientInfoDialog open events
+  useEffect(() => {
+    const handleOpenClientInfo = (event: CustomEvent) => {
+      setClientInfoDialogId(event.detail.id);
+    };
+
+    window.addEventListener('board:open-client-info', handleOpenClientInfo as EventListener);
+    return () => window.removeEventListener('board:open-client-info', handleOpenClientInfo as EventListener);
+  }, []);
   // Event handlers - no hooks inside
   const clearSelection = () => setSelectedIds([]);
   const selectAllVisible = () => setSelectedIds(allIds);

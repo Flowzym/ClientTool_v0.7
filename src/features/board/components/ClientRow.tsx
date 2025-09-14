@@ -63,6 +63,10 @@ export function ClientRow({
     window.dispatchEvent(new CustomEvent('board:open-notes', { detail: { id: cid } }));
   };
 
+  const onOpenClient = (cid: string) => {
+    // Trigger ClientInfoDialog via CustomEvent
+    window.dispatchEvent(new CustomEvent('board:open-client-info', { detail: { id: cid } }));
+  };
   return (
     <div className="grid grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px] gap-2 items-center px-3 py-2 hover:bg-gray-50">
       {/* Auswahl + Pin */}
@@ -100,6 +104,7 @@ export function ClientRow({
           note: client.note,
         }}
         onOpenNotes={onOpenNotes}
+        onOpenClient={onOpenClient}
       />
 
       <OfferCell
