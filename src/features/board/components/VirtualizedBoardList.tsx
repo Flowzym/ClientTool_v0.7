@@ -197,6 +197,7 @@ function VirtualizedBoardList({
                 }}
                 role="row"
                 aria-rowindex={virtualItem.index + 1}
+                aria-selected={selectedIds.has(client.id)}
               >
                 <ClientRowVirtualized
                   client={client}
