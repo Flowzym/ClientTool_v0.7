@@ -7,7 +7,7 @@ import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import { ClientRow } from './components/ClientRow';
 import { BatchActionsBar } from './components/BatchActionsBar';
 import { BoardHeader } from './components/BoardHeader';
-import { ColumnHeader } from './components/ColumnHeader';
+import ColumnHeader from './components/ColumnHeader';
 import { featureManager } from '../../config/features';
 
 // Extracted components for stable hook order
