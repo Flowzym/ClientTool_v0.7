@@ -17,6 +17,7 @@ interface VirtualizedBoardListProps {
   actions: any;
   selectedIds: Set<string>;
   onToggleSelect: (index: number, id: string, withShift: boolean) => void;
+  onTogglePin: (index: number, id: string, event?: React.MouseEvent) => void;
   rowHeight?: number;
   overscan?: number;
   className?: string;
@@ -34,6 +35,7 @@ function VirtualizedBoardList({
   actions,
   selectedIds,
   onToggleSelect,
+  onTogglePin,
   rowHeight = 52,
   overscan = 8,
   className = ''
@@ -203,6 +205,7 @@ function VirtualizedBoardList({
                   actions={actions}
                   selected={selectedIds.has(client.id)}
                   onToggleSelect={(withShift) => onToggleSelect(virtualItem.index, client.id, withShift)}
+                  onTogglePin={(event) => onTogglePin(virtualItem.index, client.id, event)}
                 />
               </div>
             );

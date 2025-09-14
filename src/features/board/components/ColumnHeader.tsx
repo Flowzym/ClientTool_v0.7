@@ -19,6 +19,7 @@ export default function ColumnHeader({
   onToggle
 }: ColumnHeaderProps) {
   const getAriaSort = (): 'ascending' | 'descending' | 'none' => {
+    if (!sortable) return 'none';
     if (!isActive || !direction) return 'none';
     return direction === 'asc' ? 'ascending' : 'descending';
   };
@@ -34,7 +35,7 @@ export default function ColumnHeader({
 
   if (!sortable) {
     return (
-      <div className="text-xs font-bold text-gray-600" role="columnheader">
+      <div className="text-xs font-bold text-gray-600" role="columnheader" aria-sort="none">
         {label}
       </div>
     );

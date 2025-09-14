@@ -264,28 +264,25 @@ export function useBoardData() {
             return aUser.localeCompare(bUser) * direction;
           }));
           break;
-        case 'lastActivity':
+        case 'activity':
           sorted.sort(withPinnedFirst((a, b) => byDateISO('lastActivity')(a, b) * direction));
           break;
         case 'followUp':
           sorted.sort(withPinnedFirst((a, b) => byDateISO('followUp')(a, b) * direction));
           break;
-        case 'contactCount':
+        case 'contacts':
           sorted.sort(withPinnedFirst((a, b) => byNumber('contactCount')(a, b) * direction));
           break;
         case 'notes':
           sorted.sort(withPinnedFirst((a, b) => (countNotes(a) - countNotes(b)) * direction));
           break;
-        case 'angebot':
+        case 'offer':
           const angebotOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch'];
-          sorted.sort(withPinnedFirst((a, b) => byEnum('angebot', angebotOrder)(a, b) * direction));
+          sorted.sort(withPinnedFirst((a, b) => byEnum('offer', angebotOrder)(a, b) * direction));
           break;
         case 'result':
           const resultOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch', 'keineReaktion'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('result', resultOrder)(a, b) * direction));
-          break;
-        case 'bookingDate':
-          sorted.sort(withPinnedFirst((a, b) => byDateISO('bookingDate')(a, b) * direction));
           break;
       }
     } else {

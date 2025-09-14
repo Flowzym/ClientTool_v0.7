@@ -1,0 +1,284 @@
+# Test Plan - Klient:innendaten-Tool
+
+## Übersicht
+
+Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und automatisierte Tests der Anwendung.
+
+## Automatisierte Tests
+
+### Unit Tests
+- **Abdeckung**: 85%+ lines, 85%+ functions, 80%+ branches
+- **Framework**: Vitest mit React Testing Library
+- **Ausführung**: `npm test`
+
+### Integration Tests
+- **Board Rendering**: `src/features/board/__tests__/board.rendering.test.tsx`
+- **Optimistic Updates**: `src/features/board/__tests__/integration/optimistic-flow.integration.test.tsx`
+- **Selection & Batch**: `src/features/board/__tests__/integration/selection-batch.integration.test.tsx`
+- **Status ↔ Follow-up**: `src/features/board/__tests__/integration/status-followup.integration.test.tsx`
+- **Undo/Redo Flow**: `src/features/board/__tests__/integration/undo-redo.integration.test.tsx`
+
+### Pin Functionality Tests
+- **Shift-Range Operations**: `src/features/board/__tests__/pin.shift-range.test.tsx`
+  - Single pin/unpin toggle
+  - Shift-click range pinning with consistent target state
+  - Reverse range handling (higher to lower index)
+  - Mixed pin states in range
+  - Accessibility with aria-pressed states
+
+### Accessibility Tests
+- **Header Accessibility**: `src/features/board/__tests__/a11y.headers.test.tsx`
+  - aria-sort correctness for all column states
+  - Header checkbox tri-state behavior (false/true/mixed)
+  - Keyboard navigation through sortable headers
+  - Screen reader support validation
+
+### Performance Tests
+- **Virtual Rows**: `src/features/board/__tests__/perf.flag.test.ts`
+- **Hook Order Guards**: `src/features/board/__tests__/board.hookOrder.guard.test.tsx`
+- **Virtualization Toggle**: `src/features/board/__tests__/virtualRows.toggle.test.tsx`
+
+### Export/Import Tests
+- **CSV Utils**: `src/features/export/csv/__tests__/csvUtils.test.ts`
+- **ZIP Utils**: `src/features/export/zip/__tests__/zipUtils.test.ts`
+- **Excel Routing**: `src/features/import/__tests__/excelRouting.test.ts`
+
+## Manuelle Testszenarien
+
+### Board-Funktionalität
+
+#### Pin-Operationen
+1. **Einzelnes Pinnen/Entpinnen**
+   - Klick auf Pin-Button → Client wird gepinnt/entpinnt
+   - Gepinnte Clients bleiben oben in allen Sortierungen
+   - Pin-Status visuell korrekt (📌 vs 📍)
+
+2. **Shift-Range Pinning** ⭐ NEU
+   - Ersten Client anklicken (Anker setzen)
+   - Shift+Klick auf anderen Client → Bereich wird gepinnt/entpinnt
+   - Zielzustand bestimmt Aktion (geklicktes Element → alle im Bereich)
+   - Funktioniert in beide Richtungen (aufwärts/abwärts)
+
+3. **Pinned-First Sorting**
+   - Sortierung nach Name → Gepinnte bleiben oben, dann alphabetisch
+   - Sortierung nach Status → Gepinnte bleiben oben, dann nach Status
+   - Sortierung nach Priorität → Gepinnte bleiben oben, dann nach Priorität
+
+#### Accessibility
+1. **Header-Sortierung** ⭐ VERBESSERT
+   - Tab-Navigation durch sortierbare Header
+   - aria-sort="none/ascending/descending" korrekt
+   - Enter/Space aktiviert Sortierung
+   - Nicht-sortierbare Header haben aria-sort="none"
+
+2. **Header-Checkbox Tri-State** ⭐ NEU
+   - Keine Auswahl: aria-checked="false", nicht indeterminate
+   - Alle ausgewählt: aria-checked="true", checked=true
+   - Teilauswahl: aria-checked="mixed", indeterminate=true
+   - Klick-Verhalten: false→true→false Zyklus
+
+3. **Pin-Button Accessibility**
+   - aria-pressed="true/false" je nach Pin-Status
+   - Keyboard-Navigation (Tab + Enter/Space)
+   - Beschreibende title-Attribute
+
+### Import-Pipeline
+
+#### Excel/CSV-Import
+1. **Datei-Upload**
+   - .xlsx, .xls, .csv Dateien
+   - HTML-Tabellen-Fallback für Web-Portal-Downloads
+   - Magic-Bytes-Erkennung vs. falsche Extensions
+
+2. **Mapping & Validierung**
+   - Auto-Mapping deutscher Spaltennamen
+   - Mapping-Presets pro Source-ID
+   - Validierungsfehler-Anzeige
+
+3. **Delta-Sync**
+   - Anhängen vs. Synchronisieren
+   - Neue/Aktualisierte/Entfallene Erkennung
+   - Geschützte Felder respektieren
+
+#### PDF-Import
+1. **Text-Extraktion**
+   - PDF-Seiten-Auswahl
+   - Regex-Erkennung (AMS-ID, Namen, Kontakte)
+   - OCR-Hinweis für Scan-PDFs
+
+2. **Mapping-Korrektur**
+   - Automatische Feld-Zuordnung
+   - Manuelle Korrektur-Möglichkeit
+   - Vorschau vor Import
+
+### Verschlüsselung & Sicherheit
+
+#### Encryption-Modi
+1. **PLAIN-Modus** (nur localhost)
+   - Guardrail: Blockiert auf Nicht-localhost
+   - Export-Sperre aktiv
+   - Warnung in UI
+
+2. **DEV-ENC-Modus**
+   - DEV-Key aus ENV oder localStorage
+   - Automatische Key-Generierung
+   - Sicherheits-Panel zeigt Key-Quelle
+
+3. **PROD-ENC-Modus**
+   - Passphrase-Gate vor Datenzugriff
+   - Argon2id Key-Derivation
+   - Envelope v1 Verschlüsselung
+
+#### Network Guard
+1. **Local-Only Verhalten**
+   - Externe Requests blockiert
+   - Same-Origin erlaubt
+   - Blocked-Requests-Log
+
+2. **SharePoint-Integration** (optional)
+   - Feature-Flag aktiviert externe Domains
+   - Network Guard zeigt erlaubte Domains
+   - Sicherheitswarnung in UI
+
+### PWA & Offline
+
+#### Service Worker
+1. **Cache-Strategien**
+   - Navigation: Network-First → Cache-Fallback
+   - Assets: Cache-First
+   - Offline-Fallback-Seite
+
+2. **Installation**
+   - PWA-Installation möglich
+   - Manifest korrekt
+   - Icons verfügbar
+
+## Kritische Pfade
+
+### 1. Daten-Import → Board → Export
+1. Excel-Datei importieren (Anhängen-Modus)
+2. Board öffnen → Daten sichtbar
+3. Status/Zuweisungen ändern
+4. CSV exportieren → Daten korrekt
+
+### 2. Verschlüsselung Roundtrip
+1. PROD-ENC: Passphrase eingeben
+2. Daten importieren
+3. App schließen/neu öffnen
+4. Passphrase erneut eingeben → Daten verfügbar
+
+### 3. Pin-Operationen mit Sortierung
+1. Mehrere Clients pinnen (einzeln + Shift-Range)
+2. Nach verschiedenen Spalten sortieren
+3. Gepinnte Clients bleiben immer oben
+4. Entpinnen funktioniert korrekt
+
+### 4. Batch-Operationen
+1. Mehrere Clients auswählen (Checkbox + Shift-Range)
+2. Batch-Status/Zuweisung ändern
+3. Undo/Redo funktioniert
+4. Optimistic Updates korrekt
+
+## Browser-Kompatibilität
+
+### Unterstützte Browser
+- **Chrome/Edge**: 90+ (File System Access API)
+- **Firefox**: 88+ (Standard File Input)
+- **Safari**: 14+ (Standard File Input)
+
+### Feature-Detection
+- File System Access API → System-Dateidialoge
+- Service Worker → PWA-Funktionalität
+- IndexedDB → Lokale Datenbank
+- WebCrypto → Verschlüsselung
+
+## Performance-Benchmarks
+
+### Virtual Rows (opt-in)
+- **DOM-Reduktion**: >90% bei 1000+ Datensätzen
+- **Scroll-Performance**: 45+ FPS bei großen Datasets
+- **Mount-Zeit**: Vergleichbar mit klassischer Darstellung
+- **Memory-Effizienz**: Nur sichtbare Zeilen im DOM
+
+### Encryption-Performance
+- **AES-GCM**: <10ms für typische Client-Datensätze
+- **Argon2id**: ~100ms für Key-Derivation (akzeptabel)
+- **IndexedDB**: <50ms für CRUD-Operationen
+
+## Fehlerbehandlung
+
+### Graceful Degradation
+- **Offline**: App funktioniert ohne Netzwerk
+- **Crypto-Fehler**: Klare Fehlermeldungen
+- **Import-Fehler**: Validierung mit Korrektur-Hinweisen
+- **Browser-Limits**: Fallbacks für fehlende APIs
+
+### Error Boundaries
+- **React Error Boundaries**: Verhindern kompletten App-Crash
+- **Service Worker**: Robuste Cache-Strategien
+- **Database**: Transaktionale Operationen
+
+## Deployment-Tests
+
+### Build-Validierung
+- **TypeScript**: Strict mode, 0 Fehler
+- **ESLint**: 0 Fehler, 0 Warnungen
+- **Vite Build**: Erfolgreiche Produktion
+- **Bundle-Size**: <2MB gzipped
+
+### Quality Gates
+- **Status Gate**: `npm run status` → grün
+- **Coverage**: Schwellenwerte erfüllt
+- **Performance**: Lighthouse-Score >90
+
+## Regression-Tests
+
+### Nach Updates prüfen
+1. **Board-Funktionalität**: Pin, Sort, Filter, Selection
+2. **Import-Pipeline**: Excel, PDF, HTML-Fallback
+3. **Verschlüsselung**: Alle Modi, Roundtrip-Tests
+4. **PWA**: Offline-Funktionalität, Cache-Strategien
+5. **Export**: CSV, ZIP, Injection-Guards
+
+### Breaking-Change-Detection
+- **Export Policy**: Contract-Tests
+- **Hook Order**: Guard-Tests
+- **API-Kompatibilität**: Integration-Tests
+
+## Testdaten
+
+### Demo-Clients
+- **Seed-Funktion**: `seedTestData()` in PassphraseGate
+- **16 Test-Clients**: Verschiedene Status, Prioritäten, Angebote
+- **Deterministische Daten**: Feste Timestamps für Tests
+
+### Sample-Dateien
+- **Excel**: `sample-data/clients.xlsx`
+- **CSV**: `sample-data/clients.csv`
+- **PDF**: `public/sample/clients.pdf`
+
+## Monitoring
+
+### Development
+- **Performance Playground**: `/dev/perf` für Virtualisierung-Tests
+- **Status Gate**: Automatische Quality-Checks
+- **Console-Logs**: Strukturierte Debug-Ausgaben
+
+### Production
+- **Error Tracking**: Lokale Error-Logs
+- **Performance**: Web Vitals Monitoring
+- **Usage**: Feature-Flag-Nutzung
+
+---
+
+## Neue Testfälle (v0.7.2)
+
+### Pin Shift-Range Tests
+- **Datei**: `src/features/board/__tests__/pin.shift-range.test.tsx`
+- **Abdeckung**: Shift-Range Pinning, Entpinnen, Bereich-Konsistenz
+- **Szenarien**: Einzeln, Range, Reverse-Range, Mixed-States
+
+### Accessibility Header Tests
+- **Datei**: `src/features/board/__tests__/a11y.headers.test.tsx`
+- **Abdeckung**: aria-sort Korrektheit, Header-Checkbox Tri-State
+- **Szenarien**: Sortable/Non-sortable Headers, Keyboard-Navigation, Screen-Reader-Support

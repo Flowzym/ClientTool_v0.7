@@ -18,13 +18,15 @@ function ClassicClientList({
   users, 
   actions, 
   selectedSet, 
-  onToggleSelect 
+  onToggleSelect,
+  onTogglePin
 }: {
   clients: any[];
   users: any[];
   actions: any;
   selectedSet: Set<string>;
   onToggleSelect: (index: number, id: string, withShift: boolean) => void;
+  onTogglePin: (index: number, id: string, event?: React.MouseEvent) => void;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -57,6 +59,7 @@ function ClassicClientList({
                 actions={actions}
                 selected={selectedSet.has(c.id)}
                 onToggleSelect={(withShift: boolean) => onToggleSelect(realIndex, c.id, withShift)}
+                onTogglePin={(event?: React.MouseEvent) => onTogglePin(realIndex, c.id, event)}
               />
             );
           })}
@@ -77,13 +80,15 @@ function VirtualClientList({
   users, 
   actions, 
   selectedSet, 
-  onToggleSelect 
+  onToggleSelect,
+  onTogglePin
 }: {
   clients: any[];
   users: any[];
   actions: any;
   selectedSet: Set<string>;
   onToggleSelect: (index: number, id: string, withShift: boolean) => void;
+  onTogglePin: (index: number, id: string, event?: React.MouseEvent) => void;
 }) {
   // Import VirtualizedBoardList dynamically to avoid circular deps
   const VirtualizedBoardList = React.lazy(() => import('./components/VirtualizedBoardList'));
@@ -96,6 +101,7 @@ function VirtualClientList({
         actions={actions}
         selectedIds={selectedSet}
         onToggleSelect={onToggleSelect}
+        onTogglePin={onTogglePin}
         rowHeight={44}
         className="min-w-[1480px] border rounded-lg overflow-hidden"
       />
@@ -106,6 +112,7 @@ function VirtualClientList({
 function Board() {
   const renderCount = useRenderCount();
   const lastIndexRef = useRef<number | null>(null);
+  const lastPinAnchorIndex = useRef<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [clientInfoDialogId, setClientInfoDialogId] = useState<string | null>(null);
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
@@ -154,6 +161,29 @@ function Board() {
     lastIndexRef.current = index;
   };
 
+  const togglePinAtIndex = (index: number, id: string, event?: React.MouseEvent) => {
+    const withShift = event?.shiftKey || false;
+    const currentClient = visibleClients.find((c: any) => c.id === id);
+    const targetPinState = !currentClient?.isPinned;
+
+    if (!withShift || lastPinAnchorIndex.current == null) {
+      // Single pin toggle
+      actions.update(id, { isPinned: targetPinState });
+      lastPinAnchorIndex.current = index;
+      return;
+    }
+
+    // Shift-range pin toggle
+    const start = Math.min(lastPinAnchorIndex.current, index);
+    const end = Math.max(lastPinAnchorIndex.current, index);
+    const idsInRange = allIds.slice(start, end + 1);
+    
+    // Apply target state to all in range
+    const changes = { isPinned: targetPinState };
+    actions.bulkUpdate(idsInRange, changes);
+    
+    lastPinAnchorIndex.current = index;
+  };
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -206,6 +236,11 @@ function Board() {
             <input
               type="checkbox"
               checked={selectedIds.length === allIds.length && allIds.length > 0}
+              aria-checked={
+                selectedIds.length === 0 ? false :
+                selectedIds.length === allIds.length ? true :
+                'mixed'
+              }
               ref={(el) => {
                 if (el) {
                   el.indeterminate = selectedIds.length > 0 && selectedIds.length < allIds.length;
@@ -246,6 +281,7 @@ function Board() {
           actions={actions}
           selectedSet={selectedSet}
           onToggleSelect={toggleAtIndex}
+          onTogglePin={togglePinAtIndex}
         />
       ) : (
         <ClassicClientList
@@ -254,6 +290,7 @@ function Board() {
           actions={actions}
           selectedSet={selectedSet}
           onToggleSelect={toggleAtIndex}
+          onTogglePin={togglePinAtIndex}
         />
       )}
 

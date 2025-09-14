@@ -34,12 +34,14 @@ type Actions = {
 
 export function ClientRow({
   client, users, actions, selected, onToggleSelect
+  onTogglePin
 }: {
   client: any;
   users: any[];
   actions: Actions;
   selected?: boolean;
   onToggleSelect?: (withShift: boolean) => void;
+  onTogglePin?: (event?: React.MouseEvent) => void;
 }) {
   const { id } = client ?? {};
 
@@ -81,7 +83,7 @@ export function ClientRow({
         <button
           className={`p-1 rounded hover:bg-gray-50 ${client.isPinned ? 'text-blue-600' : 'text-gray-400'}`}
           title="Pin toggeln"
-          onClick={() => (actions.togglePin ? actions.togglePin(id) : actions.update(id, { isPinned: !client.isPinned }))}
+          onClick={(event) => onTogglePin?.(event)}
         >
           <Pin size={14} />
         </button>
