@@ -85,6 +85,20 @@ export default [
           selector: 'ExportDefaultDeclaration[parent.parent.parent.source.value=/\\.(hook|service|util)\\.(ts|tsx)$/]',
           message: 'Hooks, services, and utilities should use named exports only, not default exports'
         }
+      ],
+      
+      // Enforce export policy for hooks, services, utilities
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['**/hooks/*', '**/services/*', '**/utils/*'],
+              importNames: ['default'],
+              message: 'Default imports are not allowed for hooks, services, or utilities. Use named imports instead.'
+            }
+          ]
+        }
       ]
     },
     settings: { react: { version: 'detect' } },

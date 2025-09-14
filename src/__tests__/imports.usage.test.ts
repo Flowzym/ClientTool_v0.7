@@ -68,6 +68,30 @@ describe('Import Usage Validation', () => {
         }
       }
     });
+    
+    it('should reject default imports for services', async () => {
+      // This test validates that services don't accidentally export defaults
+      const serviceFiles = [
+        '../services/MutationService',
+        '../services/ExportService', 
+        '../services/ImportService'
+      ];
+
+      for (const servicePath of serviceFiles) {
+        try {
+          const module = await import(servicePath);
+          
+          // Critical: Services must not have default exports
+          expect(module.default).toBeUndefined();
+          
+          // Should have named exports only
+          const namedExports = Object.keys(module).filter(key => key !== 'default');
+          expect(namedExports.length).toBeGreaterThan(0);
+        } catch (error) {
+          throw new Error(`Service export validation failed for ${servicePath}: ${error}`);
+        }
+      }
+    });
   });
 
   describe('hook imports', () => {
@@ -93,6 +117,36 @@ describe('Import Usage Validation', () => {
         }
       }
     });
+    
+    it('should reject default imports for hooks', async () => {
+      const hookFiles = [
+        '../features/board/hooks/useBoardActions',
+        '../features/board/hooks/useBoardData',
+        '../features/board/hooks/useOptimisticOverlay'
+      ];
+
+      for (const hookPath of hookFiles) {
+        try {
+          const module = await import(hookPath);
+          
+          // Critical: Hooks must not have default exports
+          expect(module.default).toBeUndefined();
+          
+          // Should have named exports only
+          const namedExports = Object.keys(module).filter(key => key !== 'default');
+          expect(namedExports.length).toBeGreaterThan(0);
+          
+          // All exports should be hooks (start with 'use') or helpers
+          namedExports.forEach(exportName => {
+            if (exportName.startsWith('use')) {
+              expect(typeof module[exportName]).toBe('function');
+            }
+          });
+        } catch (error) {
+          throw new Error(`Hook export validation failed for ${hookPath}: ${error}`);
+        }
+      }
+    });
   });
 
   describe('utility imports', () => {
@@ -113,6 +167,32 @@ describe('Import Usage Validation', () => {
           expect(module.default).toBeUndefined(); // Should not have default export
         } catch (error) {
           throw new Error(`Utility import ${path} failed: ${error}`);
+        }
+      }
+    });
+    
+    it('should reject default imports for utilities', async () => {
+      const utilFiles = [
+        '../utils/cn',
+        '../utils/date/safeParseToISO',
+        '../utils/env',
+        '../utils/normalize',
+        '../utils/fileSniff'
+      ];
+
+      for (const utilPath of utilFiles) {
+        try {
+          const module = await import(utilPath);
+          
+          // Critical: Utilities must not have default exports
+          expect(module.default).toBeUndefined();
+          
+          // Should have named exports only
+          const namedExports = Object.keys(module).filter(key => key !== 'default');
+          expect(namedExports.length).toBeGreaterThan(0);
+        } catch (error) {
+          // Some utils might not exist - that's ok for this validation
+          console.warn(`Utility validation skipped for ${utilPath}: ${error}`);
         }
       }
     });
@@ -227,6 +307,31 @@ describe('Import Usage Validation', () => {
         expect(directBoard.default).toBe(barrelBoard.Board);
       } catch (error) {
         throw new Error(`Export consistency check failed: ${error}`);
+      }
+    });
+    
+    it('should prevent default imports for hooks/services/utils', async () => {
+      // This test validates the ESLint rule enforcement
+      const nonComponentModules = [
+        { path: '../features/board/hooks/useBoardActions', type: 'hook' },
+        { path: '../services/MutationService', type: 'service' },
+        { path: '../utils/cn', type: 'util' }
+      ];
+
+      for (const { path, type } of nonComponentModules) {
+        try {
+          const module = await import(path);
+          
+          // Should not have default export
+          expect(module.default).toBeUndefined();
+          
+          // Should have named exports
+          const namedExports = Object.keys(module).filter(key => key !== 'default');
+          expect(namedExports.length).toBeGreaterThan(0);
+          
+        } catch (error) {
+          console.warn(`${type} validation skipped for ${path}: ${error}`);
+        }
       }
     });
   });

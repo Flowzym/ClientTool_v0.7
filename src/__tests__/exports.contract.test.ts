@@ -16,6 +16,12 @@ describe('Export Contract Validation', () => {
           const module = await import(entry.path);
           expect(module.default).toBeDefined();
           expect(typeof module.default).toBe('function');
+          
+          // Components should NOT have named export with same name
+          const componentName = entry.path.split('/').pop()?.replace('.tsx', '');
+          if (componentName) {
+            expect(module[componentName]).toBeUndefined();
+          }
         } catch (error) {
           throw new Error(`Failed to import ${entry.path}: ${error}`);
         }
@@ -30,6 +36,10 @@ describe('Export Contract Validation', () => {
             if (componentName) {
               expect(barrel[componentName]).toBeDefined();
               expect(typeof barrel[componentName]).toBe('function');
+              
+              // Barrel should re-export the default as named
+              const directModule = await import(entry.path);
+              expect(barrel[componentName]).toBe(directModule.default);
             }
           } catch (error) {
             throw new Error(`Failed to import from barrel ${entry.barrel}: ${error}`);
@@ -60,6 +70,10 @@ describe('Export Contract Validation', () => {
               expect(typeof module[exportName]).toBe('function');
             }
           });
+          
+          // Hooks should follow naming convention
+          const hookExports = namedExports.filter(name => name.startsWith('use'));
+          expect(hookExports.length).toBeGreaterThan(0);
         } catch (error) {
           throw new Error(`Failed to import ${entry.path}: ${error}`);
         }
@@ -76,6 +90,7 @@ describe('Export Contract Validation', () => {
             moduleExports.forEach(exportName => {
               expect(barrel[exportName]).toBeDefined();
               expect(typeof barrel[exportName]).toBe(typeof module[exportName]);
+              expect(barrel[exportName]).toBe(module[exportName]);
             });
           } catch (error) {
             throw new Error(`Failed to validate barrel ${entry.barrel}: ${error}`);
@@ -99,6 +114,11 @@ describe('Export Contract Validation', () => {
           // Should have at least one named export
           const namedExports = Object.keys(module).filter(key => key !== 'default');
           expect(namedExports.length).toBeGreaterThan(0);
+          
+          // Services should be objects or classes
+          namedExports.forEach(exportName => {
+            expect(typeof module[exportName]).toMatch(/object|function/);
+          });
         } catch (error) {
           throw new Error(`Failed to import ${entry.path}: ${error}`);
         }
@@ -120,6 +140,11 @@ describe('Export Contract Validation', () => {
           // Should have at least one named export
           const namedExports = Object.keys(module).filter(key => key !== 'default');
           expect(namedExports.length).toBeGreaterThan(0);
+          
+          // Utilities should be functions or constants
+          namedExports.forEach(exportName => {
+            expect(typeof module[exportName]).toMatch(/function|string|number|boolean|object/);
+          });
         } catch (error) {
           throw new Error(`Failed to import ${entry.path}: ${error}`);
         }
@@ -187,6 +212,27 @@ describe('Export Contract Validation', () => {
           }
         } catch (error) {
           throw new Error(`Mixed export pattern in ${entry.path}: ${error}`);
+        }
+      }
+    });
+    
+    it('should enforce consistent export types across re-exports', async () => {
+      const componentEntries = exportPolicy.entries.filter(entry => 
+        entry.kind === 'component' && entry.barrel
+      );
+
+      for (const entry of componentEntries) {
+        try {
+          const directModule = await import(entry.path);
+          const barrel = await import(entry.barrel!);
+          const componentName = entry.path.split('/').pop()?.replace('.tsx', '');
+          
+          if (componentName) {
+            // Barrel export should be same function as direct default
+            expect(barrel[componentName]).toBe(directModule.default);
+          }
+        } catch (error) {
+          throw new Error(`Export consistency check failed for ${entry.path}: ${error}`);
         }
       }
     });

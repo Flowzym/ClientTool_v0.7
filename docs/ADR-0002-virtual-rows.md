@@ -161,3 +161,29 @@ viewport: dynamic based on container size
 - Feature flag management in `features.ts`
 - Hook order guards in `board.hookOrder.guard.test.tsx`
 - Lazy loading tests in `virtualizedList.lazy.test.tsx`
+
+## Appendix: Operational Hygiene
+
+### Performance Flag Management
+- **Default State**: `virtualRows: false` (CRITICAL for stability)
+- **Activation**: Only via development toggle or explicit configuration
+- **Monitoring**: Performance playground at `/dev/perf` for validation
+- **Rollback**: Instant via feature flag without code deployment
+
+### Overlay Management (TTL/Capacity)
+- **TTL**: 5 minutes for optimistic overlay entries
+- **Capacity**: 500 max entries with LRU eviction
+- **Cleanup**: Automatic every 60 seconds
+- **Telemetry**: Dev-only counters for apply/reconcile/cleanup operations
+
+### Quality Gates
+- **Hook Order**: Guard tests prevent React warnings during flag changes
+- **Performance**: Both rendering paths validated in CI
+- **Accessibility**: ARIA compliance maintained in virtual mode
+- **Memory**: Overlay cleanup prevents memory leaks
+
+### Operational Notes
+- Virtual rows should remain opt-in until proven stable in production
+- Performance playground provides validation data for rollout decisions
+- Overlay TTL prevents memory accumulation during long sessions
+- Dev counters enable debugging of optimistic update patterns
