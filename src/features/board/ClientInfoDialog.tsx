@@ -100,13 +100,6 @@ export default function ClientInfoDialog({ isOpen, onClose, client }: Props) {
               </div>
             </FieldRow>
             
-            <FieldRow value={fmt(client.title)} label="Titel">
-              <div>
-                <div className="text-gray-500 text-xs">Titel</div>
-                <div>{fmt(client.title)}</div>
-              </div>
-            </FieldRow>
-            
             <FieldRow value={genderSymbol} label="Geschlecht">
               <div>
                 <div className="text-gray-500 text-xs">Geschlecht</div>
