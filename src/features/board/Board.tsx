@@ -426,7 +426,6 @@ function Board() {
               aria-label="Alle auswählen"
               className="mr-2"
             />
-            <span className="text-xs font-medium text-gray-600">Pin</span>
           </div>
           <ColumnHeader
             columnKey="name"
