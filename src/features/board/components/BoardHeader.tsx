@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ExportCsvDialog } from './index';
 
-export function BoardHeader({
+function BoardHeader({
   selectedCount,
   getSelectedRows,
   onPinSelected,
@@ -42,3 +42,5 @@ export function BoardHeader({
     </div>
   );
 }
+
+export default BoardHeader;

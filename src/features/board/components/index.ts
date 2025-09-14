@@ -5,7 +5,7 @@
 
 export { default as ClientRow } from './ClientRow';
 export { default as BatchActionsBar } from './BatchActionsBar';
-export { BoardHeader } from './BoardHeader';
+export { default as BoardHeader } from './BoardHeader';
 export { default as ExportDialog } from '../ExportDialog';
 export { ContactDialog } from '../ContactDialog';
 export { default as ClientInfoDialog } from '../ClientInfoDialog';
