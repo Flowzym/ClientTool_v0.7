@@ -274,11 +274,14 @@ export function useBoardData() {
           sorted.sort(withPinnedFirst((a, b) => byNumber('contactCount')(a, b) * direction));
           break;
         case 'notes':
+          break;
+        case 'booking':
+          sorted.sort(withPinnedFirst((a, b) => byDateISO('amsBookingDate')(a, b) * direction));
           sorted.sort(withPinnedFirst((a, b) => (countNotes(a) - countNotes(b)) * direction));
           break;
         case 'offer':
           const angebotOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch'];
-          sorted.sort(withPinnedFirst((a, b) => byEnum('offer', angebotOrder)(a, b) * direction));
+          sorted.sort(withPinnedFirst((a, b) => byEnum('angebot', angebotOrder)(a, b) * direction));
           break;
         case 'result':
           const resultOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch', 'keineReaktion'];
@@ -377,7 +380,8 @@ export function useBoardData() {
     const filtered = sortedClients.length;
     const archived = clients.filter(c => c.isArchived).length;
     
-    return { total, filtered, archived };
+    return {
+    toggleSort, total, filtered, archived };
   }, [clients, sortedClients]);
 
   // Filter-Updates
@@ -474,7 +478,6 @@ export function useBoardData() {
     clients: view.sort.key ? sortedClients : legacySortedClients,
     users,
     view,
-    toggleSort,
     counts,
     isLoading,
     selectedIds,
