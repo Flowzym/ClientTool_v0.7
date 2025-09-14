@@ -123,6 +123,8 @@ function Board() {
   const actions = useBoardActions();
 
   function handleHeaderToggle(key: string){ try { toggleSort?.(key as any); } catch {} }
+
+  const clients = useOptimisticOverlay(clients);
   const visibleClients = useMemo(() => clients.filter((c: any) => !c.isArchived || view.showArchived), [clients, view.showArchived]);
   const sortedClients = visibleClients;
   const allIds = useMemo(() => sortedClients.map((c: any) => c.id as string), [sortedClients]);
