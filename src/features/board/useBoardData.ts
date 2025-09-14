@@ -277,7 +277,6 @@ export function useBoardData() {
           break;
         case 'booking':
           sorted.sort(withPinnedFirst((a, b) => byDateISO('amsBookingDate')(a, b) * direction));
-          sorted.sort(withPinnedFirst((a, b) => (countNotes(a) - countNotes(b)) * direction));
           break;
         case 'offer':
           const angebotOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch'];
