@@ -113,10 +113,10 @@ function Board() {
   // All hooks must be called before any early returns
   const { data, isLoading, view, toggleSort } = useBoardData();
   const actions = useBoardActions();
-  const { overlay } = useOptimisticOverlay();
+  const clientsWithOverlay = useOptimisticOverlay();
 
   const { clients = [], users = [] } = data || {};
-  const visibleClients = useMemo(() => clients.filter((c: any) => !c.isArchived || view.showArchived), [clients, view.showArchived]);
+  const visibleClients = useMemo(() => clientsWithOverlay.filter((c: any) => !c.isArchived || view.showArchived), [clientsWithOverlay, view.showArchived]);
   const allIds = useMemo(() => visibleClients.map((c: any) => c.id), [visibleClients]);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
@@ -169,7 +169,7 @@ function Board() {
   }, [actions, allIds]);
 
   // Derived values
-  const selectedRowsProvider = () => visibleClients.filter((c:any) => selectedSet.has(c.id));
+  const selectedRowsProvider = () => visibleClients.filter((c: any) => selectedSet.has(c.id));
 
   // Early return AFTER all hooks
   if (isLoading) return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;
