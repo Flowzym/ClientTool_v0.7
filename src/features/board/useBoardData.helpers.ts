@@ -16,7 +16,8 @@ export type FilterChip =
   | 'assigned-me'
   | 'assigned-to';
 
-export type SortMode = 'urgency' | 'activity' | 'assignee';
+export type SortKey = 'name' | 'offer' | 'status' | 'result' | 'followUp' | 'assignedTo' | 'contacts' | 'notes' | 'priority' | 'activity' | null;
+export type SortDirection = 'asc' | 'desc' | null;
 
 export type BoardFilters = {
   chips: FilterChip[];
@@ -25,7 +26,10 @@ export type BoardFilters = {
   assignedToId?: string | null;
 };
 
-export type BoardSort = { mode: SortMode };
+export type BoardSort = { 
+  key: SortKey;
+  direction: SortDirection;
+};
 
 export type BoardColumnVisibility = {
   angebot?: boolean;
@@ -43,7 +47,7 @@ export type BoardView = {
 
 export const defaultView: BoardView = {
   filters: { chips: [], showArchived: false, currentUserId: null, assignedToId: null },
-  sort: { mode: 'urgency' },
+  sort: { key: null, direction: null },
   columnVisibility: {
     angebot: true,
     status: true,

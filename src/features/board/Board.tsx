@@ -100,83 +100,6 @@ function VirtualClientList({
         className="min-w-[1480px] border rounded-lg overflow-hidden"
       />
     </React.Suspense>
-  );
-}
-
-function Board() {
-  // ALL HOOKS AT TOP LEVEL - NEVER CONDITIONAL
-  const { clients, users, isLoading, view, setView } = useBoardData();
-  const actions = useBoardActions();
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
-  const [clientInfoDialogId, setClientInfoDialogId] = useState<string | null>(null);
-  const lastIndexRef = useRef<number | null>(null);
-  
-  const visibleClients = useOptimisticOverlay(clients);
-  const renderCount = useRenderCount('Board');
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-  const allIds = useMemo(() => visibleClients.map((c:any) => c.id as string), [visibleClients]);
-
-  // Client info dialog handler
-  useEffect(() => {
-    const handleOpenClientInfo = (event: CustomEvent) => {
-      setClientInfoDialogId(event.detail.id);
-    };
-    
-    window.addEventListener('board:open-client-info', handleOpenClientInfo as EventListener);
-    return () => window.removeEventListener('board:open-client-info', handleOpenClientInfo as EventListener);
-  }, []);
-
-  // Sort helper: pinned first -> active column -> id
-  const _formatName = (c) => {
-    const last = c.lastName || '';
-    const first = c.firstName || '';
-    const title = c.title ? ' (' + c.title + ')' : '';
-    const fallback = c.name || '';
-    return (last || first) ? (last + ', ' + first + title) : fallback;
-  };
-  const _getPinned = (c) => !!(c.isPinned ?? c.pinned ?? false);
-  const _cmpStr = (a, b) => String(a).localeCompare(String(b), 'de', { sensitivity: 'base' });
-  const _cmpNum = (a, b) => (Number(a) - Number(b));
-  const _cmpDate = (a, b) => {
-    const A = a || null, B = b || null;
-    if (!A && !B) return 0; if (!A) return 1; if (!B) return -1;
-    if (A < B) return -1; if (A > B) return 1; return 0;
-  };
-  const _sortClients = (list, sort) => {
-    const dir = (sort && sort.direction === 'desc') ? -1 : 1;
-    const key = sort ? sort.key : null;
-    const arr = list.slice();
-    arr.sort((a,b) => {
-      const pa = _getPinned(a), pb = _getPinned(b);
-      if (pa !== pb) return pa ? -1 : 1;
-      let d = 0;
-      switch (key) {
-        case 'name': d = _cmpStr(_formatName(a), _formatName(b)); break;
-        case 'offer': d = _cmpStr(a.angebot ?? '', b.angebot ?? ''); break;
-        case 'status': d = _cmpStr(a.status ?? '', b.status ?? ''); break;
-        case 'result': d = _cmpStr(a.result ?? '', b.result ?? ''); break;
-        case 'followUp': d = _cmpDate(a.followUp ?? null, b.followUp ?? null); break;
-        case 'assignedTo': d = _cmpStr(a.assignedTo ?? '', b.assignedTo ?? ''); break;
-        case 'contacts': d = _cmpNum(a.contactCount ?? 0, b.contactCount ?? 0); break;
-        case 'notes': d = _cmpNum(countNotes(a), countNotes(b)); break;
-        case 'priority': {
-          const priorityOrder = { niedrig: 1, normal: 2, hoch: 3, dringend: 4 };
-          const aVal = priorityOrder[a.priority] ?? 0;
-          const bVal = priorityOrder[b.priority] ?? 0;
-          d = aVal - bVal;
-          break;
-        }
-        case 'activity': d = _cmpDate(a.lastActivity ?? null, b.lastActivity ?? null); break;
-        default: d = 0;
-      }
-      if (d !== 0) return dir * d;
-      return String(a.id).localeCompare(String(b.id));
-    });
-    return arr;
-  };
-  const sortedClients = useMemo(() => _sortClients(visibleClients, view.sort), [visibleClients, view.sort]);
-
   // Subscribe to feature flag changes
   useEffect(() => {
     perfMark('board:render:start');
@@ -281,16 +204,16 @@ function Board() {
             />
             <span className="text-xs font-medium text-gray-600">Pin</span>
           </div>
-          <ColumnHeader columnKey="name" label="Kunde" isActive={view.sort.key === 'name'} direction={view.sort.direction} onToggle={() => actions.toggleSort('name')} />
-          <ColumnHeader columnKey="offer" label="Angebot" isActive={view.sort.key === 'offer'} direction={view.sort.direction} onToggle={() => actions.toggleSort('offer')} />
-          <ColumnHeader columnKey="status" label="Status" isActive={view.sort.key === 'status'} direction={view.sort.direction} onToggle={() => actions.toggleSort('status')} />
-          <ColumnHeader columnKey="result" label="Ergebnis" isActive={view.sort.key === 'result'} direction={view.sort.direction} onToggle={() => actions.toggleSort('result')} />
-          <ColumnHeader columnKey="followUp" label="Follow-up" isActive={view.sort.key === 'followUp'} direction={view.sort.direction} onToggle={() => actions.toggleSort('followUp')} />
-          <ColumnHeader columnKey="assignedTo" label="Zuständigkeit" isActive={view.sort.key === 'assignedTo'} direction={view.sort.direction} onToggle={() => actions.toggleSort('assignedTo')} />
-          <ColumnHeader columnKey="contacts" label="Kontakt" isActive={view.sort.key === 'contacts'} direction={view.sort.direction} onToggle={() => actions.toggleSort('contacts')} />
-          <ColumnHeader columnKey="notes" label="Anmerkung" isActive={view.sort.key === 'notes'} direction={view.sort.direction} onToggle={() => actions.toggleSort('notes')} />
+          <ColumnHeader columnKey="name" label="Kunde" isActive={view.sort.key === 'name'} direction={view.sort.direction} onToggle={() => toggleSort('name')} />
+          <ColumnHeader columnKey="offer" label="Angebot" isActive={view.sort.key === 'offer'} direction={view.sort.direction} onToggle={() => toggleSort('offer')} />
+          <ColumnHeader columnKey="status" label="Status" isActive={view.sort.key === 'status'} direction={view.sort.direction} onToggle={() => toggleSort('status')} />
+          <ColumnHeader columnKey="result" label="Ergebnis" isActive={view.sort.key === 'result'} direction={view.sort.direction} onToggle={() => toggleSort('result')} />
+          <ColumnHeader columnKey="followUp" label="Follow-up" isActive={view.sort.key === 'followUp'} direction={view.sort.direction} onToggle={() => toggleSort('followUp')} />
+          <ColumnHeader columnKey="assignedTo" label="Zuständigkeit" isActive={view.sort.key === 'assignedTo'} direction={view.sort.direction} onToggle={() => toggleSort('assignedTo')} />
+          <ColumnHeader columnKey="contacts" label="Kontakt" isActive={view.sort.key === 'contacts'} direction={view.sort.direction} onToggle={() => toggleSort('contacts')} />
+          <ColumnHeader columnKey="notes" label="Anmerkung" isActive={view.sort.key === 'notes'} direction={view.sort.direction} onToggle={() => toggleSort('notes')} />
           <ColumnHeader columnKey="booking" label="Zubuchung" sortable={false} isActive={false} direction={undefined} onToggle={() => {}} />
-          <ColumnHeader columnKey="priority" label="Priorität" isActive={view.sort.key === 'priority'} direction={view.sort.direction} onToggle={() => actions.toggleSort('priority')} />
+          <ColumnHeader columnKey="priority" label="Priorität" isActive={view.sort.key === 'priority'} direction={view.sort.direction} onToggle={() => toggleSort('priority')} />
           <ColumnHeader columnKey="activity" label="Aktivität" sortable={false} isActive={false} direction={undefined} onToggle={() => {}} />
           <div className="text-xs font-medium text-gray-600">Aktionen</div>
         </div>
@@ -299,7 +222,7 @@ function Board() {
       {/* Client List (virtualized or classic) */}
       {virtualRowsEnabled ? (
         <VirtualClientList
-          clients={sortedClients}
+          clients={visibleClients}
           users={users}
           actions={actions}
           selectedSet={selectedSet}
@@ -307,7 +230,7 @@ function Board() {
         />
       ) : (
         <ClassicClientList
-          clients={sortedClients}
+          clients={visibleClients}
           users={users}
           actions={actions}
           selectedSet={selectedSet}

@@ -7,7 +7,8 @@ import { cryptoManager } from '../../data/crypto'; // Keep this import
 import type { Client, User } from '../../domain/models';
 import type { 
   FilterChip, 
-  SortMode, 
+  SortKey,
+  SortDirection,
   BoardFilters, 
   BoardSort, 
   BoardColumnVisibility, 
@@ -301,9 +302,8 @@ export function useBoardData() {
   };
 
   return {
-    clients: filteredClients,
+    clients: sortedClients,
     users,
-    view,
     counts,
     isLoading,
     selectedIds,
@@ -311,6 +311,7 @@ export function useBoardData() {
     toggleChip,
     toggleArchived,
     setCurrentUser,
+    toggleSort,
     toggleSort,
     setSortMode,
     setColumnVisibility,
