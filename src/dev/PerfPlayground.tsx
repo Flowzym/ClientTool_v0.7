@@ -449,7 +449,7 @@ export function PerfPlayground() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span>DOM Row Ratio (Virtual):</span>
-              <Badge variant="success" size="sm">< 0.2</Badge>
+              <Badge variant="success" size="sm">&lt; 0.2</Badge>
             </div>
             <div className="flex justify-between">
               <span>DOM Row Ratio (Flat):</span>
@@ -457,7 +457,7 @@ export function PerfPlayground() {
             </div>
             <div className="flex justify-between">
               <span>Scroll FPS (Virtual, 1k+):</span>
-              <Badge variant="success" size="sm">> 45</Badge>
+              <Badge variant="success" size="sm">&gt; 45</Badge>
             </div>
             <div className="flex justify-between">
               <span>Mount Time (Virtual vs Flat):</span>
