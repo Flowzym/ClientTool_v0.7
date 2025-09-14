@@ -53,6 +53,6 @@ import {
     setColumnVisibility,
     toggleSort,
     resetToDefaultView,
-    refreshData
+    toggleSort
   };
 }
