@@ -113,9 +113,9 @@ function Board() {
   // All hooks must be called before any early returns
   const { data, isLoading, view, toggleSort } = useBoardData();
   const actions = useBoardActions();
-  const clientsWithOverlay = useOptimisticOverlay();
 
   const { clients = [], users = [] } = data || {};
+  const clientsWithOverlay = useOptimisticOverlay(clients);
   const visibleClients = useMemo(() => clientsWithOverlay.filter((c: any) => !c.isArchived || view.showArchived), [clientsWithOverlay, view.showArchived]);
   const allIds = useMemo(() => visibleClients.map((c: any) => c.id), [visibleClients]);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
