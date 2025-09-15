@@ -99,13 +99,13 @@ export function useBoardActions() {
   }, [update]);
 
   const togglePin = useCallback(async (id: string | string[]) => {
-    const setTrue = async (one: string) => { await update(one, { isPinned: true }); };
+    const setTrue = async (one: string) => { await update(one, { isPinned: true, pinnedAt: new Date().toISOString() }); };
     if (Array.isArray(id)) { for (const one of id) await setTrue(one); }
     else { await setTrue(id); }
   }, [update]);
 
   const bulkPin = useCallback(async (ids: string[]) => {
-    await bulkUpdate(ids, { isPinned: true });
+    await bulkUpdate(ids, { isPinned: true, pinnedAt: new Date().toISOString() });
   }, [bulkUpdate]);
 
   const bulkUnpin = useCallback(async (ids: string[]) => {
