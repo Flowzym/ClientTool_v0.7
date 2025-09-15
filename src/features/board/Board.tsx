@@ -130,7 +130,6 @@ function Board() {
 
   // All hooks must be called before any early returns
   const { clients, users, isLoading, view, toggleSort } = useBoardData();
-  const sortState = (view?.sort ?? { key: null, direction: null }) as { key: string | null; direction: 'asc'|'desc'|null };
   const actions = useBoardActions();
 
   function handleHeaderToggle(key: string){ try { toggleSort?.(key as any); } catch {} }
