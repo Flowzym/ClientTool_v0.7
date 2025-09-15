@@ -40,8 +40,9 @@ class MutationService {
         changes: inverseChanges
       };
 
-      // 3. Persistieren
-      await db.clients.update(patch.id, patch.changes as any);
+      // 3. Vollständiges Objekt mit Änderungen erstellen und persistieren
+      const nextPlain = { ...current, ...patch.changes };
+      await db.clients.put(nextPlain);
 
       // 4. Undo-Stack befüllen (nach erfolgreichem Persist)
       this.pushUndo(undoEntry);
@@ -100,8 +101,9 @@ class MutationService {
         redoChanges[key] = (current as any)[key];
       });
 
-      // Undo anwenden
-      await db.clients.update(undoEntry.id, undoEntry.changes as any);
+      // Vollständiges Objekt mit Undo-Änderungen erstellen und persistieren
+      const nextPlain = { ...current, ...undoEntry.changes };
+      await db.clients.put(nextPlain);
 
       // Redo-Stack befüllen
       this.redoStack.push({
@@ -150,8 +152,9 @@ class MutationService {
         undoChanges[key] = (current as any)[key];
       });
 
-      // Redo anwenden
-      await db.clients.update(redoEntry.id, redoEntry.changes as any);
+      // Vollständiges Objekt mit Redo-Änderungen erstellen und persistieren
+      const nextPlain = { ...current, ...redoEntry.changes };
+      await db.clients.put(nextPlain);
 
       // Undo-Stack befüllen
       this.pushUndo({
