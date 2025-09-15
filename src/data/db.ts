@@ -133,9 +133,8 @@ class ClientWorkDB extends Dexie {
           updatedAt: Date.now()
         });
         
-        // Ersetze alle Modifikationen durch neues Envelope
-        Object.keys(mods).forEach(key => delete mods[key]);
-        Object.assign(mods, envelope);
+        // Gib das vollständige verschlüsselte Envelope zurück
+        return envelope;
       })();
     });
 
@@ -171,9 +170,8 @@ class ClientWorkDB extends Dexie {
           updatedAt: Date.now()
         });
         
-        // Ersetze alle Modifikationen durch neues Envelope
-        Object.keys(mods).forEach(key => delete mods[key]);
-        Object.assign(mods, envelope);
+        // Gib das vollständige verschlüsselte Envelope zurück
+        return envelope;
       })();
     });
 
@@ -189,8 +187,7 @@ class ClientWorkDB extends Dexie {
         const plainOld = await decodeEnvelope<ImportSession>(oldObj);
         const nextPlain = { ...plainOld, ...mods };
         const envelope = await codec.encode(nextPlain);
-        Object.keys(mods).forEach(key => delete mods[key]);
-        Object.assign(mods, envelope);
+        return envelope;
       })();
     });
 
