@@ -3,6 +3,7 @@ import { bulkApply, updateById, undoLast, redoLast, getUndoRedoStatus } from '..
 import { build } from '../services/PatchBuilder';
 import { isValidISO } from '../utils/date';
 import type { OfferValue } from '../types';
+import type { Priority } from '../../../domain/models';
 import type { Patch } from '../../../types/patch';
 
 function emit(name: string, detail: any) {
@@ -74,7 +75,7 @@ export function useBoardActions() {
   }, [update]);
 
   const cyclePriority = useCallback(async (id: string, current?: string | null) => {
-    const order = [null, 'niedrig', 'mittel', 'hoch'] as const;
+    const order: (Priority | null)[] = [null, 'niedrig', 'normal', 'hoch', 'dringend'];
     const idx = order.indexOf((current ?? null) as any);
     const next = order[(idx + 1) % order.length];
     await update(id, { priority: next });

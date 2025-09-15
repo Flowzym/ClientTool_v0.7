@@ -200,17 +200,37 @@ export function useBoardData() {
     }
     
     // Chip-Filter
+    const mapChipToAngebot = (chip: string): string | null => {
+      switch (chip.toLowerCase()) {
+        case 'bam': return 'BAM';
+        case 'll': 
+        case 'lebenslauf':
+        case 'll/b+':
+        case 'llb+':
+        case 'lebenslauf/beratung+':
+          return 'LL/B+';
+        case 'bwb':
+        case 'bewerbungsbuero':
+        case 'bewerbungsbüro':
+          return 'BwB';
+        case 'nb':
+        case 'none':
+        case 'kein':
+          return 'NB';
+        default:
+          return null;
+      }
+    };
     
     view.filters.chips.forEach(chip => {
       switch (chip) {
         case 'bam':
-          filtered = filtered.filter(c => c.angebot === 'bam');
-          break;
         case 'lebenslauf':
-          filtered = filtered.filter(c => c.angebot === 'lebenslauf');
-          break;
         case 'bewerbungsbuero':
-          filtered = filtered.filter(c => c.angebot === 'bewerbungsbuero');
+          const code = mapChipToAngebot(chip);
+          if (code) {
+            filtered = filtered.filter(c => c.angebot === code);
+          }
           break;
         case 'km-termin':
           filtered = filtered.filter(c => c.result === 'gesundheitlicheMassnahme');
@@ -258,7 +278,7 @@ export function useBoardData() {
     });
     
     return filtered;
-  }, [clients, users, view, assignedToFilter]);
+  }, [overlayedClients, users, view, assignedToFilter]);
 
   // Sortierte Clients
   const sortedClients = useMemo(() => {
@@ -399,12 +419,12 @@ export function useBoardData() {
 
   // Zähler
   const counts = useMemo(() => {
-    const total = clients.length;
+    const total = overlayedClients.length;
     const filtered = sortedClients.length;
-    const archived = clients.filter(c => c.isArchived).length;
+    const archived = overlayedClients.filter(c => c.isArchived).length;
     
     return { total, filtered, archived };
-  }, [clients, sortedClients]);
+  }, [overlayedClients, sortedClients]);
 
   // Filter-Updates
   const toggleChip = (chip: FilterChip) => {
