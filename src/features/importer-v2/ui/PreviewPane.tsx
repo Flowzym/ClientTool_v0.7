@@ -1,182 +1,132 @@
 /**
- * Data preview pane with validation results
- * Shows transformed data and validation issues
+ * Data preview pane for Importer V2
+ * Real-time preview of mapped and transformed data
  */
 
-import React, { useState } from 'react';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../../../components/Card';
 import { Badge } from '../../../components/Badge';
-import { AlertCircle, CheckCircle, Eye, EyeOff } from 'lucide-react';
-import type { InternalField, MappingResult, CustomField, ValidationResult } from '../core/types';
+import { Eye, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+
+// TODO: Implement data preview functionality
+// - Real-time mapping preview
+// - Validation issue highlighting
+// - Data quality indicators
+// - Sample data display
+// - Export preview
 
 interface PreviewPaneProps {
-  data: Array<Record<InternalField, any>>;
-  validation: ValidationResult;
-  mapping: Record<string, MappingResult>;
-  customFields: CustomField[];
+  mappedData: any[];
+  validationResults: any[];
   maxRows?: number;
+  showIssuesOnly?: boolean;
 }
 
-export function PreviewPane({ 
-  data, 
-  validation, 
-  mapping, 
-  customFields, 
-  maxRows = 10 
+export function PreviewPane({
+  mappedData,
+  validationResults,
+  maxRows = 50,
+  showIssuesOnly = false
 }: PreviewPaneProps) {
-  const [showAllRows, setShowAllRows] = useState(false);
-  const [showOnlyErrors, setShowOnlyErrors] = useState(false);
+  // TODO: Implement preview pane logic
+  // - Filter data based on showIssuesOnly
+  // - Highlight validation issues
+  // - Show data quality metrics
+  // - Provide drill-down capabilities
+  // - Support export of preview data
 
-  const displayData = showAllRows ? data : data.slice(0, maxRows);
-  const mappedFields = Object.values(mapping).map(m => m.field);
-  const customFieldIds = customFields.map(f => f.id);
-  const allFields = [...mappedFields, ...customFieldIds];
-
-  const getFieldLabel = (field: string): string => {
-    // Check if it's a custom field
-    const customField = customFields.find(f => f.id === field);
-    if (customField) return customField.label;
-    
-    // TODO: Use field labels from core/types
-    return field;
-  };
-
-  const getRowIssues = (rowIndex: number) => {
-    return validation.issues.filter(issue => issue.row === rowIndex + 1);
-  };
-
-  const getIssueIcon = (type: 'error' | 'warning') => {
-    return type === 'error' ? (
-      <AlertCircle className="w-4 h-4 text-error-500" />
-    ) : (
-      <AlertCircle className="w-4 h-4 text-warning-500" />
-    );
-  };
-
-  const filteredData = showOnlyErrors 
-    ? displayData.filter((_, index) => getRowIssues(index).some(issue => issue.type === 'error'))
-    : displayData;
+  const displayData = mappedData.slice(0, maxRows);
+  const issueCount = validationResults.filter(r => !r.valid).length;
 
   return (
     <div className="space-y-4">
-      {/* Controls */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h4 className="font-medium">Datenvorschau</h4>
-          <Badge variant={validation.valid ? 'success' : 'error'} size="sm">
-            {validation.valid ? 'Gültig' : 'Fehler gefunden'}
-          </Badge>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={showOnlyErrors}
-              onChange={(e) => setShowOnlyErrors(e.target.checked)}
-              className="rounded border-gray-300"
-            />
-            Nur Fehler anzeigen
-          </label>
-          
-          {data.length > maxRows && (
-            <button
-              onClick={() => setShowAllRows(!showAllRows)}
-              className="flex items-center gap-1 text-sm text-accent-600 hover:text-accent-700"
-            >
-              {showAllRows ? (
-                <>
-                  <EyeOff className="w-4 h-4" />
-                  Weniger anzeigen
-                </>
-              ) : (
-                <>
-                  <Eye className="w-4 h-4" />
-                  Alle {data.length} Zeilen
-                </>
-              )}
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Data table */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <div className="bg-gray-50 px-4 py-2 border-b border-gray-200">
-          <div className="flex gap-4 text-xs font-medium text-gray-600">
-            <div className="w-12">#</div>
-            {allFields.map(field => (
-              <div key={field} className="min-w-[120px] truncate">
-                {getFieldLabel(field)}
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            <div className="flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              Daten-Vorschau
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Badge variant="default" size="sm">
+                  {displayData.length} von {mappedData.length} Zeilen
+                </Badge>
+                {issueCount > 0 && (
+                  <Badge variant="error" size="sm">
+                    <AlertTriangle className="w-3 h-3 mr-1" />
+                    {issueCount} Probleme
+                  </Badge>
+                )}
               </div>
-            ))}
-            <div className="w-20">Status</div>
-          </div>
-        </div>
-        
-        <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-          {filteredData.map((row, index) => {
-            const issues = getRowIssues(index);
-            const hasErrors = issues.some(issue => issue.type === 'error');
-            const hasWarnings = issues.some(issue => issue.type === 'warning');
+              
+              <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={showIssuesOnly}
+                    onChange={() => {}}
+                    className="rounded border-gray-300"
+                  />
+                  Nur Probleme zeigen
+                </label>
+              </div>
+            </div>
             
-            return (
-              <div 
-                key={index} 
-                className={`px-4 py-2 text-sm ${hasErrors ? 'bg-red-50' : hasWarnings ? 'bg-yellow-50' : ''}`}
-              >
-                <div className="flex gap-4 items-center">
-                  <div className="w-12 text-gray-500">{index + 1}</div>
-                  
-                  {allFields.map(field => (
-                    <div key={field} className="min-w-[120px] truncate">
-                      {(row as any)[field] || '—'}
-                    </div>
-                  ))}
-                  
-                  <div className="w-20">
-                    {hasErrors ? (
-                      <Badge variant="error" size="sm">Fehler</Badge>
-                    ) : hasWarnings ? (
-                      <Badge variant="warning" size="sm">Warnung</Badge>
-                    ) : (
-                      <Badge variant="success" size="sm">OK</Badge>
-                    )}
-                  </div>
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-gray-50 px-3 py-2 border-b">
+                <div className="text-sm font-medium">
+                  TODO: Interaktive Daten-Tabelle mit Validierungs-Highlighting
                 </div>
-                
-                {/* Issue details */}
-                {issues.length > 0 && (
-                  <div className="mt-2 ml-16 space-y-1">
-                    {issues.map((issue, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs">
-                        {getIssueIcon(issue.type)}
-                        <span className="font-medium">{issue.field}:</span>
-                        <span>{issue.message}</span>
+              </div>
+              
+              <div className="max-h-96 overflow-auto">
+                {displayData.length > 0 ? (
+                  <div className="divide-y">
+                    {displayData.map((row, index) => (
+                      <div key={index} className="px-3 py-2 hover:bg-gray-50">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500 w-8">
+                            {index + 1}
+                          </span>
+                          <div className="flex-1 text-sm">
+                            {Object.entries(row).slice(0, 3).map(([key, value]) => (
+                              <span key={key} className="mr-4">
+                                <span className="font-medium">{key}:</span>{' '}
+                                <span>{String(value || '—')}</span>
+                              </span>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            {validationResults[index]?.valid ? (
+                              <CheckCircle className="w-4 h-4 text-success-500" />
+                            ) : (
+                              <AlertTriangle className="w-4 h-4 text-error-500" />
+                            )}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
+                ) : (
+                  <div className="px-3 py-8 text-center text-gray-500">
+                    <Info className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                    <div className="text-sm">Keine Daten für Vorschau verfügbar</div>
+                  </div>
                 )}
               </div>
-            );
-          })}
-        </div>
-        
-        {filteredData.length === 0 && (
-          <div className="px-4 py-8 text-center text-gray-500">
-            {showOnlyErrors ? 'Keine Fehler gefunden' : 'Keine Daten zum Anzeigen'}
+            </div>
+            
+            <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+              💡 TODO: Echtzeit-Vorschau mit Validierung, Highlighting und Export-Optionen
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* Summary */}
-      <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>Zeilen: {data.length}</div>
-          <div>Zugeordnet: {Object.keys(mapping).length} Spalten</div>
-          <div>Eigene Felder: {customFields.length}</div>
-          <div>Gültigkeitsrate: {data.length > 0 ? Math.round((validation.stats.validRows / data.length) * 100) : 0}%</div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

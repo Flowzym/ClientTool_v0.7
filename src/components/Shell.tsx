@@ -107,7 +107,6 @@ export function Shell({ children }: { children: React.ReactNode }) {
           {import.meta.env.DEV && (
             <div className="mt-2 pt-2 border-t border-gray-200">
               <NavItem to="/dev/perf" icon={BarChart3} title="Perf Playground" desc="Virtualisierung testen" />
-              <NavItem to="/dev/importer-v2" icon={FileSpreadsheet} title="Importer V2" desc="Enhanced Import testen" />
             </div>
           )}
 
