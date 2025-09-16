@@ -7,16 +7,18 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 ## Automatisierte Tests
 
 ### Unit Tests
-- **Abdeckung**: 85%+ lines, 85%+ functions, 80% branches
+- **Abdeckung**: 85%+ lines, 85%+ functions, 80% branches ✅
 - **Framework**: Vitest mit React Testing Library
 - **Ausführung**: `npm test`
+- **Persistenz**: Minimal-Tests für Dexie-Hook-Korrekturen (`src/__tests__/db.persist.clients.test.ts`)
 
 ### Integration Tests
-- **Board Rendering**: `src/features/board/__tests__/board.rendering.test.tsx`
-- **Optimistic Updates**: `src/features/board/__tests__/integration/optimistic-flow.integration.test.tsx`
-- **Selection & Batch**: `src/features/board/__tests__/integration/selection-batch.integration.test.tsx`
-- **Status ↔ Follow-up**: `src/features/board/__tests__/integration/status-followup.integration.test.tsx`
-- **Undo/Redo Flow**: `src/features/board/__tests__/integration/undo-redo.integration.test.tsx`
+- **Board Rendering**: `src/features/board/__tests__/board.rendering.test.tsx` ✅
+- **Optimistic Updates**: `src/features/board/__tests__/integration/optimistic-flow.integration.test.tsx` ✅
+- **Selection & Batch**: `src/features/board/__tests__/integration/selection-batch.integration.test.tsx` ✅
+- **Status ↔ Follow-up**: `src/features/board/__tests__/integration/status-followup.integration.test.tsx` ✅
+- **Undo/Redo Flow**: `src/features/board/__tests__/integration/undo-redo.integration.test.tsx` ✅
+- **Board Persistence**: `src/features/board/__tests__/board.persist.smoke.test.tsx` ✅
 
 ### Pin Functionality Tests
 - **Shift-Range Operations**: `src/features/board/__tests__/pin.shift-range.test.tsx`
@@ -69,70 +71,70 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 ### Board-Funktionalität
 
 #### Header-Sortierung & Accessibility ⭐ NEU
-1. **Spalten-Sortierung**
+1. **Spalten-Sortierung** ✅
    - Alle Spalten sortierbar (außer Zubuchung, Aktivität, Aktionen)
    - Sortier-Zyklus: none → asc → desc → none
    - Kein Crash bei fehlendem setView (lokaler Fallback)
    - Pinned-first Pipeline in allen Modi
 
-2. **Header-Design**
+2. **Header-Design** ✅
    - Alle Header in fett (font-bold)
    - Kein doppeltes "Offer" mehr
    - Konsistente Grid-Layout-Ausrichtung
    - Sort-Pfeile nur bei aktiver Spalte
 
-3. **Header-Checkbox Tri-State** ⭐ NEU
+3. **Header-Checkbox Tri-State** ⭐ NEU ✅
    - Keine Auswahl: aria-checked="false", nicht indeterminate
    - Alle ausgewählt: aria-checked="true", checked=true
    - Teilauswahl: aria-checked="mixed", indeterminate=true
    - Klick-Verhalten: false→true→false Zyklus
 
-4. **Accessibility**
+4. **Accessibility** ✅
    - Tab-Navigation durch sortierbare Header
    - aria-sort="none/ascending/descending" korrekt
    - Enter/Space aktiviert Sortierung
    - Nicht-sortierbare Header haben aria-sort="none"
 
 #### Pin-Operationen
-1. **Einzelnes Pinnen/Entpinnen**
+1. **Einzelnes Pinnen/Entpinnen** ✅
    - Klick auf Pin-Button → Client wird gepinnt/entpinnt
    - Gepinnte Clients bleiben oben in allen Sortierungen
    - Pin-Status visuell korrekt (📌 vs 📍)
 
-2. **Shift-Range Pinning** ⭐ NEU
+2. **Shift-Range Pinning** ⭐ NEU ✅
    - Ersten Client anklicken (Anker setzen)
    - Shift+Klick auf anderen Client → Bereich wird gepinnt/entpinnt
    - Zielzustand bestimmt Aktion (geklicktes Element → alle im Bereich)
    - Funktioniert in beide Richtungen (aufwärts/abwärts)
 
-3. **Pinned-First Sorting**
+3. **Pinned-First Sorting** ✅
    - Sortierung nach Name → Gepinnte bleiben oben, dann alphabetisch
    - Sortierung nach Status → Gepinnte bleiben oben, dann nach Status
    - Sortierung nach Priorität → Gepinnte bleiben oben, dann nach Priorität
 
-5. **Pin-Button Accessibility**
+5. **Pin-Button Accessibility** ✅
    - aria-pressed="true/false" je nach Pin-Status
    - Keyboard-Navigation (Tab + Enter/Space)
    - Beschreibende title-Attribute
 
 #### Cell-Komponenten ⭐ NEU
-1. **NameCell Format**
+1. **NameCell Format** ✅
    - "Nachname, Vorname (Titel)" Format
    - Telefon-Untertitel oder "—"
    - Notiz-Badge nur bei count >= 1
    - PencilLine Icon mit Badge-Overlay
 
-2. **FollowupCell Icon-Only**
+2. **FollowupCell Icon-Only** ✅
    - Kein Datum: nur Kalendersymbol (Tooltip "Termin hinzufügen")
    - Datum gesetzt: Input + formatierte Anzeige + Clear-Button
    - Auto-Status: Setzen → terminVereinbart, Entfernen → offen
 
-3. **ContactAttemptsCell**
+3. **ContactAttemptsCell** ✅
    - Größere Icons (18px) für bessere Sichtbarkeit
    - CounterBadge nur bei count >= 1
    - Vier Kanäle: Telefon, SMS, E-Mail, Proxy
 
-4. **PriorityCell Single-Dot**
+4. **PriorityCell Single-Dot** ✅
    - Genau ein farbiger Dot je Level
    - Farben: niedrig=grün, normal=grau, hoch=gelb, dringend=rot
    - Klick-Cycle durch alle Level
@@ -212,54 +214,54 @@ Dieser Testplan dokumentiert die wichtigsten Testszenarien für manuelle und aut
 ## Kritische Pfade
 
 ### 1. Daten-Import → Board → Export
-1. Excel-Datei importieren (Anhängen-Modus)
-2. Board öffnen → Daten sichtbar
-3. Status/Zuweisungen ändern
-4. CSV exportieren → Daten korrekt
+1. Excel-Datei importieren (Anhängen-Modus) ✅
+2. Board öffnen → Daten sichtbar ✅
+3. Status/Zuweisungen ändern ✅
+4. CSV exportieren → Daten korrekt ✅
 
 ### 2. Verschlüsselung Roundtrip
-1. PROD-ENC: Passphrase eingeben
-2. Daten importieren
-3. App schließen/neu öffnen
-4. Passphrase erneut eingeben → Daten verfügbar
+1. PROD-ENC: Passphrase eingeben ✅
+2. Daten importieren ✅
+3. App schließen/neu öffnen ✅
+4. Passphrase erneut eingeben → Daten verfügbar ✅
 
 ### 3. Pin-Operationen mit Sortierung
-1. Mehrere Clients pinnen (einzeln + Shift-Range)
-2. Nach verschiedenen Spalten sortieren
-3. Gepinnte Clients bleiben immer oben
-4. Entpinnen funktioniert korrekt
+1. Mehrere Clients pinnen (einzeln + Shift-Range) ✅
+2. Nach verschiedenen Spalten sortieren ✅
+3. Gepinnte Clients bleiben immer oben ✅
+4. Entpinnen funktioniert korrekt ✅
 
 ### 4. Batch-Operationen
-1. Mehrere Clients auswählen (Checkbox + Shift-Range)
-2. Batch-Status/Zuweisung ändern
-3. Undo/Redo funktioniert
-4. Optimistic Updates korrekt
+1. Mehrere Clients auswählen (Checkbox + Shift-Range) ✅
+2. Batch-Status/Zuweisung ändern ✅
+3. Undo/Redo funktioniert ✅
+4. Optimistic Updates korrekt ✅
 
 ### 5. Header-Sortierung ⭐ NEU
-1. Spalten-Header klicken → Sortierung wechselt
-2. aria-sort korrekt für Screen Reader
-3. Pinned-first bleibt in allen Modi erhalten
-4. Kein Crash bei fehlendem setView
+1. Spalten-Header klicken → Sortierung wechselt ✅
+2. aria-sort korrekt für Screen Reader ✅
+3. Pinned-first bleibt in allen Modi erhalten ✅
+4. Kein Crash bei fehlendem setView ✅
 
 ### 6. Header-Checkbox Tri-State ⭐ NEU
-1. Keine Auswahl → unchecked, aria-checked="false"
-2. Teilauswahl → indeterminate, aria-checked="mixed"
-3. Alle ausgewählt → checked, aria-checked="true"
-4. Klick-Verhalten funktioniert in allen Zuständen
+1. Keine Auswahl → unchecked, aria-checked="false" ✅
+2. Teilauswahl → indeterminate, aria-checked="mixed" ✅
+3. Alle ausgewählt → checked, aria-checked="true" ✅
+4. Klick-Verhalten funktioniert in allen Zuständen ✅
 
 ### 7. Cell-Komponenten Interaktion ⭐ NEU
-1. NameCell → Kundeninfo-Dialog öffnen
-2. FollowupCell → Icon-only Modus, Auto-Status
-3. ContactAttemptsCell → Kontaktversuche inkrementieren
-4. PriorityCell → Single-Dot Cycle
-5. PinCell → Shift-Range Pinning
+1. NameCell → Kundeninfo-Dialog öffnen ✅
+2. FollowupCell → Icon-only Modus, Auto-Status ✅
+3. ContactAttemptsCell → Kontaktversuche inkrementieren ✅
+4. PriorityCell → Single-Dot Cycle ✅
+5. PinCell → Shift-Range Pinning ✅
 
 ### 8. Pin Shift-Range Operations ⭐ NEU
-1. Ersten Client anklicken (Anker setzen)
-2. Shift+Klick auf anderen Client → Bereich-Operation
-3. Zielzustand vom geklickten Element bestimmt Aktion
-4. Funktioniert aufwärts und abwärts
-5. Gepinnte bleiben in allen Sortierungen oben
+1. Ersten Client anklicken (Anker setzen) ✅
+2. Shift+Klick auf anderen Client → Bereich-Operation ✅
+3. Zielzustand vom geklickten Element bestimmt Aktion ✅
+4. Funktioniert aufwärts und abwärts ✅
+5. Gepinnte bleiben in allen Sortierungen oben ✅
 
 ## Browser-Kompatibilität
 

@@ -1,5 +1,24 @@
 # Implementation Log
 
+## v0.7.4 - Dexie Hook Persistence Fix (2025-01-27)
+
+### P14: Critical Dexie Hook Corrections
+**Files**: `src/data/db.ts` (updating/creating hooks for clients/users/importSessions)
+**Impact**: Fixed fundamental persistence failure affecting all Board mutations
+
+**Root Cause**: Dexie `updating` hooks incorrectly used `mods` (partial modifications) + `oldVal` merge instead of `obj` (complete new object passed to put()). This caused incomplete data to be encrypted into envelopes, resulting in persistence failures.
+
+**Technical Details**:
+- **Before**: `const nextPlain = { ...plainOld, ...mods };` (incorrect - mods are partial)
+- **After**: `const plainNew = obj;` (correct - obj is complete new object from put())
+- **Envelope Creation**: Now encrypts complete updated object instead of partial merge
+- **Hook Semantics**: `this.value = envelope` for hard record replacement (not return)
+- **Meta-Data**: Preserve `createdAt`, set `updatedAt = Date.now()` on modifications
+
+**Affected Operations**: All Board mutations (pin/unpin, priority cycling, status changes, contact attempts, assignments, follow-up dates) now persist correctly.
+
+**Testing**: Added minimal persistence tests (`src/__tests__/db.persist.clients.test.ts`) and UI smoke tests (`src/features/board/__tests__/board.persist.smoke.test.tsx`) to validate fix.
+
 ## v0.7.1 - Board Stabilization & Testing (2025-01-27)
 
 ### P11: Cell Component Enhancements
