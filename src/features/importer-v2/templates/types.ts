@@ -1,66 +1,41 @@
 /**
- * Template-specific types for Importer V2
- * Types for mapping templates, rules, and template management
+ * Template system types
+ * Defines structure for saving and loading mapping configurations
  */
 
-// TODO: Define template-specific types
-// - Template metadata and versioning
-// - Rule definitions and parameters
-// - Template sharing and permissions
-// - Template validation and migration
-// - Usage analytics and optimization
-
-export interface TemplateMetadataV2 {
+export interface TemplateMetadata {
   id: string;
   name: string;
   description?: string;
-  version: string;
-  author?: string;
   createdAt: string;
-  updatedAt: string;
-  lastUsed?: string;
-  usageCount?: number;
+  updatedAt?: string;
+  fieldCount: number;
+  customFieldCount: number;
   tags?: string[];
+  isDefault?: boolean;
 }
 
-export interface TemplateRuleV2 {
-  id: string;
-  type: 'normalization' | 'validation' | 'transformation';
-  field: string;
-  parameters: Record<string, any>;
-  enabled: boolean;
-  order: number;
+export interface TemplateOptions {
+  dateFormat: 'auto' | 'dd.mm.yyyy' | 'yyyy-mm-dd';
+  phoneHandling: 'split' | 'combined';
+  genderMapping: Record<string, 'M' | 'F'>;
+  encoding?: 'utf-8' | 'latin-1' | 'auto';
+  delimiter?: ',' | ';' | 'auto';
+  skipEmptyRows?: boolean;
+  trimWhitespace?: boolean;
 }
 
-export interface TemplateVersionV2 {
-  version: string;
-  changes: string[];
-  createdAt: string;
-  author?: string;
-  breaking: boolean;
-}
-
-export interface TemplateUsageV2 {
+export interface TemplateUsage {
   templateId: string;
+  usedAt: string;
   fileName: string;
-  timestamp: string;
-  success: boolean;
-  stats: {
-    rowsProcessed: number;
-    errorsFound: number;
-    warningsFound: number;
-  };
-  userFeedback?: {
-    rating: 1 | 2 | 3 | 4 | 5;
-    comments?: string;
-  };
+  recordCount: number;
+  successRate: number;
 }
 
-export interface TemplateShareV2 {
-  templateId: string;
-  sharedBy: string;
-  sharedWith: string[];
-  permissions: ('read' | 'write' | 'delete')[];
-  sharedAt: string;
-  expiresAt?: string;
+export interface TemplateStats {
+  totalUses: number;
+  lastUsed?: string;
+  averageSuccessRate: number;
+  commonFiles: string[];
 }

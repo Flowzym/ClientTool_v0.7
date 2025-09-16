@@ -1,110 +1,111 @@
 /**
- * Column selection component for Importer V2
- * Smart field selection with search and filtering
+ * Smart column selector with grouped options
+ * Combines internal fields and custom fields with intelligent grouping
  */
 
 import React from 'react';
-import { Search, Filter } from 'lucide-react';
-
-// TODO: Implement smart column selection
-// - Searchable field list
-// - Category-based filtering
-// - Confidence-based sorting
-// - Custom field creation
-// - Field usage statistics
+import type { InternalField, CustomField } from '../core/types';
 
 interface ColumnSelectProps {
-  availableFields: string[];
-  selectedField?: string;
-  onFieldSelect: (field: string) => void;
-  onFieldClear: () => void;
-  suggestions?: Array<{
-    field: string;
-    confidence: number;
-    reason: string;
-  }>;
+  value?: InternalField | string;
+  customFields: CustomField[];
+  onChange: (field: InternalField | string | null) => void;
+  disabled?: boolean;
 }
 
-export function ColumnSelect({
-  availableFields,
-  selectedField,
-  onFieldSelect,
-  onFieldClear,
-  suggestions = []
-}: ColumnSelectProps) {
-  // TODO: Implement column selection logic
-  // - Search functionality
-  // - Category filtering
-  // - Suggestion ranking
-  // - Custom field creation
-  // - Field description tooltips
+// Field groups for better UX
+const FIELD_GROUPS = {
+  'Basis-Daten': [
+    'firstName', 'lastName', 'title', 'gender', 'birthDate'
+  ] as InternalField[],
+  'Kontakt': [
+    'phone', 'email', 'address', 'zip', 'city'
+  ] as InternalField[],
+  'AMS-Daten': [
+    'amsId', 'amsBookingDate', 'entryDate', 'exitDate', 
+    'amsAgentFirstName', 'amsAgentLastName', 'amsAdvisor'
+  ] as InternalField[],
+  'Interne Felder': [
+    'status', 'priority', 'angebot', 'result', 'followUp',
+    'assignedTo', 'note', 'internalCode'
+  ] as InternalField[],
+  'Sonstige': [
+    'svNumber', 'countryCode', 'areaCode', 'phoneNumber'
+  ] as InternalField[]
+};
 
+const FIELD_LABELS: Record<InternalField, string> = {
+  // Basis-Daten
+  firstName: 'Vorname',
+  lastName: 'Nachname', 
+  title: 'Titel',
+  gender: 'Geschlecht',
+  birthDate: 'Geburtsdatum',
+  
+  // Kontakt
+  phone: 'Telefon',
+  email: 'E-Mail',
+  address: 'Adresse',
+  zip: 'PLZ',
+  city: 'Ort',
+  
+  // AMS-Daten
+  amsId: 'AMS-ID',
+  amsBookingDate: 'Zubuchungsdatum',
+  entryDate: 'Eintrittsdatum',
+  exitDate: 'Austrittsdatum',
+  amsAgentFirstName: 'AMS-Betreuer Vorname',
+  amsAgentLastName: 'AMS-Betreuer Nachname',
+  amsAdvisor: 'AMS-Berater',
+  
+  // Interne Felder
+  status: 'Status',
+  priority: 'Priorität',
+  angebot: 'Angebot',
+  result: 'Ergebnis',
+  followUp: 'Follow-up Termin',
+  assignedTo: 'Zugewiesen an',
+  note: 'Notiz',
+  internalCode: 'Interner Code',
+  
+  // Sonstige
+  svNumber: 'SV-Nummer',
+  countryCode: 'Ländercode',
+  areaCode: 'Vorwahl',
+  phoneNumber: 'Telefonnummer'
+};
+
+export function ColumnSelect({ value, customFields, onChange, disabled }: ColumnSelectProps) {
   return (
-    <div className="space-y-4">
-      <div className="text-sm text-gray-600">
-        TODO: Intelligente Feld-Auswahl mit Suche und Vorschlägen
-      </div>
+    <select
+      value={value || ''}
+      onChange={(e) => onChange(e.target.value || null)}
+      disabled={disabled}
+      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm disabled:opacity-50"
+    >
+      <option value="">Ignorieren</option>
       
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Feld suchen..."
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md"
-        />
-      </div>
-      
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <span className="text-sm text-gray-600">Kategorien:</span>
-          <div className="flex gap-1">
-            {['Basis', 'Kontakt', 'AMS', 'Intern'].map(category => (
-              <button
-                key={category}
-                className="px-2 py-1 text-xs border rounded hover:bg-gray-50"
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-      
-      <div className="max-h-48 overflow-y-auto border rounded">
-        {availableFields.map(field => (
-          <button
-            key={field}
-            onClick={() => onFieldSelect(field)}
-            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${
-              selectedField === field ? 'bg-blue-50 text-blue-700' : ''
-            }`}
-          >
-            {field}
-          </button>
-        ))}
-      </div>
-      
-      {suggestions.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-gray-700">Vorschläge:</div>
-          {suggestions.map((suggestion, index) => (
-            <button
-              key={index}
-              onClick={() => onFieldSelect(suggestion.field)}
-              className="w-full flex items-center justify-between p-2 border rounded hover:bg-gray-50"
-            >
-              <span className="text-sm">{suggestion.field}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">{suggestion.reason}</span>
-                <span className="text-xs font-medium">
-                  {Math.round(suggestion.confidence * 100)}%
-                </span>
-              </div>
-            </button>
+      {/* Standard field groups */}
+      {Object.entries(FIELD_GROUPS).map(([groupName, fields]) => (
+        <optgroup key={groupName} label={groupName}>
+          {fields.map(field => (
+            <option key={field} value={field}>
+              {FIELD_LABELS[field]}
+            </option>
           ))}
-        </div>
+        </optgroup>
+      ))}
+      
+      {/* Custom fields */}
+      {customFields.length > 0 && (
+        <optgroup label="Eigene Felder">
+          {customFields.map(field => (
+            <option key={field.id} value={field.id}>
+              {field.label}
+            </option>
+          ))}
+        </optgroup>
       )}
-    </div>
+    </select>
   );
 }
