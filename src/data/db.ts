@@ -121,20 +121,25 @@ class ClientWorkDB extends Dexie {
     
     this.clients.hook('updating', function (mods, _pk, oldVal) {
       return (async () => {
+        // obj is the third parameter - the complete new object passed to put()
+        const obj = arguments[2]; // Access third parameter correctly
         const plainOld = await decodeEnvelope<Client>(oldVal);
-        const nextPlain = { ...plainOld, ...mods };
-        
+        const nextPlain = obj; // Use the complete new object, not oldVal + mods
         
         const envelope = await codec.encode(nextPlain, {
-          id: oldVal.id,
-          amsId: oldVal.amsId,
-          rowKey: oldVal.rowKey,
+          id: nextPlain.id,
+          amsId: nextPlain.amsId,
+          rowKey: nextPlain.rowKey,
           createdAt: oldVal.createdAt, // Behalte ursprüngliches Erstellungsdatum
           updatedAt: Date.now()
         });
         
-        // Gib das vollständige verschlüsselte Envelope zurück
-        return envelope;
+        // Set this.value to replace the entire record
+        this.value = envelope;
+        
+        if (import.meta.env.DEV) {
+          console.debug('[dexie:update] clients', { id: nextPlain.id });
+        }
       })();
     });
 
@@ -158,11 +163,13 @@ class ClientWorkDB extends Dexie {
     
     this.users.hook('updating', function (mods, _pk, oldVal) {
       return (async () => {
+        // obj is the third parameter - the complete new object passed to put()
+        const obj = arguments[2]; // Access third parameter correctly
         const plainOld = await decodeEnvelope<User>(oldVal);
-        const nextPlain = { ...plainOld, ...mods };
+        const nextPlain = obj; // Use the complete new object, not oldVal + mods
         
         const envelope = await codec.encode(nextPlain, {
-          id: oldVal.id,
+          id: nextPlain.id,
           name: nextPlain.name,
           role: nextPlain.role,
           active: nextPlain.active,
@@ -170,24 +177,44 @@ class ClientWorkDB extends Dexie {
           updatedAt: Date.now()
         });
         
-        // Gib das vollständige verschlüsselte Envelope zurück
-        return envelope;
+        // Set this.value to replace the entire record
+        this.value = envelope;
+        
+        if (import.meta.env.DEV) {
+          console.debug('[dexie:update] users', { id: nextPlain.id });
+        }
       })();
     });
 
     // ImportSessions Hooks
     this.importSessions.hook('reading', (val) => decodeEnvelope<ImportSession>(val));
     this.importSessions.hook('creating', function (_pk, obj) {
-      return codec.encode(obj).then(envelope => {
-        Object.assign(this, envelope);
-      });
+      return (async () => {
+        const envelope = await codec.encode(obj);
+        
+        // Set this.value to replace the entire record
+        this.value = envelope;
+        
+        if (import.meta.env.DEV) {
+          console.debug('[dexie:create] importSessions', { id: obj.id });
+        }
+      })();
     });
     this.importSessions.hook('updating', function (mods, _pk, oldObj) {
       return (async () => {
+        // obj is the third parameter - the complete new object passed to put()
+        const obj = arguments[2]; // Access third parameter correctly
         const plainOld = await decodeEnvelope<ImportSession>(oldObj);
-        const nextPlain = { ...plainOld, ...mods };
+        const nextPlain = obj; // Use the complete new object, not oldVal + mods
+        
         const envelope = await codec.encode(nextPlain);
-        return envelope;
+        
+        // Set this.value to replace the entire record
+        this.value = envelope;
+        
+        if (import.meta.env.DEV) {
+          console.debug('[dexie:update] importSessions', { id: nextPlain.id });
+        }
       })();
     });
 
