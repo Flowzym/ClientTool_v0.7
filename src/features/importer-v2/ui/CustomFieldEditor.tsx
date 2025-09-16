@@ -1,147 +1,151 @@
 /**
- * Custom field editor for Importer V2
- * Create and edit custom field mappings and transformations
+ * Custom field editor modal
+ * Allows users to define additional fields beyond standard schema
  */
 
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/Card';
+import React, { useState } from 'react';
 import { Button } from '../../../components/Button';
-import { Plus, Edit, Trash2, Code } from 'lucide-react';
-
-// TODO: Implement custom field editor
-// - Create custom field definitions
-// - Define transformation rules
-// - Set validation parameters
-// - Preview transformations
-// - Save custom fields for reuse
+import { X, Plus } from 'lucide-react';
+import type { CustomField } from '../core/types';
 
 interface CustomFieldEditorProps {
-  onFieldCreate: (field: any) => void;
-  onFieldUpdate: (id: string, field: any) => void;
-  onFieldDelete: (id: string) => void;
-  existingFields: any[];
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (field: CustomField) => void;
+  existingFields: CustomField[];
 }
 
-export function CustomFieldEditor({
-  onFieldCreate,
-  onFieldUpdate,
-  onFieldDelete,
-  existingFields
-}: CustomFieldEditorProps) {
-  // TODO: Implement custom field editor logic
-  // - Field definition form
-  // - Transformation rule builder
-  // - Validation rule editor
-  // - Preview functionality
-  // - Field management (CRUD)
+export function CustomFieldEditor({ isOpen, onClose, onSave, existingFields }: CustomFieldEditorProps) {
+  const [fieldData, setFieldData] = useState<Partial<CustomField>>({
+    label: '',
+    type: 'text',
+    required: false,
+    description: ''
+  });
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSave = () => {
+    setError(null);
+    
+    if (!fieldData.label?.trim()) {
+      setError('Feldname ist erforderlich');
+      return;
+    }
+    
+    // Check for duplicate labels
+    const existingLabels = existingFields.map(f => f.label.toLowerCase());
+    if (existingLabels.includes(fieldData.label.toLowerCase())) {
+      setError('Ein Feld mit diesem Namen existiert bereits');
+      return;
+    }
+    
+    const customField: CustomField = {
+      id: `custom_${Date.now()}`,
+      label: fieldData.label.trim(),
+      type: fieldData.type || 'text',
+      required: fieldData.required || false,
+      description: fieldData.description?.trim() || undefined,
+      validation: fieldData.validation
+    };
+    
+    onSave(customField);
+    
+    // Reset form
+    setFieldData({
+      label: '',
+      type: 'text',
+      required: false,
+      description: ''
+    });
+  };
+
+  if (!isOpen) return null;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Benutzerdefinierte Felder
-        </h3>
-        <Button variant="secondary" size="sm">
-          <Plus className="w-4 h-4 mr-2" />
-          Neues Feld
-        </Button>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <div className="flex items-center gap-2">
-              <Code className="w-5 h-5" />
-              Feld-Editor
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="text-sm text-gray-600">
-              TODO: Implementiere benutzerdefinierten Feld-Editor
-            </div>
-            
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Feld-Name
-                </label>
-                <input
-                  type="text"
-                  placeholder="z.B. customStatus"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Feld-Typ
-                </label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
-                  <option value="text">Text</option>
-                  <option value="number">Zahl</option>
-                  <option value="date">Datum</option>
-                  <option value="boolean">Ja/Nein</option>
-                  <option value="enum">Auswahlliste</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Transformations-Regel
-                </label>
-                <textarea
-                  placeholder="z.B. value.toLowerCase().trim()"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  rows={3}
-                />
-              </div>
-            </div>
-            
-            <div className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm">
-                <Eye className="w-4 h-4 mr-2" />
-                Vorschau
-              </Button>
-              <Button size="sm">
-                <Save className="w-4 h-4 mr-2" />
-                Speichern
-              </Button>
-            </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold">Eigenes Feld hinzufügen</h3>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Feldname *</label>
+            <input
+              type="text"
+              value={fieldData.label || ''}
+              onChange={(e) => setFieldData(prev => ({ ...prev, label: e.target.value }))}
+              placeholder="z.B. Abteilung, Kostenstelle, ..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              autoFocus
+            />
           </div>
-        </CardContent>
-      </Card>
-
-      {existingFields.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Vorhandene Felder</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {existingFields.map((field, index) => (
-                <div key={index} className="flex items-center justify-between p-2 border rounded">
-                  <div>
-                    <span className="font-medium">{field.name || `Feld ${index + 1}`}</span>
-                    <span className="text-sm text-gray-500 ml-2">
-                      ({field.type || 'text'})
-                    </span>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="sm">
-                      <Edit className="w-3 h-3" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Trash2 className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">Feldtyp</label>
+            <select
+              value={fieldData.type || 'text'}
+              onChange={(e) => setFieldData(prev => ({ ...prev, type: e.target.value as any }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            >
+              <option value="text">Text</option>
+              <option value="number">Zahl</option>
+              <option value="date">Datum</option>
+              <option value="email">E-Mail</option>
+              <option value="phone">Telefon</option>
+              <option value="boolean">Ja/Nein</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium mb-2">Beschreibung</label>
+            <textarea
+              value={fieldData.description || ''}
+              onChange={(e) => setFieldData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Optionale Beschreibung für dieses Feld..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              rows={2}
+            />
+          </div>
+          
+          <div>
+            <label className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                checked={fieldData.required || false}
+                onChange={(e) => setFieldData(prev => ({ ...prev, required: e.target.checked }))}
+                className="rounded border-gray-300"
+              />
+              <span className="text-sm">Pflichtfeld</span>
+            </label>
+          </div>
+          
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+              <div className="flex items-center gap-2 text-red-700">
+                <AlertCircle className="w-4 h-4" />
+                <div className="text-sm">{error}</div>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+        </div>
+        
+        <div className="flex justify-end gap-3 mt-6">
+          <Button variant="ghost" onClick={onClose}>
+            Abbrechen
+          </Button>
+          <Button onClick={handleSave}>
+            <Plus className="w-4 h-4 mr-2" />
+            Feld hinzufügen
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
