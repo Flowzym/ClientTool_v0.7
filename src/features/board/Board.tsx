@@ -3,6 +3,7 @@ import { countNotes } from './utils/notes';
 import { perfMark, perfMeasure } from '../../lib/perf/timer';
 import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
+import { useBoardActions } from './hooks/useBoardActions';
 import ColumnHeader from './components/ColumnHeader';
 import { ClientInfoDialog } from './components';
 import { ClientRow } from './components/ClientRow';
@@ -105,18 +106,6 @@ function VirtualClientList({
       />
     </React.Suspense>
   );
-}
-
-function useBoardActions() {
-  // Placeholder implementation
-  return {
-    update: (id: string, changes: any) => {},
-    bulkUpdate: (ids: string[], changes: any) => {},
-    bulkPin: (ids: string[]) => {},
-    bulkUnpin: (ids: string[]) => {},
-    undo: () => {},
-    redo: () => {}
-  };
 }
 
 function Board() {
