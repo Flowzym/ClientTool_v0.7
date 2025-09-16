@@ -1,3 +1,4 @@
+import { db } from '../../../data/db';
 import { mutationService } from '../../../services/MutationService';
 import type { Patch } from '../../../types/patch';
 
@@ -40,19 +41,9 @@ async function getByAnyId(table: any, id: any): Promise<any | undefined> {
 }
 
 async function applyOne<T>(p: Patch<T>): Promise<void> {
-  const table = (db as any).clients;
+  const table = db.clients;
   if (!table) throw new Error('BoardService: db.clients missing');
-
-  // try Dexie update first
-  try {
-    const updated = await table.update(p.id as any, p.changes as any);
-    if (updated && updated > 0) return;
-  } catch {}
-
-  // Fallback: read-merge-put (upsert) mit tolerantem Lookup
-  const before = await getByAnyId(table, p.id as any);
-  const merged = { ...(before ?? { id: p.id }), ...(p.changes as any) };
-  await table.put(merged as any);
+  await performUpsert(table, p.id, p.changes);
 }
 
 async function computeInverse(forward: Patch<any>[]): Promise<Patch<any>[]> {
