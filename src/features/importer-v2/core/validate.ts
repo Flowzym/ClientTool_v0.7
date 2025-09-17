@@ -4,6 +4,7 @@
  */
 
 import type { InternalField, ValidationResult, ValidationIssue } from './types';
+import { validateFieldContent } from './detect';
 
 // Required fields for client records
 export const REQUIRED_FIELDS: InternalField[] = [
@@ -20,192 +21,222 @@ export const RECOMMENDED_FIELDS: InternalField[] = [
   'priority'
 ];
 
+// Austrian/German specific validation rules
+const VALIDATION_RULES = {
+  svNumber: {
+    pattern: /^\d{4}\s?\d{6}$/,
+    message: 'SV-Nummer muss Format "1234 123456" haben'
+  },
+  amsId: {
+    pattern: /^(AMS|ams)[-_]?\d{6,10}$/i,
+    message: 'AMS-ID muss Format "AMS123456" haben'
+  },
+  zip: {
+    pattern: /^([1-9]\d{3}|\d{5})$/,
+    message: 'Postleitzahl muss 4-5 Ziffern haben'
+  },
+  phone: {
+    pattern: /^(\+43|\+49|0043|0049|0)\s?[\d\s\-\/\(\)]{6,15}$/,
+    message: 'Telefonnummer muss österreichisches/deutsches Format haben'
+  },
+  email: {
+    pattern: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
+    message: 'E-Mail-Adresse ist ungültig'
+  },
+  date: {
+    pattern: /^(\d{1,2}[\.\/\-]\d{1,2}[\.\/\-]\d{2,4}|\d{4}[\.\/\-]\d{1,2}[\.\/\-]\d{1,2})$/,
+    message: 'Datum muss Format DD.MM.YYYY oder YYYY-MM-DD haben'
+  }
+};
+
 /**
  * Validates a single field value
  */
-function validateField(
+export function validateField(
   field: InternalField,
   value: any,
-  rowIndex: number
+  rowIndex: number,
+  allRowData?: Record<string, any>
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   
-  if (value == null || String(value).trim() === '') {
-    if (REQUIRED_FIELDS.includes(field)) {
-      issues.push({
-        type: 'error',
-        row: rowIndex,
-        field,
-        message: `Pflichtfeld "${field}" ist leer`,
-        value,
-        suggestion: 'Wert eingeben oder Zeile überspringen'
-      });
-    }
+  // Convert to string and trim
+  const stringValue = value?.toString()?.trim() || '';
+  
+  // Check if required field is empty
+  if (REQUIRED_FIELDS.includes(field) && !stringValue) {
+    issues.push({
+      type: 'error',
+      row: rowIndex,
+      field,
+      message: `Pflichtfeld "${field}" ist leer`,
+      value,
+      suggestion: 'Wert eingeben oder Zeile entfernen'
+    });
     return issues;
   }
   
-  const strValue = String(value).trim();
+  // Skip validation for empty optional fields
+  if (!stringValue) {
+    return issues;
+  }
   
   // Field-specific validation
   switch (field) {
-    case 'email':
-      if (strValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(strValue)) {
-        issues.push({
-          type: 'error',
-          row: rowIndex,
-          field,
-          message: 'Ungültige E-Mail-Adresse',
-          value: strValue,
-          suggestion: 'Format: name@domain.com'
-        });
-      }
-      break;
-      
-    case 'phone':
-      // Austrian/German phone validation
-      const phonePattern = /^(\+43|\+49|0)\s*\d{1,4}[\s\/-]*\d{3,}$/;
-      if (strValue && !phonePattern.test(strValue.replace(/\s/g, ''))) {
-        issues.push({
-          type: 'warning',
-          row: rowIndex,
-          field,
-          message: 'Telefonnummer entspricht nicht österreichischem/deutschem Format',
-          value: strValue,
-          suggestion: 'Format: +43 1 234 5678 oder 01 234 5678'
-        });
-      }
-      break;
-      
-    case 'zip':
-      // Austrian (4 digits) or German (5 digits) postal codes
-      if (strValue && !/^\d{4,5}$/.test(strValue)) {
-        issues.push({
-          type: 'error',
-          row: rowIndex,
-          field,
-          message: 'Ungültige Postleitzahl',
-          value: strValue,
-          suggestion: 'Österreich: 4 Ziffern (1010), Deutschland: 5 Ziffern (10115)'
-        });
-      }
-      break;
-      
     case 'svNumber':
-      // Austrian social security format: 1234 123456
-      const svPattern = /^\d{4}\s?\d{6}$|^\d{10}$/;
-      if (strValue && !svPattern.test(strValue.replace(/\s/g, ''))) {
+      if (!VALIDATION_RULES.svNumber.pattern.test(stringValue)) {
         issues.push({
           type: 'error',
           row: rowIndex,
           field,
-          message: 'Ungültige SV-Nummer',
-          value: strValue,
-          suggestion: 'Format: 1234 123456 oder 1234123456'
+          message: VALIDATION_RULES.svNumber.message,
+          value,
+          suggestion: 'Format: 1234 123456 (4 Ziffern, Leerzeichen, 6 Ziffern)'
         });
       }
       break;
       
     case 'amsId':
-      // AMS-ID format: A + 4-6 digits
-      if (strValue && !/^A\d{4,6}$/i.test(strValue)) {
+      if (!VALIDATION_RULES.amsId.pattern.test(stringValue)) {
+        issues.push({
+          type: 'error',
+          row: rowIndex,
+          field,
+          message: VALIDATION_RULES.amsId.message,
+          value,
+          suggestion: 'Format: AMS123456 oder ams-123456'
+        });
+      }
+      break;
+      
+    case 'zip':
+      if (!VALIDATION_RULES.zip.pattern.test(stringValue)) {
+        issues.push({
+          type: 'error',
+          row: rowIndex,
+          field,
+          message: VALIDATION_RULES.zip.message,
+          value,
+          suggestion: 'Österreich: 4 Ziffern (1000-9999), Deutschland: 5 Ziffern'
+        });
+      }
+      break;
+      
+    case 'phone':
+      if (!VALIDATION_RULES.phone.pattern.test(stringValue)) {
         issues.push({
           type: 'warning',
           row: rowIndex,
           field,
-          message: 'AMS-ID entspricht nicht dem erwarteten Format',
-          value: strValue,
-          suggestion: 'Format: A12345 (A + 4-6 Ziffern)'
+          message: VALIDATION_RULES.phone.message,
+          value,
+          suggestion: 'Format: +43 123 456789 oder 0123 456789'
+        });
+      }
+      break;
+      
+    case 'email':
+      if (!VALIDATION_RULES.email.pattern.test(stringValue)) {
+        issues.push({
+          type: 'error',
+          row: rowIndex,
+          field,
+          message: VALIDATION_RULES.email.message,
+          value,
+          suggestion: 'Format: name@domain.at'
         });
       }
       break;
       
     case 'birthDate':
-    case 'amsBookingDate':
     case 'entryDate':
     case 'exitDate':
-    case 'followUp':
+    case 'amsBookingDate':
     case 'lastActivity':
-      // Date validation (multiple formats)
-      const datePatterns = [
-        /^\d{1,2}[.\/]\d{1,2}[.\/]\d{4}$/, // dd.mm.yyyy
-        /^\d{4}-\d{2}-\d{2}$/, // yyyy-mm-dd
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/ // ISO datetime
-      ];
-      
-      const isValidDate = datePatterns.some(pattern => pattern.test(strValue)) ||
-                         !isNaN(Date.parse(strValue));
-      
-      if (strValue && !isValidDate) {
-        issues.push({
-          type: 'error',
-          row: rowIndex,
-          field,
-          message: 'Ungültiges Datumsformat',
-          value: strValue,
-          suggestion: 'Format: dd.mm.yyyy, yyyy-mm-dd oder ISO-Format'
-        });
-      }
-      break;
-      
-    case 'status':
-      const validStatuses = [
-        'offen', 'inBearbeitung', 'terminVereinbart', 'wartetRueckmeldung',
-        'dokumenteOffen', 'foerderAbklaerung', 'zugewiesenExtern', 'ruht',
-        'erledigt', 'nichtErreichbar', 'abgebrochen'
-      ];
-      
-      if (strValue && !validStatuses.includes(strValue)) {
+      if (!VALIDATION_RULES.date.pattern.test(stringValue)) {
         issues.push({
           type: 'warning',
           row: rowIndex,
           field,
-          message: 'Unbekannter Status-Wert',
-          value: strValue,
-          suggestion: `Erlaubte Werte: ${validStatuses.slice(0, 3).join(', ')}, ...`
+          message: VALIDATION_RULES.date.message,
+          value,
+          suggestion: 'Format: 01.01.1990 oder 1990-01-01'
         });
-      }
-      break;
-      
-    case 'priority':
-      const validPriorities = ['niedrig', 'normal', 'hoch', 'dringend'];
-      
-      if (strValue && !validPriorities.includes(strValue)) {
-        issues.push({
-          type: 'warning',
-          row: rowIndex,
-          field,
-          message: 'Unbekannter Prioritäts-Wert',
-          value: strValue,
-          suggestion: `Erlaubte Werte: ${validPriorities.join(', ')}`
-        });
-      }
-      break;
-      
-    case 'angebot':
-      const validAngebote = ['BAM', 'LL/B+', 'BwB', 'NB'];
-      
-      if (strValue && !validAngebote.includes(strValue)) {
-        issues.push({
-          type: 'warning',
-          row: rowIndex,
-          field,
-          message: 'Unbekannter Angebot-Wert',
-          value: strValue,
-          suggestion: `Erlaubte Werte: ${validAngebote.join(', ')}`
-        });
+      } else {
+        // Additional date logic validation
+        const dateIssue = validateDateLogic(field, stringValue, rowIndex, allRowData);
+        if (dateIssue) {
+          issues.push(dateIssue);
+        }
       }
       break;
       
     case 'firstName':
     case 'lastName':
-      if (strValue.length < 2) {
+      if (stringValue.length < 2) {
         issues.push({
           type: 'warning',
           row: rowIndex,
           field,
-          message: 'Name ist sehr kurz',
-          value: strValue,
-          suggestion: 'Prüfen Sie, ob der Name vollständig ist'
+          message: `${field === 'firstName' ? 'Vorname' : 'Nachname'} ist sehr kurz`,
+          value,
+          suggestion: 'Vollständigen Namen eingeben'
+        });
+      }
+      
+      // Check for suspicious patterns
+      if (/^\d+$/.test(stringValue)) {
+        issues.push({
+          type: 'error',
+          row: rowIndex,
+          field,
+          message: `${field === 'firstName' ? 'Vorname' : 'Nachname'} darf nicht nur aus Zahlen bestehen`,
+          value,
+          suggestion: 'Namen korrigieren'
+        });
+      }
+      break;
+      
+    case 'gender':
+      const validGenders = ['m', 'w', 'd', 'männlich', 'weiblich', 'divers', 'male', 'female', 'diverse'];
+      if (!validGenders.includes(stringValue.toLowerCase())) {
+        issues.push({
+          type: 'warning',
+          row: rowIndex,
+          field,
+          message: 'Unbekannter Geschlechtswert',
+          value,
+          suggestion: 'Verwenden Sie: m, w, d oder männlich, weiblich, divers'
+        });
+      }
+      break;
+      
+    case 'status':
+      // Validate against common status values
+      const validStatuses = ['aktiv', 'inaktiv', 'beendet', 'pausiert', 'offen', 'geschlossen'];
+      if (!validStatuses.some(status => stringValue.toLowerCase().includes(status))) {
+        issues.push({
+          type: 'info',
+          row: rowIndex,
+          field,
+          message: 'Ungewöhnlicher Status-Wert',
+          value,
+          suggestion: 'Prüfen Sie, ob der Status korrekt ist'
+        });
+      }
+      break;
+      
+    case 'priority':
+      // Validate priority values
+      const validPriorities = ['hoch', 'mittel', 'niedrig', 'high', 'medium', 'low', '1', '2', '3', '4', '5'];
+      if (!validPriorities.includes(stringValue.toLowerCase())) {
+        issues.push({
+          type: 'info',
+          row: rowIndex,
+          field,
+          message: 'Ungewöhnlicher Prioritätswert',
+          value,
+          suggestion: 'Verwenden Sie: hoch, mittel, niedrig oder 1-5'
         });
       }
       break;
@@ -215,83 +246,122 @@ function validateField(
 }
 
 /**
- * Validates a complete row of mapped data
+ * Validates date logic (e.g., birth date not in future, exit after entry)
  */
-export function validateRow(
-  rowData: Record<InternalField, any>,
-  rowIndex: number
-): ValidationIssue[] {
-  const issues: ValidationIssue[] = [];
-  
-  // Validate each field
-  Object.entries(rowData).forEach(([field, value]) => {
-    const fieldIssues = validateField(field as InternalField, value, rowIndex);
-    issues.push(...fieldIssues);
-  });
-  
-  // Cross-field validation
-  
-  // Check if both firstName and lastName are missing
-  if (!rowData.firstName && !rowData.lastName) {
-    issues.push({
-      type: 'error',
-      row: rowIndex,
-      message: 'Weder Vor- noch Nachname vorhanden',
-      suggestion: 'Mindestens ein Name ist erforderlich'
-    });
-  }
-  
-  // Check date consistency (entry before exit)
-  if (rowData.entryDate && rowData.exitDate) {
-    const entryTime = new Date(rowData.entryDate).getTime();
-    const exitTime = new Date(rowData.exitDate).getTime();
+function validateDateLogic(
+  field: InternalField,
+  dateValue: string,
+  rowIndex: number,
+  allRowData?: Record<string, any>
+): ValidationIssue | null {
+  try {
+    // Parse date (simplified - would need proper date parsing in production)
+    const parsedDate = new Date(dateValue.replace(/\./g, '/'));
+    const now = new Date();
     
-    if (!isNaN(entryTime) && !isNaN(exitTime) && entryTime > exitTime) {
-      issues.push({
-        type: 'error',
-        row: rowIndex,
-        message: 'Eintrittsdatum liegt nach Austrittsdatum',
-        suggestion: 'Prüfen Sie die Datumsangaben'
-      });
+    switch (field) {
+      case 'birthDate':
+        if (parsedDate > now) {
+          return {
+            type: 'error',
+            row: rowIndex,
+            field,
+            message: 'Geburtsdatum liegt in der Zukunft',
+            value: dateValue,
+            suggestion: 'Datum korrigieren'
+          };
+        }
+        
+        // Check if person would be too old (>120 years)
+        const age = now.getFullYear() - parsedDate.getFullYear();
+        if (age > 120) {
+          return {
+            type: 'warning',
+            row: rowIndex,
+            field,
+            message: 'Person wäre über 120 Jahre alt',
+            value: dateValue,
+            suggestion: 'Geburtsdatum prüfen'
+          };
+        }
+        
+        // Check if person would be too young (<14 years for AMS)
+        if (age < 14) {
+          return {
+            type: 'warning',
+            row: rowIndex,
+            field,
+            message: 'Person ist unter 14 Jahre alt',
+            value: dateValue,
+            suggestion: 'Geburtsdatum prüfen (AMS-Mindestalter)'
+          };
+        }
+        break;
+        
+      case 'entryDate':
+      case 'amsBookingDate':
+        // Entry dates shouldn't be too far in the future
+        const monthsInFuture = (parsedDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30);
+        if (monthsInFuture > 6) {
+          return {
+            type: 'warning',
+            row: rowIndex,
+            field,
+            message: 'Eintrittsdatum liegt weit in der Zukunft',
+            value: dateValue,
+            suggestion: 'Datum prüfen'
+          };
+        }
+        break;
+        
+      case 'exitDate':
+        // Exit date should be after entry date if both are present
+        if (allRowData?.entryDate) {
+          const entryDate = new Date(allRowData.entryDate.replace(/\./g, '/'));
+          if (parsedDate < entryDate) {
+            return {
+              type: 'error',
+              row: rowIndex,
+              field,
+              message: 'Austrittsdatum liegt vor Eintrittsdatum',
+              value: dateValue,
+              suggestion: 'Datumsreihenfolge prüfen'
+            };
+          }
+        }
+        break;
     }
+  } catch (error) {
+    // Date parsing failed - already handled by pattern validation
   }
   
-  // Check follow-up date is in future (warning only)
-  if (rowData.followUp) {
-    const followUpTime = new Date(rowData.followUp).getTime();
-    const now = Date.now();
-    
-    if (!isNaN(followUpTime) && followUpTime < now - (7 * 24 * 60 * 60 * 1000)) {
-      issues.push({
-        type: 'warning',
-        row: rowIndex,
-        field: 'followUp',
-        message: 'Follow-up-Termin liegt mehr als eine Woche in der Vergangenheit',
-        value: rowData.followUp,
-        suggestion: 'Prüfen Sie, ob das Datum korrekt ist'
-      });
-    }
-  }
-  
-  return issues;
+  return null;
 }
 
 /**
- * Validates a batch of rows
+ * Validates entire dataset
  */
-export function validateBatch(
-  rows: Array<Record<InternalField, any>>,
-  onProgress?: (progress: number) => void
+export function validateDataset(
+  data: Record<string, any>[],
+  mappings: Record<string, InternalField>
 ): ValidationResult {
-  const allIssues: ValidationIssue[] = [];
+  const issues: ValidationIssue[] = [];
   let validRows = 0;
   let errorRows = 0;
   let warningRows = 0;
   
-  rows.forEach((row, index) => {
-    const rowIssues = validateRow(row, index + 1); // 1-based row numbers
-    allIssues.push(...rowIssues);
+  for (let rowIndex = 0; rowIndex < data.length; rowIndex++) {
+    const row = data[rowIndex];
+    const rowIssues: ValidationIssue[] = [];
     
+    // Validate each mapped field
+    for (const [column, field] of Object.entries(mappings)) {
+      const value = row[column];
+      const fieldIssues = validateField(field, value, rowIndex, row);
+      rowIssues.push(...fieldIssues);
+    }
+    
+    // Categorize row
     const hasErrors = rowIssues.some(issue => issue.type === 'error');
     const hasWarnings = rowIssues.some(issue => issue.type === 'warning');
     
@@ -303,22 +373,14 @@ export function validateBatch(
       validRows++;
     }
     
-    // Report progress
-    if (onProgress && (index + 1) % 100 === 0) {
-      onProgress((index + 1) / rows.length);
-    }
-  });
-  
-  // Final progress report
-  if (onProgress) {
-    onProgress(1.0);
+    issues.push(...rowIssues);
   }
   
   return {
     valid: errorRows === 0,
-    issues: allIssues,
+    issues,
     stats: {
-      totalRows: rows.length,
+      totalRows: data.length,
       validRows,
       errorRows,
       warningRows
@@ -327,77 +389,130 @@ export function validateBatch(
 }
 
 /**
- * Suggests fixes for common validation issues
+ * Validates mapping completeness
  */
-export function suggestFixes(issues: ValidationIssue[]): Array<{
-  type: 'bulk_fix' | 'mapping_change' | 'data_transform';
-  description: string;
-  affectedRows: number[];
-  action: string;
-}> {
-  const suggestions: any[] = [];
+export function validateMappingCompleteness(
+  mappings: Record<string, InternalField>
+): ValidationIssue[] {
+  const issues: ValidationIssue[] = [];
+  const mappedFields = Object.values(mappings);
   
-  // Group issues by type and field
-  const issueGroups = new Map<string, ValidationIssue[]>();
-  
-  issues.forEach(issue => {
-    const key = `${issue.type}-${issue.field || 'general'}`;
-    if (!issueGroups.has(key)) {
-      issueGroups.set(key, []);
+  // Check for missing required fields
+  for (const requiredField of REQUIRED_FIELDS) {
+    if (!mappedFields.includes(requiredField)) {
+      issues.push({
+        type: 'error',
+        row: -1, // Mapping-level issue
+        field: requiredField,
+        message: `Pflichtfeld "${requiredField}" ist nicht zugeordnet`,
+        suggestion: 'Spalte für dieses Feld auswählen'
+      });
     }
-    issueGroups.get(key)!.push(issue);
-  });
+  }
   
-  // Generate suggestions for common patterns
-  issueGroups.forEach((groupIssues, key) => {
-    if (groupIssues.length >= 3) { // Only suggest bulk fixes for 3+ occurrences
-      const [type, field] = key.split('-');
-      const affectedRows = groupIssues.map(issue => issue.row);
-      
-      if (field === 'email' && type === 'error') {
-        suggestions.push({
-          type: 'bulk_fix',
-          description: 'E-Mail-Adressen automatisch korrigieren',
-          affectedRows,
-          action: 'Häufige Tippfehler reparieren (z.B. @ durch . ersetzt)'
-        });
-      }
-      
-      if (field === 'phone' && type === 'warning') {
-        suggestions.push({
-          type: 'data_transform',
-          description: 'Telefonnummern normalisieren',
-          affectedRows,
-          action: 'Einheitliches Format anwenden (+43 1 234 5678)'
-        });
-      }
-      
-      if (field === 'birthDate' && type === 'error') {
-        suggestions.push({
-          type: 'data_transform',
-          description: 'Datumsformat vereinheitlichen',
-          affectedRows,
-          action: 'Alle Daten zu dd.mm.yyyy Format konvertieren'
-        });
-      }
+  // Check for missing recommended fields
+  for (const recommendedField of RECOMMENDED_FIELDS) {
+    if (!mappedFields.includes(recommendedField)) {
+      issues.push({
+        type: 'info',
+        row: -1,
+        field: recommendedField,
+        message: `Empfohlenes Feld "${recommendedField}" ist nicht zugeordnet`,
+        suggestion: 'Spalte für bessere Datenqualität zuordnen'
+      });
     }
-  });
+  }
   
-  return suggestions;
+  // Check for duplicate mappings
+  const fieldCounts = mappedFields.reduce((counts, field) => {
+    counts[field] = (counts[field] || 0) + 1;
+    return counts;
+  }, {} as Record<string, number>);
+  
+  for (const [field, count] of Object.entries(fieldCounts)) {
+    if (count > 1) {
+      issues.push({
+        type: 'error',
+        row: -1,
+        field: field as InternalField,
+        message: `Feld "${field}" ist mehrfach zugeordnet`,
+        suggestion: 'Doppelte Zuordnungen entfernen'
+      });
+    }
+  }
+  
+  return issues;
 }
 
 /**
- * Quick validation for single value
+ * Provides validation suggestions based on issues
  */
-export function quickValidate(field: InternalField, value: any): {
-  valid: boolean;
-  message?: string;
-} {
-  const issues = validateField(field, value, 0);
-  const errors = issues.filter(issue => issue.type === 'error');
+export function getValidationSuggestions(
+  issues: ValidationIssue[]
+): Array<{
+  type: 'fix_format' | 'add_mapping' | 'review_data' | 'ignore_warning';
+  message: string;
+  action?: string;
+  affectedRows?: number[];
+}> {
+  const suggestions: Array<{
+    type: 'fix_format' | 'add_mapping' | 'review_data' | 'ignore_warning';
+    message: string;
+    action?: string;
+    affectedRows?: number[];
+  }> = [];
   
-  return {
-    valid: errors.length === 0,
-    message: errors[0]?.message
-  };
+  // Group issues by type and field
+  const issueGroups = issues.reduce((groups, issue) => {
+    const key = `${issue.type}-${issue.field}`;
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key].push(issue);
+    return groups;
+  }, {} as Record<string, ValidationIssue[]>);
+  
+  for (const [key, groupIssues] of Object.entries(issueGroups)) {
+    const firstIssue = groupIssues[0];
+    const affectedRows = groupIssues.map(issue => issue.row).filter(row => row >= 0);
+    
+    if (firstIssue.type === 'error' && firstIssue.row === -1) {
+      // Mapping-level error
+      suggestions.push({
+        type: 'add_mapping',
+        message: firstIssue.message,
+        action: firstIssue.suggestion
+      });
+    } else if (firstIssue.type === 'error') {
+      // Data format error
+      suggestions.push({
+        type: 'fix_format',
+        message: `${groupIssues.length} Zeilen haben Formatfehler in "${firstIssue.field}"`,
+        action: firstIssue.suggestion,
+        affectedRows
+      });
+    } else if (firstIssue.type === 'warning') {
+      // Data quality warning
+      suggestions.push({
+        type: 'review_data',
+        message: `${groupIssues.length} Zeilen haben Warnungen in "${firstIssue.field}"`,
+        action: firstIssue.suggestion,
+        affectedRows
+      });
+    } else {
+      // Info-level issues
+      suggestions.push({
+        type: 'ignore_warning',
+        message: `${groupIssues.length} Hinweise zu "${firstIssue.field}"`,
+        action: firstIssue.suggestion,
+        affectedRows
+      });
+    }
+  }
+  
+  return suggestions.sort((a, b) => {
+    // Sort by priority: errors first, then warnings, then info
+    const priority = { fix_format: 1, add_mapping: 2, review_data: 3, ignore_warning: 4 };
+    return priority[a.type] - priority[b.type];
+  });
 }

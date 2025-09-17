@@ -1,4 +1,5 @@
 /**
+ 
  * Header normalization and display utilities
  * Repairs broken encodings, normalizes for matching, preserves display quality
  */
@@ -73,32 +74,42 @@ function repairMojibake(text: string): { repaired: string; repairs: string[] } {
 }
 
 /**
- * Removes diacritics for fuzzy matching (ä→ae, ß→ss)
+ * Removes diacritics for matching purposes (ä→ae, ß→ss)
  */
 function removeDiacritics(text: string): string {
   let result = text;
-  
   for (const [diacritic, replacement] of Object.entries(DIACRITIC_MAP)) {
     result = result.replace(new RegExp(diacritic, 'g'), replacement);
   }
-  
   return result;
 }
 
 /**
- * Tokenizes header into searchable tokens
+ * Normalizes special characters and punctuation
  */
-function tokenizeHeader(text: string): string[] {
+function normalizeSpecialChars(text: string): string {
   return text
-    .toLowerCase()
-    .replace(/[^a-z0-9äöüß]/g, ' ') // Keep German chars for now
-    .split(/\s+/)
-    .filter(token => token.length > 1) // Remove single chars
-    .map(token => removeDiacritics(token)); // Remove diacritics for matching
+    .replace(/[_\-\.\/\\]/g, ' ') // Convert separators to spaces
+    .replace(/[()[\]{}]/g, '') // Remove brackets
+    .replace(/[,:;]/g, '') // Remove punctuation
+    .replace(/\s+/g, ' ') // Collapse multiple spaces
+    .trim();
 }
 
 /**
- * Normalizes header for matching (repairs encoding, cleans, tokenizes)
+ * Tokenizes normalized text into searchable tokens
+ */
+function tokenize(text: string): string[] {
+  return text
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(token => token.length > 0)
+    .filter(token => !['und', 'der', 'die', 'das', 'von', 'zu', 'im', 'am', 'an', 'auf'].includes(token));
+}
+
+/**
+ * Normalizes header for matching purposes
+ * Repairs mojibake, removes diacritics, normalizes whitespace and special chars
  */
 export function normalizeHeader(raw: string): NormalizationResult {
   if (!raw || typeof raw !== 'string') {
@@ -113,22 +124,17 @@ export function normalizeHeader(raw: string): NormalizationResult {
   // Step 1: Repair mojibake
   const { repaired, repairs } = repairMojibake(raw.trim());
   
-  // Step 2: Basic cleaning
-  const cleaned = repaired
-    .replace(/\s+/g, ' ') // Normalize whitespace
-    .trim();
+  // Step 2: Remove diacritics for matching
+  const withoutDiacritics = removeDiacritics(repaired);
   
-  // Step 3: Create normalized version for matching
-  const normalized = cleaned
-    .toLowerCase()
-    .replace(/[^a-z0-9äöüß\s]/g, '') // Remove special chars but keep German
-    .trim();
+  // Step 3: Normalize special characters
+  const normalized = normalizeSpecialChars(withoutDiacritics);
   
-  // Step 4: Tokenize for fuzzy matching
-  const tokens = tokenizeHeader(normalized);
+  // Step 4: Tokenize
+  const tokens = tokenize(normalized);
   
   return {
-    fixed: cleaned, // Repaired but readable
+    fixed: normalized.toLowerCase(),
     tokens,
     original: raw,
     repairs
@@ -136,118 +142,45 @@ export function normalizeHeader(raw: string): NormalizationResult {
 }
 
 /**
- * Returns display-friendly header (repaired encoding, proper casing)
+ * Returns properly formatted header for display in UI
+ * Repairs mojibake but preserves proper German capitalization and umlauts
  */
 export function displayHeader(raw: string): string {
   if (!raw || typeof raw !== 'string') {
     return '';
   }
 
+  // Repair mojibake but keep proper formatting
   const { repaired } = repairMojibake(raw.trim());
   
-  // Basic title case for common words
+  // Clean up whitespace but preserve case and umlauts
   return repaired
     .replace(/\s+/g, ' ')
-    .trim()
-    .replace(/\b\w/g, char => char.toUpperCase()); // Title case
+    .trim();
 }
 
 /**
- * Calculates Levenshtein distance for fuzzy matching
+ * Checks if two normalized headers are equivalent
  */
-export function levenshteinDistance(a: string, b: string): number {
-  if (a.length === 0) return b.length;
-  if (b.length === 0) return a.length;
-
-  const matrix: number[][] = [];
-
-  // Initialize matrix
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  // Fill matrix
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) === a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
-        );
-      }
-    }
-  }
-
-  return matrix[b.length][a.length];
+export function headersMatch(header1: string, header2: string): boolean {
+  const norm1 = normalizeHeader(header1);
+  const norm2 = normalizeHeader(header2);
+  return norm1.fixed === norm2.fixed;
 }
 
 /**
- * Calculates Jaro-Winkler similarity for fuzzy matching
+ * Gets token overlap ratio between two headers
  */
-export function jaroWinklerSimilarity(a: string, b: string): number {
-  if (a === b) return 1.0;
-  if (a.length === 0 || b.length === 0) return 0.0;
-
-  const matchWindow = Math.floor(Math.max(a.length, b.length) / 2) - 1;
-  if (matchWindow < 0) return 0.0;
-
-  const aMatches = new Array(a.length).fill(false);
-  const bMatches = new Array(b.length).fill(false);
-
-  let matches = 0;
-  let transpositions = 0;
-
-  // Find matches
-  for (let i = 0; i < a.length; i++) {
-    const start = Math.max(0, i - matchWindow);
-    const end = Math.min(i + matchWindow + 1, b.length);
-
-    for (let j = start; j < end; j++) {
-      if (bMatches[j] || a[i] !== b[j]) continue;
-      aMatches[i] = bMatches[j] = true;
-      matches++;
-      break;
-    }
-  }
-
-  if (matches === 0) return 0.0;
-
-  // Count transpositions
-  let k = 0;
-  for (let i = 0; i < a.length; i++) {
-    if (!aMatches[i]) continue;
-    while (!bMatches[k]) k++;
-    if (a[i] !== b[k]) transpositions++;
-    k++;
-  }
-
-  const jaro = (matches / a.length + matches / b.length + (matches - transpositions / 2) / matches) / 3;
-
-  // Winkler prefix bonus
-  let prefix = 0;
-  for (let i = 0; i < Math.min(a.length, b.length, 4); i++) {
-    if (a[i] === b[i]) prefix++;
-    else break;
-  }
-
-  return jaro + (0.1 * prefix * (1 - jaro));
-}
-
-/**
- * Calculates token overlap ratio between two token sets
- */
-export function tokenOverlapRatio(tokensA: string[], tokensB: string[]): number {
-  if (tokensA.length === 0 || tokensB.length === 0) return 0;
-
-  const setA = new Set(tokensA);
-  const setB = new Set(tokensB);
-  const intersection = new Set([...setA].filter(token => setB.has(token)));
+export function getTokenOverlap(header1: string, header2: string): number {
+  const tokens1 = normalizeHeader(header1).tokens;
+  const tokens2 = normalizeHeader(header2).tokens;
   
-  return intersection.size / Math.max(setA.size, setB.size);
+  if (tokens1.length === 0 && tokens2.length === 0) return 1;
+  if (tokens1.length === 0 || tokens2.length === 0) return 0;
+  
+  const set1 = new Set(tokens1);
+  const set2 = new Set(tokens2);
+  const intersection = new Set([...set1].filter(x => set2.has(x)));
+  
+  return intersection.size / Math.max(set1.size, set2.size);
 }

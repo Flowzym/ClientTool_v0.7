@@ -1,324 +1,328 @@
 /**
- * Mapping confidence scoring system
- * Combines alias matching, fuzzy matching, and content analysis
+ * Intelligent column mapping scoring system
+ * Combines alias matching, token overlap, fuzzy matching, and content hints
  */
 
 import type { InternalField, ColumnGuess, ScoringWeights, DEFAULT_SCORING_WEIGHTS } from './types';
-import { ALIASES } from './aliases';
-import { normalizeHeader, levenshteinDistance, jaroWinklerSimilarity, tokenOverlapRatio } from './normalize';
-import { getContentBoost } from './detect';
+import { normalizeHeader, getTokenOverlap } from './normalize';
+import { getAliases, findFieldByAlias } from './aliases';
+import { suggestFieldsFromContent } from './detect';
 
 /**
- * Calculates exact alias match score
+ * Calculates Levenshtein distance between two strings
  */
-function scoreExactAlias(field: InternalField, normalizedHeader: string): {
-  score: number;
-  matchedAlias?: string;
-} {
-  const aliases = ALIASES[field] || [];
-  const headerLower = normalizedHeader.toLowerCase();
+function levenshteinDistance(str1: string, str2: string): number {
+  const matrix: number[][] = [];
   
-  for (const alias of aliases) {
-    if (headerLower === alias.toLowerCase()) {
-      return { score: 1.0, matchedAlias: alias };
+  for (let i = 0; i <= str2.length; i++) {
+    matrix[i] = [i];
+  }
+  
+  for (let j = 0; j <= str1.length; j++) {
+    matrix[0][j] = j;
+  }
+  
+  for (let i = 1; i <= str2.length; i++) {
+    for (let j = 1; j <= str1.length; j++) {
+      if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
     }
   }
   
-  return { score: 0 };
+  return matrix[str2.length][str1.length];
 }
 
 /**
- * Calculates token overlap score
+ * Calculates fuzzy match score using Levenshtein distance
  */
-function scoreTokenOverlap(field: InternalField, headerTokens: string[]): {
-  score: number;
-  overlappingTokens: string[];
-} {
-  const aliases = ALIASES[field] || [];
-  const overlappingTokens: string[] = [];
-  let bestOverlap = 0;
+function calculateFuzzyScore(str1: string, str2: string): number {
+  if (!str1 || !str2) return 0;
   
-  for (const alias of aliases) {
-    const aliasTokens = alias.toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length > 1);
-    const overlap = tokenOverlapRatio(headerTokens, aliasTokens);
+  const maxLength = Math.max(str1.length, str2.length);
+  if (maxLength === 0) return 1;
+  
+  const distance = levenshteinDistance(str1.toLowerCase(), str2.toLowerCase());
+  return 1 - (distance / maxLength);
+}
+
+/**
+ * Calculates Jaro similarity between two strings
+ */
+function jaroSimilarity(str1: string, str2: string): number {
+  if (str1 === str2) return 1;
+  if (!str1 || !str2) return 0;
+  
+  const len1 = str1.length;
+  const len2 = str2.length;
+  const matchWindow = Math.floor(Math.max(len1, len2) / 2) - 1;
+  
+  if (matchWindow < 0) return 0;
+  
+  const str1Matches = new Array(len1).fill(false);
+  const str2Matches = new Array(len2).fill(false);
+  
+  let matches = 0;
+  let transpositions = 0;
+  
+  // Find matches
+  for (let i = 0; i < len1; i++) {
+    const start = Math.max(0, i - matchWindow);
+    const end = Math.min(i + matchWindow + 1, len2);
     
-    if (overlap > bestOverlap) {
-      bestOverlap = overlap;
-      overlappingTokens.length = 0;
-      overlappingTokens.push(...headerTokens.filter(token => 
-        aliasTokens.some(aliasToken => aliasToken.includes(token) || token.includes(aliasToken))
-      ));
+    for (let j = start; j < end; j++) {
+      if (str2Matches[j] || str1[i] !== str2[j]) continue;
+      str1Matches[i] = true;
+      str2Matches[j] = true;
+      matches++;
+      break;
     }
   }
   
-  return { score: bestOverlap, overlappingTokens };
-}
-
-/**
- * Calculates fuzzy matching score using multiple algorithms
- */
-function scoreFuzzyMatch(field: InternalField, normalizedHeader: string): {
-  score: number;
-  bestMatch?: string;
-  algorithm: 'levenshtein' | 'jaro-winkler';
-} {
-  const aliases = ALIASES[field] || [];
-  const headerLower = normalizedHeader.toLowerCase();
+  if (matches === 0) return 0;
   
-  let bestScore = 0;
-  let bestMatch: string | undefined;
-  let bestAlgorithm: 'levenshtein' | 'jaro-winkler' = 'levenshtein';
-  
-  for (const alias of aliases) {
-    const aliasLower = alias.toLowerCase();
-    
-    // Levenshtein similarity (normalized)
-    const levDistance = levenshteinDistance(headerLower, aliasLower);
-    const maxLength = Math.max(headerLower.length, aliasLower.length);
-    const levSimilarity = maxLength > 0 ? 1 - (levDistance / maxLength) : 0;
-    
-    // Jaro-Winkler similarity
-    const jaroSimilarity = jaroWinklerSimilarity(headerLower, aliasLower);
-    
-    // Use best algorithm for this pair
-    if (jaroSimilarity > levSimilarity && jaroSimilarity > bestScore) {
-      bestScore = jaroSimilarity;
-      bestMatch = alias;
-      bestAlgorithm = 'jaro-winkler';
-    } else if (levSimilarity > bestScore) {
-      bestScore = levSimilarity;
-      bestMatch = alias;
-      bestAlgorithm = 'levenshtein';
-    }
+  // Count transpositions
+  let k = 0;
+  for (let i = 0; i < len1; i++) {
+    if (!str1Matches[i]) continue;
+    while (!str2Matches[k]) k++;
+    if (str1[i] !== str2[k]) transpositions++;
+    k++;
   }
   
-  // Only return meaningful fuzzy matches (>60% similarity)
-  return bestScore >= 0.6 ? { score: bestScore, bestMatch, algorithm: bestAlgorithm } : { score: 0, algorithm: 'levenshtein' };
+  return (matches / len1 + matches / len2 + (matches - transpositions / 2) / matches) / 3;
 }
 
 /**
- * Calculates position-based hint score
+ * Scores a single field against a column header
  */
-function scorePositionHint(field: InternalField, columnIndex: number, totalColumns: number): number {
-  // Common field positions in Austrian/German exports
-  const positionHints: Record<InternalField, number[]> = {
-    'amsId': [0, 1], // Usually first or second column
-    'lastName': [1, 2], // Early columns
-    'firstName': [2, 3],
-    'birthDate': [3, 4, 5],
-    'phone': [4, 5, 6],
-    'email': [5, 6, 7],
-    'address': [6, 7, 8],
-    'status': [-3, -2, -1], // Often near end (negative = from end)
-    'priority': [-2, -1],
-    'note': [-1] // Usually last column
+function scoreFieldMatch(
+  field: InternalField,
+  columnHeader: string,
+  sampleRows?: string[][],
+  weights: ScoringWeights = DEFAULT_SCORING_WEIGHTS
+): ColumnGuess {
+  const normalized = normalizeHeader(columnHeader);
+  const aliases = getAliases(field);
+  const reasons: string[] = [];
+  let confidence = 0;
+  
+  const hints = {
+    exactAlias: false,
+    tokenOverlap: 0,
+    fuzzyScore: 0,
+    contentHints: [] as string[]
   };
+
+  // 1. Exact alias match (highest priority)
+  const exactMatch = findFieldByAlias(columnHeader);
+  if (exactMatch === field) {
+    confidence += weights.exactAlias;
+    hints.exactAlias = true;
+    reasons.push('Exakte Übereinstimmung mit bekanntem Alias');
+  }
+
+  // 2. Token overlap scoring
+  let bestTokenOverlap = 0;
+  let bestAlias = '';
   
-  const hints = positionHints[field];
-  if (!hints) return 0;
+  for (const alias of aliases) {
+    const overlap = getTokenOverlap(columnHeader, alias);
+    if (overlap > bestTokenOverlap) {
+      bestTokenOverlap = overlap;
+      bestAlias = alias;
+    }
+  }
   
-  // Convert negative positions to actual indices
-  const actualHints = hints.map(pos => 
-    pos < 0 ? totalColumns + pos : pos
-  );
+  if (bestTokenOverlap > 0) {
+    const tokenScore = bestTokenOverlap * weights.tokenOverlap;
+    confidence += tokenScore;
+    hints.tokenOverlap = bestTokenOverlap;
+    
+    if (bestTokenOverlap >= 0.8) {
+      reasons.push(`Hohe Token-Übereinstimmung mit "${bestAlias}" (${Math.round(bestTokenOverlap * 100)}%)`);
+    } else if (bestTokenOverlap >= 0.5) {
+      reasons.push(`Mittlere Token-Übereinstimmung mit "${bestAlias}" (${Math.round(bestTokenOverlap * 100)}%)`);
+    }
+  }
+
+  // 3. Fuzzy matching (Levenshtein + Jaro)
+  let bestFuzzyScore = 0;
+  let bestFuzzyAlias = '';
   
-  // Check if current position matches any hint
-  const matches = actualHints.some(hintPos => 
-    Math.abs(columnIndex - hintPos) <= 1 // Allow ±1 tolerance
-  );
+  for (const alias of aliases) {
+    const levenshtein = calculateFuzzyScore(normalized.fixed, normalizeHeader(alias).fixed);
+    const jaro = jaroSimilarity(normalized.fixed, normalizeHeader(alias).fixed);
+    const fuzzyScore = Math.max(levenshtein, jaro);
+    
+    if (fuzzyScore > bestFuzzyScore) {
+      bestFuzzyScore = fuzzyScore;
+      bestFuzzyAlias = alias;
+    }
+  }
   
-  return matches ? 0.3 : 0;
+  if (bestFuzzyScore > 0.6) {
+    const fuzzyWeight = bestFuzzyScore * weights.fuzzyMatch;
+    confidence += fuzzyWeight;
+    hints.fuzzyScore = bestFuzzyScore;
+    reasons.push(`Ähnlichkeit mit "${bestFuzzyAlias}" (${Math.round(bestFuzzyScore * 100)}%)`);
+  }
+
+  // 4. Content-based hints (if sample data available)
+  if (sampleRows && sampleRows.length > 0) {
+    // Extract column index for this header (simplified - assumes headers are in order)
+    const columnIndex = 0; // TODO: This should be determined by the caller
+    const sampleValues = sampleRows
+      .map(row => row[columnIndex])
+      .filter(val => val && typeof val === 'string')
+      .slice(0, 10);
+
+    if (sampleValues.length > 0) {
+      const contentSuggestions = suggestFieldsFromContent(sampleValues);
+      const matchingSuggestion = contentSuggestions.find(s => s.field === field);
+      
+      if (matchingSuggestion && matchingSuggestion.confidence > 0.5) {
+        const contentBoost = matchingSuggestion.confidence * weights.contentHint;
+        confidence += contentBoost;
+        hints.contentHints.push(matchingSuggestion.reason);
+        reasons.push(`Inhaltsanalyse: ${matchingSuggestion.reason}`);
+      }
+    }
+  }
+
+  // Normalize confidence to 0-1 range
+  confidence = Math.min(confidence, 1.0);
+
+  return {
+    field,
+    confidence,
+    reasons,
+    hints
+  };
 }
 
 /**
- * Main column guessing function
+ * Guesses the best field mapping for a column
  */
 export function guessColumn(
   field: InternalField,
   candidates: string[],
-  sampleRows?: string[][],
-  weights: ScoringWeights = DEFAULT_SCORING_WEIGHTS
-): ColumnGuess[] {
-  const guesses: ColumnGuess[] = [];
-  
-  candidates.forEach((candidate, columnIndex) => {
-    const normalized = normalizeHeader(candidate);
-    const reasons: string[] = [];
-    let totalScore = 0;
-    
-    // 1. Exact alias match
-    const exactMatch = scoreExactAlias(field, normalized.fixed);
-    if (exactMatch.score > 0) {
-      totalScore += exactMatch.score * weights.exactAlias;
-      reasons.push(`Exakte Übereinstimmung: "${exactMatch.matchedAlias}"`);
-    }
-    
-    // 2. Token overlap
-    const tokenMatch = scoreTokenOverlap(field, normalized.tokens);
-    if (tokenMatch.score > 0) {
-      totalScore += tokenMatch.score * weights.tokenOverlap;
-      reasons.push(`Token-Überlappung: ${tokenMatch.overlappingTokens.join(', ')}`);
-    }
-    
-    // 3. Fuzzy matching
-    const fuzzyMatch = scoreFuzzyMatch(field, normalized.fixed);
-    if (fuzzyMatch.score > 0) {
-      totalScore += fuzzyMatch.score * weights.fuzzyMatch;
-      reasons.push(`Ähnlichkeit (${fuzzyMatch.algorithm}): "${fuzzyMatch.bestMatch}" (${Math.round(fuzzyMatch.score * 100)}%)`);
-    }
-    
-    // 4. Content analysis boost
-    if (sampleRows && sampleRows.length > 0) {
-      const columnSamples = sampleRows
-        .map(row => row[columnIndex])
-        .filter(val => val != null && String(val).trim().length > 0)
-        .map(val => String(val).trim());
-      
-      if (columnSamples.length > 0) {
-        const contentBoost = getContentBoost(field, columnSamples);
-        if (contentBoost > 0) {
-          totalScore += contentBoost * weights.contentHint;
-          reasons.push(`Inhalts-Analyse: ${Math.round(contentBoost * 100)}% Übereinstimmung`);
-        }
-      }
-    }
-    
-    // 5. Position hint
-    const positionBoost = scorePositionHint(field, columnIndex, candidates.length);
-    if (positionBoost > 0) {
-      totalScore += positionBoost * weights.positionHint;
-      reasons.push(`Position-Hinweis: Spalte ${columnIndex + 1}`);
-    }
-    
-    // Only include meaningful guesses (>10% confidence)
-    if (totalScore >= 0.1) {
-      guesses.push({
-        field,
-        confidence: Math.min(totalScore, 1.0), // Cap at 100%
-        reasons,
-        hints: {
-          exactAlias: exactMatch.score > 0,
-          tokenOverlap: tokenMatch.score,
-          fuzzyScore: fuzzyMatch.score,
-          contentHints: sampleRows ? ['content-analyzed'] : []
-        }
-      });
-    }
-  });
-  
-  // Sort by confidence (highest first)
-  return guesses.sort((a, b) => b.confidence - a.confidence);
+  sampleRows?: string[][]
+): ColumnGuess {
+  if (!candidates || candidates.length === 0) {
+    return {
+      field,
+      confidence: 0,
+      reasons: ['Keine Kandidaten verfügbar'],
+      hints: {}
+    };
+  }
+
+  // Score each candidate
+  const scores = candidates.map(candidate => 
+    scoreFieldMatch(field, candidate, sampleRows)
+  );
+
+  // Return the best match
+  return scores.reduce((best, current) => 
+    current.confidence > best.confidence ? current : best
+  );
 }
 
 /**
- * Finds best mapping for all fields across all columns
+ * Guesses mappings for all fields against available columns
  */
-export function findBestMappings(
+export function guessAllMappings(
   fields: InternalField[],
-  headers: string[],
+  columnHeaders: string[],
   sampleRows?: string[][],
   weights?: ScoringWeights
 ): Record<string, ColumnGuess> {
-  const mappings: Record<string, ColumnGuess> = {};
-  const usedColumns = new Set<number>();
-  
-  // Score all field-column combinations
-  const allGuesses: Array<{ columnIndex: number; guess: ColumnGuess }> = [];
-  
-  fields.forEach(field => {
-    const guesses = guessColumn(field, headers, sampleRows, weights);
-    guesses.forEach((guess, index) => {
-      allGuesses.push({ columnIndex: index, guess });
-    });
-  });
-  
-  // Sort all guesses by confidence
-  allGuesses.sort((a, b) => b.guess.confidence - a.guess.confidence);
-  
-  // Assign best non-conflicting mappings
-  for (const { columnIndex, guess } of allGuesses) {
-    const columnKey = columnIndex.toString();
+  const result: Record<string, ColumnGuess> = {};
+  const usedColumns = new Set<string>();
+
+  // Sort fields by priority (required fields first)
+  const requiredFields: InternalField[] = ['firstName', 'lastName', 'amsId'];
+  const sortedFields = [
+    ...fields.filter(f => requiredFields.includes(f)),
+    ...fields.filter(f => !requiredFields.includes(f))
+  ];
+
+  for (const field of sortedFields) {
+    // Only consider unused columns to avoid conflicts
+    const availableColumns = columnHeaders.filter(col => !usedColumns.has(col));
     
-    // Skip if column already mapped or field already assigned
-    if (usedColumns.has(columnIndex) || Object.values(mappings).some(m => m.field === guess.field)) {
+    if (availableColumns.length === 0) {
+      result[field] = {
+        field,
+        confidence: 0,
+        reasons: ['Keine verfügbaren Spalten mehr'],
+        hints: {}
+      };
       continue;
     }
+
+    const bestGuess = guessColumn(field, availableColumns, sampleRows);
     
-    // Only assign high-confidence mappings automatically
-    if (guess.confidence >= 0.7) {
-      mappings[columnKey] = guess;
-      usedColumns.add(columnIndex);
+    // Only use columns with reasonable confidence
+    if (bestGuess.confidence > 0.3) {
+      // Find the actual column header that produced this score
+      const matchedColumn = availableColumns.find(col => {
+        const score = scoreFieldMatch(field, col, sampleRows, weights);
+        return Math.abs(score.confidence - bestGuess.confidence) < 0.001;
+      });
+      
+      if (matchedColumn) {
+        usedColumns.add(matchedColumn);
+        result[matchedColumn] = bestGuess;
+      }
     }
   }
-  
-  return mappings;
+
+  return result;
 }
 
 /**
- * Validates mapping quality and suggests improvements
+ * Calculates overall mapping quality score
  */
-export function validateMappingQuality(
+export function calculateMappingQuality(
   mappings: Record<string, ColumnGuess>,
-  requiredFields: InternalField[]
+  requiredFields: InternalField[] = ['firstName', 'lastName']
 ): {
-  score: number; // 0-1 overall quality
-  issues: Array<{
-    type: 'missing_required' | 'low_confidence' | 'duplicate_mapping';
-    field?: InternalField;
-    message: string;
-    severity: 'error' | 'warning';
-  }>;
+  score: number;
+  coverage: number;
+  requiredCoverage: number;
+  averageConfidence: number;
 } {
-  const issues: any[] = [];
-  let score = 1.0;
+  const allGuesses = Object.values(mappings);
+  const mappedFields = allGuesses.map(g => g.field);
   
-  // Check for missing required fields
-  const mappedFields = new Set(Object.values(mappings).map(m => m.field));
-  const missingRequired = requiredFields.filter(field => !mappedFields.has(field));
+  // Calculate coverage
+  const totalFields = Object.keys(mappings).length;
+  const coverage = totalFields > 0 ? allGuesses.length / totalFields : 0;
   
-  missingRequired.forEach(field => {
-    issues.push({
-      type: 'missing_required',
-      field,
-      message: `Pflichtfeld "${field}" ist nicht zugeordnet`,
-      severity: 'error'
-    });
-    score -= 0.2; // Penalty for missing required fields
-  });
+  // Calculate required field coverage
+  const mappedRequiredFields = requiredFields.filter(f => mappedFields.includes(f));
+  const requiredCoverage = requiredFields.length > 0 ? mappedRequiredFields.length / requiredFields.length : 1;
   
-  // Check for low confidence mappings
-  Object.values(mappings).forEach(mapping => {
-    if (mapping.confidence < 0.5) {
-      issues.push({
-        type: 'low_confidence',
-        field: mapping.field,
-        message: `Niedrige Zuordnungs-Sicherheit für "${mapping.field}" (${Math.round(mapping.confidence * 100)}%)`,
-        severity: 'warning'
-      });
-      score -= 0.1;
-    }
-  });
+  // Calculate average confidence
+  const averageConfidence = allGuesses.length > 0 
+    ? allGuesses.reduce((sum, g) => sum + g.confidence, 0) / allGuesses.length 
+    : 0;
   
-  // Check for duplicate field mappings
-  const fieldCounts = new Map<InternalField, number>();
-  Object.values(mappings).forEach(mapping => {
-    fieldCounts.set(mapping.field, (fieldCounts.get(mapping.field) || 0) + 1);
-  });
-  
-  fieldCounts.forEach((count, field) => {
-    if (count > 1) {
-      issues.push({
-        type: 'duplicate_mapping',
-        field,
-        message: `Feld "${field}" ist mehrfach zugeordnet`,
-        severity: 'error'
-      });
-      score -= 0.3;
-    }
-  });
+  // Overall score combines coverage and confidence
+  const score = (coverage * 0.3 + requiredCoverage * 0.4 + averageConfidence * 0.3);
   
   return {
-    score: Math.max(0, score),
-    issues
+    score,
+    coverage,
+    requiredCoverage,
+    averageConfidence
   };
 }

@@ -1,239 +1,283 @@
 /**
- * Column alias detection for Importer V2
- * Comprehensive alias mappings including broken umlauts and common variations
+ * Comprehensive alias dictionary for German/Austrian field mapping
+ * Includes broken encoding variants and common synonyms
  */
 
 import type { InternalField } from './types';
 
-// Comprehensive alias mappings with broken encoding variants
 export const ALIASES: Record<InternalField, string[]> = {
-  // AMS-ID variants
   amsId: [
-    'ams', 'ams-id', 'ams_id', 'amsid', 'amsnummer', 'ams-nummer', 'ams_nummer',
-    'kundennummer', 'kunden-nummer', 'kunden_nummer', 'clientid', 'client-id', 'client_id',
-    'id', 'nummer', 'fallnummer', 'fall-nummer', 'fall_nummer'
+    'ams id', 'ams-id', 'amsid', 'ams nummer', 'ams-nummer', 'amsnummer',
+    'ams code', 'ams-code', 'amscode', 'ams kennzeichen', 'ams-kennzeichen',
+    'ams referenz', 'ams-referenz', 'amsreferenz', 'ams key', 'ams-key',
+    'ams identifikation', 'ams-identifikation', 'ams ident', 'ams-ident',
+    'arbeitsmarktservice id', 'arbeitsmarktservice-id', 'arbeitsmarktservice nummer',
+    'ams�id', 'ams�nummer', 'ams�code' // broken variants
   ],
 
-  // Name fields with broken umlauts
   firstName: [
-    'vorname', 'vor-name', 'vor_name', 'firstname', 'first-name', 'first_name',
-    'givenname', 'given-name', 'given_name', 'vn', 'fname', 'prename',
-    'rufname', 'ruf-name', 'ruf_name'
+    'vorname', 'vor name', 'vor-name', 'first name', 'firstname', 'first-name',
+    'rufname', 'ruf name', 'ruf-name', 'taufname', 'tauf name', 'tauf-name',
+    'name vorname', 'name-vorname', 'vn', 'fn', 'givenname', 'given name',
+    'christian name', 'christian-name', 'prename', 'pre name', 'pre-name',
+    'vorname�', 'vor�name', 'rufname�' // broken variants
   ],
-  
+
   lastName: [
-    'nachname', 'nach-name', 'nach_name', 'lastname', 'last-name', 'last_name',
-    'familienname', 'familien-name', 'familien_name', 'surname', 'nn', 'lname',
-    'zuname', 'zu-name', 'zu_name'
+    'nachname', 'nach name', 'nach-name', 'familienname', 'familien name', 'familien-name',
+    'last name', 'lastname', 'last-name', 'surname', 'sur name', 'sur-name',
+    'zuname', 'zu name', 'zu-name', 'name nachname', 'name-nachname',
+    'nn', 'ln', 'sn', 'family name', 'family-name', 'geschlechtsname',
+    'nachname�', 'nach�name', 'familienname�', 'familien�name' // broken variants
   ],
 
   title: [
-    'titel', 'title', 'anrede', 'grad', 'degree', 'academic-title', 'academic_title',
-    'akademischer-titel', 'akademischer_titel', 'dr', 'prof', 'mag'
+    'titel', 'anrede', 'ansprache', 'title', 'salutation', 'prefix',
+    'akademischer titel', 'akademischer-titel', 'akademischertitel',
+    'grad', 'degree', 'dr', 'prof', 'mag', 'dipl', 'ing',
+    'herr', 'frau', 'mr', 'mrs', 'ms', 'miss',
+    'titel�', 'anrede�', 'grad�' // broken variants
   ],
 
   gender: [
-    'geschlecht', 'gender', 'sex', 'geschl', 'male-female', 'male_female',
-    'm-w', 'm_w', 'mann-frau', 'mann_frau'
+    'geschlecht', 'sex', 'gender', 'm/w', 'mw', 'm w', 'm-w',
+    'männlich weiblich', 'männlich-weiblich', 'male female', 'male-female',
+    'geschlechtsangabe', 'geschlechts angabe', 'geschlechts-angabe',
+    'geschlecht�', 'geschlechtsangabe�', 'm�nnlich', 'weiblich�' // broken variants
   ],
 
-  // Broken umlaut variants for common fields
   birthDate: [
-    'geburtsdatum', 'geburts-datum', 'geburts_datum', 'birthdate', 'birth-date', 'birth_date',
-    'geb-datum', 'geb_datum', 'gebdat', 'dob', 'date-of-birth', 'date_of_birth',
-    // Broken umlauts
-    'geburtsdatum', 'geburts�datum', 'geb�rtsdatum'
+    'geburtsdatum', 'geburts datum', 'geburts-datum', 'birth date', 'birthdate', 'birth-date',
+    'geboren', 'geboren am', 'geb', 'geb.', 'date of birth', 'dob',
+    'geburtstermin', 'geburts termin', 'geburts-termin', 'birthday',
+    'datum geburt', 'datum-geburt', 'datumgeburt',
+    'geburtsdatum�', 'geburts�datum', 'geboren�' // broken variants
   ],
 
   svNumber: [
-    'sv-nummer', 'sv_nummer', 'svnummer', 'sv-nr', 'sv_nr', 'svnr',
-    'sozialversicherungsnummer', 'sozialversicherungs-nummer', 'sozialversicherungs_nummer',
-    'social-security', 'social_security', 'ssn',
-    // Broken umlauts
-    'sv-n�mmer', 'sv_n�mmer', 'sozialversicher�ngsnummer'
+    'sv nummer', 'sv-nummer', 'svnummer', 'sv nr', 'sv-nr', 'svnr',
+    'sozialversicherungsnummer', 'sozialversicherungs nummer', 'sozialversicherungs-nummer',
+    'social security number', 'ssn', 'social security', 'social-security',
+    'versicherungsnummer', 'versicherungs nummer', 'versicherungs-nummer',
+    'sv kennzeichen', 'sv-kennzeichen', 'svkennzeichen',
+    'sv�nummer', 'sv�nr', 'sozialversicherungsnummer�', 'versicherungsnummer�' // broken variants
   ],
 
-  // Contact information
   phone: [
-    'telefon', 'tel', 'phone', 'telefonnummer', 'telefon-nummer', 'telefon_nummer',
-    'tel-nr', 'tel_nr', 'telnr', 'handy', 'mobil', 'mobile', 'cell', 'cellular',
-    'festnetz', 'fest-netz', 'fest_netz'
+    'telefon', 'tel', 'tel.', 'phone', 'telefonnummer', 'telefon nummer', 'telefon-nummer',
+    'handy', 'mobil', 'mobile', 'cell', 'cellular', 'smartphone',
+    'festnetz', 'fest netz', 'fest-netz', 'landline', 'land line', 'land-line',
+    'rufnummer', 'ruf nummer', 'ruf-nummer', 'phone number', 'phone-number',
+    'kontakt', 'kontaktnummer', 'kontakt nummer', 'kontakt-nummer',
+    'telefon�', 'tel�', 'handy�', 'mobil�', 'rufnummer�' // broken variants
   ],
 
   email: [
-    'email', 'e-mail', 'e_mail', 'mail', 'emailadresse', 'email-adresse', 'email_adresse',
-    'e-mail-adresse', 'e_mail_adresse', 'elektronische-post', 'elektronische_post'
+    'email', 'e-mail', 'e mail', 'mail', 'electronic mail', 'electronic-mail',
+    'email adresse', 'email-adresse', 'emailadresse', 'e-mail adresse', 'e-mail-adresse',
+    'mail adresse', 'mail-adresse', 'mailadresse', 'internet adresse', 'internet-adresse',
+    'elektronische post', 'elektronische-post', 'e-post', 'epost',
+    'kontakt email', 'kontakt-email', 'kontaktemail',
+    'email�', 'e�mail', 'mail�', 'mailadresse�' // broken variants
   ],
 
   address: [
-    'adresse', 'address', 'anschrift', 'wohnadresse', 'wohn-adresse', 'wohn_adresse',
-    'strasse', 'straße', 'street', 'str', 'hausnummer', 'haus-nummer', 'haus_nummer',
-    // Broken umlauts
-    'stra�e', 'stra�e', 'wohnadr�sse'
+    'adresse', 'anschrift', 'wohnadresse', 'wohn adresse', 'wohn-adresse',
+    'address', 'street address', 'street-address', 'home address', 'home-address',
+    'straße', 'strasse', 'str', 'str.', 'street', 'st', 'st.',
+    'wohnort', 'wohn ort', 'wohn-ort', 'residence', 'domicile',
+    'hausadresse', 'haus adresse', 'haus-adresse',
+    'adresse�', 'anschrift�', 'stra�e', 'stra�e�', 'wohnadresse�' // broken variants
   ],
 
   zip: [
-    'plz', 'postleitzahl', 'post-leitzahl', 'post_leitzahl', 'zipcode', 'zip-code', 'zip_code',
-    'postal-code', 'postal_code', 'postalcode'
+    'plz', 'postleitzahl', 'post leitzahl', 'post-leitzahl', 'zip', 'zip code', 'zip-code',
+    'postal code', 'postal-code', 'postcode', 'post code', 'post-code',
+    'lkz', 'landeskennzahl', 'landes kennzahl', 'landes-kennzahl',
+    'plz�', 'postleitzahl�', 'post�leitzahl' // broken variants
   ],
 
   city: [
-    'ort', 'stadt', 'city', 'wohnort', 'wohn-ort', 'wohn_ort',
-    'gemeinde', 'municipality'
+    'ort', 'stadt', 'gemeinde', 'city', 'town', 'municipality',
+    'wohnort', 'wohn ort', 'wohn-ort', 'heimatort', 'heimat ort', 'heimat-ort',
+    'ortschaft', 'siedlung', 'place', 'location', 'locality',
+    'stadtname', 'stadt name', 'stadt-name', 'ortsname', 'orts name', 'orts-name',
+    'ort�', 'stadt�', 'gemeinde�', 'wohnort�' // broken variants
   ],
 
   countryCode: [
-    'land', 'country', 'landcode', 'land-code', 'land_code',
-    'countrycode', 'country-code', 'country_code', 'laendercode', 'ländercode',
-    // Broken umlauts
-    'l�ndercode', 'l�nder-code'
+    'land', 'country', 'staat', 'nation', 'ländercode', 'länder code', 'länder-code',
+    'country code', 'country-code', 'countrycode', 'iso code', 'iso-code', 'isocode',
+    'landeskürzel', 'landes kürzel', 'landes-kürzel', 'staatscode', 'staats code', 'staats-code',
+    'land�', 'l�ndercode', 'l�nder�code', 'landeskürzel�' // broken variants
   ],
 
   areaCode: [
-    'vorwahl', 'vor-wahl', 'vor_wahl', 'areacode', 'area-code', 'area_code',
-    'ortsvorwahl', 'orts-vorwahl', 'orts_vorwahl'
+    'vorwahl', 'vor wahl', 'vor-wahl', 'area code', 'area-code', 'areacode',
+    'ortsvorwahl', 'orts vorwahl', 'orts-vorwahl', 'telefonvorwahl', 'telefon vorwahl', 'telefon-vorwahl',
+    'regional code', 'regional-code', 'regionalcode', 'dial code', 'dial-code',
+    'vorwahl�', 'vor�wahl', 'ortsvorwahl�', 'telefonvorwahl�' // broken variants
   ],
 
   phoneNumber: [
-    'rufnummer', 'ruf-nummer', 'ruf_nummer', 'phonenumber', 'phone-number', 'phone_number',
-    'durchwahl', 'durch-wahl', 'durch_wahl'
+    'rufnummer', 'ruf nummer', 'ruf-nummer', 'telefonnummer', 'telefon nummer', 'telefon-nummer',
+    'phone number', 'phone-number', 'phonenumber', 'number', 'nr', 'nr.',
+    'durchwahl', 'durch wahl', 'durch-wahl', 'extension', 'ext', 'ext.',
+    'rufnummer�', 'ruf�nummer', 'telefonnummer�', 'telefon�nummer' // broken variants
   ],
 
-  // AMS-specific fields
   amsBookingDate: [
-    'zubuchung', 'zubuchungsdatum', 'zubuchungs-datum', 'zubuchungs_datum',
-    'buchung', 'buchungsdatum', 'buchungs-datum', 'buchungs_datum',
-    'ams-buchung', 'ams_buchung', 'amsbuchung', 'booking-date', 'booking_date'
+    'ams buchung', 'ams-buchung', 'amsbuchung', 'ams buchungsdatum', 'ams-buchungsdatum',
+    'ams anmeldung', 'ams-anmeldung', 'amsanmeldung', 'ams anmeldedatum', 'ams-anmeldedatum',
+    'ams eintrag', 'ams-eintrag', 'amseintrag', 'ams eintragsdatum', 'ams-eintragsdatum',
+    'arbeitslos gemeldet', 'arbeitslos-gemeldet', 'arbeitslosgemeldet',
+    'ams�buchung', 'ams�anmeldung', 'arbeitslos�gemeldet' // broken variants
   ],
 
   entryDate: [
-    'eintritt', 'eintrittsdatum', 'eintritts-datum', 'eintritts_datum',
-    'entry-date', 'entry_date', 'entrydate', 'start-date', 'start_date',
-    'beginn', 'beginndatum', 'beginn-datum', 'beginn_datum'
+    'eintrittsdatum', 'eintritts datum', 'eintritts-datum', 'entry date', 'entry-date',
+    'eintritt', 'beginn', 'start', 'startdatum', 'start datum', 'start-datum',
+    'aufnahme', 'aufnahmedatum', 'aufnahme datum', 'aufnahme-datum',
+    'anmeldung', 'anmeldedatum', 'anmelde datum', 'anmelde-datum',
+    'eintrittsdatum�', 'eintritts�datum', 'beginn�', 'startdatum�' // broken variants
   ],
 
   exitDate: [
-    'austritt', 'austrittsdatum', 'austritts-datum', 'austritts_datum',
-    'exit-date', 'exit_date', 'exitdate', 'end-date', 'end_date',
-    'ende', 'endedatum', 'ende-datum', 'ende_datum'
+    'austrittsdatum', 'austritts datum', 'austritts-datum', 'exit date', 'exit-date',
+    'austritt', 'ende', 'end', 'enddatum', 'end datum', 'end-datum',
+    'abmeldung', 'abmeldedatum', 'abmelde datum', 'abmelde-datum',
+    'kündigung', 'kündigungsdatum', 'kündigung datum', 'kündigung-datum',
+    'austrittsdatum�', 'austritts�datum', 'ende�', 'k�ndigung' // broken variants
   ],
 
   amsAgentLastName: [
-    'ams-betreuer-nachname', 'ams_betreuer_nachname', 'amsbetreuer-nachname',
-    'ams-agent-lastname', 'ams_agent_lastname', 'amsagent-lastname',
-    'berater-nachname', 'berater_nachname', 'beraternachname'
+    'ams berater nachname', 'ams-berater-nachname', 'ams berater name',
+    'ams agent nachname', 'ams-agent-nachname', 'ams agent name',
+    'betreuer nachname', 'betreuer-nachname', 'betreuername',
+    'sachbearbeiter nachname', 'sachbearbeiter-nachname',
+    'ams�berater�nachname', 'betreuer�nachname' // broken variants
   ],
 
   amsAgentFirstName: [
-    'ams-betreuer-vorname', 'ams_betreuer_vorname', 'amsbetreuer-vorname',
-    'ams-agent-firstname', 'ams_agent_firstname', 'amsagent-firstname',
-    'berater-vorname', 'berater_vorname', 'beratervorname'
+    'ams berater vorname', 'ams-berater-vorname', 'ams berater vorname',
+    'ams agent vorname', 'ams-agent-vorname', 'ams agent vorname',
+    'betreuer vorname', 'betreuer-vorname', 'betreuervorname',
+    'sachbearbeiter vorname', 'sachbearbeiter-vorname',
+    'ams�berater�vorname', 'betreuer�vorname' // broken variants
   ],
 
   amsAdvisor: [
-    'ams-berater', 'ams_berater', 'amsberater', 'ams-betreuer', 'ams_betreuer', 'amsbetreuer',
-    'berater', 'betreuer', 'advisor', 'agent', 'sachbearbeiter', 'sb',
-    'ansprechpartner', 'ansprech-partner', 'ansprech_partner'
+    'ams berater', 'ams-berater', 'amsberater', 'ams beraterin', 'ams-beraterin',
+    'ams agent', 'ams-agent', 'amsagent', 'ams betreuer', 'ams-betreuer',
+    'sachbearbeiter', 'sach bearbeiter', 'sach-bearbeiter', 'bearbeiter',
+    'ansprechpartner', 'ansprech partner', 'ansprech-partner',
+    'ams�berater', 'ams�agent', 'sachbearbeiter�' // broken variants
   ],
 
-  // Internal fields
   note: [
-    'notiz', 'notizen', 'note', 'notes', 'bemerkung', 'bemerkungen', 'anmerkung', 'anmerkungen',
-    'kommentar', 'kommentare', 'comment', 'comments', 'hinweis', 'hinweise'
+    'notiz', 'bemerkung', 'anmerkung', 'kommentar', 'hinweis',
+    'note', 'comment', 'remark', 'memo', 'observation',
+    'beschreibung', 'details', 'zusatz', 'ergänzung', 'info',
+    'text', 'freitext', 'frei text', 'frei-text',
+    'notiz�', 'bemerkung�', 'anmerkung�', 'erg�nzung' // broken variants
   ],
 
   internalCode: [
-    'interner-code', 'interner_code', 'internercode', 'internal-code', 'internal_code',
-    'internalcode', 'code', 'referenz', 'reference', 'ref'
+    'interner code', 'interner-code', 'internercode', 'internal code', 'internal-code',
+    'code', 'kennzeichen', 'kennung', 'schlüssel', 'key', 'id',
+    'referenz', 'referenznummer', 'referenz nummer', 'referenz-nummer',
+    'aktenzeichen', 'akten zeichen', 'akten-zeichen',
+    'interner�code', 'kennzeichen�', 'schl�ssel', 'referenz�' // broken variants
   ],
 
-  // Status and workflow
   status: [
-    'status', 'zustand', 'state', 'bearbeitungsstatus', 'bearbeitungs-status', 'bearbeitungs_status',
-    'fallstatus', 'fall-status', 'fall_status', 'case-status', 'case_status'
+    'status', 'zustand', 'stand', 'state', 'condition',
+    'bearbeitungsstatus', 'bearbeitungs status', 'bearbeitungs-status',
+    'verfahrensstatus', 'verfahrens status', 'verfahrens-status',
+    'fallstatus', 'fall status', 'fall-status', 'case status', 'case-status',
+    'status�', 'zustand�', 'bearbeitungsstatus�' // broken variants
   ],
 
   priority: [
-    'priorität', 'prioritaet', 'priority', 'prio', 'wichtigkeit', 'dringlichkeit',
-    'urgency', 'importance',
-    // Broken umlauts
-    'priorit�t', 'priorit�t'
+    'priorität', 'priority', 'dringlichkeit', 'wichtigkeit', 'relevanz',
+    'prio', 'rang', 'ranking', 'gewichtung', 'bedeutung',
+    'eiligkeit', 'urgency', 'importance', 'significance',
+    'priorit�t', 'dringlichkeit�', 'wichtigkeit�' // broken variants
   ],
 
   result: [
-    'ergebnis', 'result', 'outcome', 'resultat', 'ausgang', 'erfolg',
-    'abschluss', 'conclusion', 'resolution'
+    'ergebnis', 'resultat', 'result', 'outcome', 'ausgang',
+    'erfolg', 'abschluss', 'fazit', 'bilanz', 'schluss',
+    'endergebnis', 'end ergebnis', 'end-ergebnis', 'final result', 'final-result',
+    'ergebnis�', 'resultat�', 'erfolg�', 'abschluss�' // broken variants
   ],
 
   angebot: [
-    'angebot', 'offer', 'maßnahme', 'massnahme', 'maßnahmen', 'massnahmen',
-    'programm', 'program', 'kurs', 'course', 'training',
-    // Broken umlauts
-    'ma�nahme', 'ma�nahmen', 'ma�nahmennummer'
+    'angebot', 'offer', 'vorschlag', 'empfehlung', 'maßnahme',
+    'kursangebot', 'kurs angebot', 'kurs-angebot', 'course offer', 'course-offer',
+    'schulungsangebot', 'schulungs angebot', 'schulungs-angebot',
+    'weiterbildung', 'weiter bildung', 'weiter-bildung', 'training',
+    'angebot�', 'ma�nahme', 'ma�nahme�', 'weiterbildung�' // broken variants
   ],
 
   followUp: [
-    'follow-up', 'follow_up', 'followup', 'termin', 'wiedervorlage', 'wieder-vorlage', 'wieder_vorlage',
-    'naechster-termin', 'nächster-termin', 'naechster_termin', 'nächster_termin',
-    'next-appointment', 'next_appointment', 'appointment',
-    // Broken umlauts
-    'n�chster-termin', 'n�chster_termin', 'wiedervorl�ge'
+    'nachfass', 'nach fass', 'nach-fass', 'follow up', 'follow-up', 'followup',
+    'nachbearbeitung', 'nach bearbeitung', 'nach-bearbeitung',
+    'wiedervorlage', 'wieder vorlage', 'wieder-vorlage',
+    'nachkontrolle', 'nach kontrolle', 'nach-kontrolle',
+    'nachfass�', 'nach�fass', 'nachbearbeitung�', 'wiedervorlage�' // broken variants
   ],
 
   lastActivity: [
-    'letzte-aktivität', 'letzte_aktivität', 'letzteaktivität',
-    'last-activity', 'last_activity', 'lastactivity',
-    'letzte-aktion', 'letzte_aktion', 'letzteaktion',
-    // Broken umlauts
-    'letzte-aktivit�t', 'letzte_aktivit�t', 'letzteaktivit�t'
+    'letzte aktivität', 'letzte-aktivität', 'letzteaktivität', 'last activity', 'last-activity',
+    'letzter kontakt', 'letzter-kontakt', 'letzterkontakt', 'last contact', 'last-contact',
+    'letzte aktion', 'letzte-aktion', 'letzteaktion', 'last action', 'last-action',
+    'letzte bearbeitung', 'letzte-bearbeitung', 'letztebearbeitung',
+    'letzte�aktivit�t', 'letzte�aktivit�t', 'letzter�kontakt' // broken variants
   ],
 
   assignedTo: [
-    'zugewiesen-an', 'zugewiesen_an', 'zugewiesenan', 'assigned-to', 'assigned_to', 'assignedto',
-    'zuständig', 'zustaendig', 'responsible', 'owner', 'sachbearbeiter', 'sb',
-    // Broken umlauts
-    'zust�ndig', 'zust�ndig'
+    'zugewiesen an', 'zugewiesen-an', 'zugewiesenan', 'assigned to', 'assigned-to',
+    'verantwortlich', 'zuständig', 'bearbeiter', 'sachbearbeiter',
+    'betreuer', 'ansprechpartner', 'kontaktperson', 'kontakt person', 'kontakt-person',
+    'owner', 'responsible', 'handler', 'agent',
+    'zugewiesen�an', 'verantwortlich�', 'zust�ndig', 'betreuer�' // broken variants
   ]
 };
 
-export interface NormalizationResult {
-  fixed: string;
-  tokens: string[];
-  original: string;
-  repairs: string[];
+/**
+ * Gets all aliases for a given internal field
+ */
+export function getAliases(field: InternalField): string[] {
+  return ALIASES[field] || [];
 }
 
-export interface ContentAnalysis {
-  hints: ContentHint[];
-  patterns: {
-    datePattern?: RegExp;
-    emailPattern?: RegExp;
-    phonePattern?: RegExp;
-    zipPattern?: RegExp;
-    svPattern?: RegExp;
-    amsIdPattern?: RegExp;
-  };
+/**
+ * Finds internal field by alias (case-insensitive)
+ */
+export function findFieldByAlias(alias: string): InternalField | null {
+  const normalizedAlias = alias.toLowerCase().trim();
+  
+  for (const [field, aliases] of Object.entries(ALIASES)) {
+    if (aliases.some(a => a.toLowerCase() === normalizedAlias)) {
+      return field as InternalField;
+    }
+  }
+  
+  return null;
 }
 
-export interface ContentHint {
-  type: 'date' | 'email' | 'phone' | 'zip' | 'svNumber' | 'amsId' | 'name' | 'address';
-  confidence: number;
-  samples: string[];
-  pattern?: string;
+/**
+ * Gets all possible aliases across all fields (for reverse lookup)
+ */
+export function getAllAliases(): Record<string, InternalField> {
+  const result: Record<string, InternalField> = {};
+  
+  for (const [field, aliases] of Object.entries(ALIASES)) {
+    for (const alias of aliases) {
+      result[alias.toLowerCase()] = field as InternalField;
+    }
+  }
+  
+  return result;
 }
-
-export interface ScoringWeights {
-  exactAlias: number;
-  tokenOverlap: number;
-  fuzzyMatch: number;
-  contentHint: number;
-  positionHint: number;
-}
-
-export const DEFAULT_SCORING_WEIGHTS: ScoringWeights = {
-  exactAlias: 1.0,
-  tokenOverlap: 0.7,
-  fuzzyMatch: 0.4,
-  contentHint: 0.6,
-  positionHint: 0.2
-};
