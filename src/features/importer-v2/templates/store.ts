@@ -1,106 +1,155 @@
 /**
  * Template storage and management for Importer V2
- * Persistent mapping templates with versioning and sharing
+ * Handles template CRUD operations and auto-detection
  */
 
-import { db } from '../../../data/db';
-import type { MappingTemplateV2 } from '../core/types';
+import type { 
+  ImportTemplate, 
+  TemplateMatchResult, 
+  TemplateSearchQuery,
+  TemplateMetadata 
+} from './types';
 
 // TODO: Implement template storage system
-// - Store templates in IndexedDB
-// - Version management for template evolution
-// - Template sharing between users
-// - Auto-detection based on file patterns
-// - Template validation and migration
+// - Local storage for user templates
+// - Built-in system templates
+// - Template import/export functionality
+// - Auto-detection and matching
+// - Usage analytics and optimization
 
-export class TemplateStoreV2 {
-  private static readonly STORAGE_KEY = 'importer_v2_templates';
+/**
+ * Template store singleton
+ */
+class TemplateStore {
+  private templates: Map<string, ImportTemplate> = new Map();
+  private initialized = false;
 
-  static async saveTemplate(template: MappingTemplateV2): Promise<void> {
-    // TODO: Implement template saving
-    // - Validate template structure
-    // - Store in encrypted format
-    // - Update template index
-    // - Handle conflicts and versioning
-    // - Notify other components of changes
-    
-    console.log('TODO: Save template', template.name);
-  }
-
-  static async loadTemplate(id: string): Promise<MappingTemplateV2 | null> {
-    // TODO: Implement template loading
-    // - Retrieve from storage
-    // - Decrypt if necessary
+  /**
+   * Initialize store with built-in templates
+   */
+  async initialize(): Promise<void> {
+    // TODO: Implement store initialization
+    // - Load built-in system templates
+    // - Load user templates from storage
     // - Validate template integrity
-    // - Handle missing or corrupted templates
-    // - Apply any necessary migrations
+    // - Set up change listeners
     
-    console.log('TODO: Load template', id);
-    return null;
+    this.initialized = true;
   }
 
-  static async listTemplates(): Promise<MappingTemplateV2[]> {
-    // TODO: Implement template listing
-    // - Retrieve all available templates
-    // - Sort by usage frequency or date
-    // - Filter by user permissions
-    // - Include template metadata
-    // - Handle storage errors gracefully
+  /**
+   * Find templates matching the given criteria
+   */
+  async findMatchingTemplates(
+    query: TemplateSearchQuery
+  ): Promise<TemplateMatchResult[]> {
+    // TODO: Implement template matching
+    // - Test detection patterns against query
+    // - Calculate match confidence scores
+    // - Return sorted results by confidence
+    // - Support fuzzy matching
     
-    console.log('TODO: List templates');
     return [];
   }
 
-  static async deleteTemplate(id: string): Promise<void> {
-    // TODO: Implement template deletion
-    // - Remove from storage
-    // - Update template index
-    // - Handle references from other templates
-    // - Confirm deletion with user
-    // - Log deletion for audit trail
-    
-    console.log('TODO: Delete template', id);
+  /**
+   * Get template by ID
+   */
+  async getTemplate(id: string): Promise<ImportTemplate | null> {
+    // TODO: Implement template retrieval
+    return this.templates.get(id) || null;
   }
 
-  static async autoDetectTemplate(
-    fileName: string,
-    headers: string[]
-  ): Promise<MappingTemplateV2 | null> {
-    // TODO: Implement auto-detection
-    // - Match file name patterns
-    // - Analyze header similarity
-    // - Score template compatibility
-    // - Return best matching template
-    // - Learn from user confirmations
+  /**
+   * Save or update template
+   */
+  async saveTemplate(template: ImportTemplate): Promise<void> {
+    // TODO: Implement template saving
+    // - Validate template structure
+    // - Update metadata timestamps
+    // - Persist to storage
+    // - Emit change events
     
-    console.log('TODO: Auto-detect template', fileName);
+    this.templates.set(template.metadata.id, template);
+  }
+
+  /**
+   * Delete template
+   */
+  async deleteTemplate(id: string): Promise<boolean> {
+    // TODO: Implement template deletion
+    // - Check if template is system template
+    // - Remove from storage
+    // - Emit change events
+    
+    return this.templates.delete(id);
+  }
+
+  /**
+   * List all templates with optional filtering
+   */
+  async listTemplates(filter?: {
+    category?: string;
+    tags?: string[];
+    search?: string;
+  }): Promise<TemplateMetadata[]> {
+    // TODO: Implement template listing
+    // - Apply filters
+    // - Sort by usage/relevance
+    // - Return metadata only
+    
+    return [];
+  }
+
+  /**
+   * Auto-detect best template for import data
+   */
+  async autoDetectTemplate(
+    filename: string,
+    headers: string[],
+    sampleRows?: string[][]
+  ): Promise<TemplateMatchResult | null> {
+    // TODO: Implement auto-detection
+    // - Test all templates against input
+    // - Calculate confidence scores
+    // - Return best match above threshold
+    
     return null;
   }
 
-  static async createFromMapping(
+  /**
+   * Create template from current mapping
+   */
+  async createTemplateFromMapping(
     name: string,
-    sourcePattern: string,
-    mappings: Record<string, string>
-  ): Promise<MappingTemplateV2> {
+    description: string,
+    mappings: Record<string, string>,
+    detectionHints: {
+      filename?: string;
+      headers: string[];
+    }
+  ): Promise<ImportTemplate> {
     // TODO: Implement template creation
-    // - Generate unique ID
-    // - Validate mapping completeness
-    // - Extract normalization rules
-    // - Set default validation rules
-    // - Save to storage
+    // - Generate template from current state
+    // - Create detection patterns
+    // - Set appropriate metadata
     
-    const template: MappingTemplateV2 = {
-      id: `template-${Date.now()}`,
-      name,
-      sourcePattern,
-      columnMappings: mappings,
-      normalizationRules: [],
-      validationRules: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    throw new Error('Not implemented');
+  }
 
-    await this.saveTemplate(template);
-    return template;
+  /**
+   * Update template usage statistics
+   */
+  async recordTemplateUsage(templateId: string): Promise<void> {
+    // TODO: Implement usage tracking
+    // - Increment usage count
+    // - Update last used timestamp
+    // - Persist changes
   }
 }
+
+// Export singleton instance
+export const templateStore = new TemplateStore();
+
+// Initialize on first import
+templateStore.initialize().catch(console.error);

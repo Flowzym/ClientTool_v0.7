@@ -1,132 +1,194 @@
 /**
- * Data preview pane for Importer V2
- * Real-time preview of mapped and transformed data
+ * Data preview pane component
+ * Shows preview of imported data with validation highlights
  */
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/Card';
-import { Badge } from '../../../components/Badge';
-import { Eye, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 
-// TODO: Implement data preview functionality
-// - Real-time mapping preview
+// TODO: Implement data preview pane
+// - Tabular data preview with virtual scrolling
 // - Validation issue highlighting
-// - Data quality indicators
-// - Sample data display
-// - Export preview
+// - Column mapping visualization
+// - Data transformation preview
+// - Export preview functionality
+
+interface PreviewData {
+  headers: string[];
+  rows: any[][];
+  mappings: Record<string, string>;
+  validationIssues: Array<{
+    row: number;
+    column: string;
+    type: 'error' | 'warning' | 'info';
+    message: string;
+  }>;
+}
 
 interface PreviewPaneProps {
-  mappedData: any[];
-  validationResults: any[];
+  data?: PreviewData;
+  isLoading?: boolean;
   maxRows?: number;
-  showIssuesOnly?: boolean;
+  showValidation?: boolean;
+  onRowClick?: (rowIndex: number) => void;
 }
 
-export function PreviewPane({
-  mappedData,
-  validationResults,
-  maxRows = 50,
-  showIssuesOnly = false
-}: PreviewPaneProps) {
-  // TODO: Implement preview pane logic
-  // - Filter data based on showIssuesOnly
-  // - Highlight validation issues
-  // - Show data quality metrics
-  // - Provide drill-down capabilities
-  // - Support export of preview data
+export const PreviewPane: React.FC<PreviewPaneProps> = ({
+  data,
+  isLoading = false,
+  maxRows = 100,
+  showValidation = true,
+  onRowClick
+}) => {
+  // TODO: Implement preview pane state and interactions
+  // - Virtual scrolling for large datasets
+  // - Column resizing and reordering
+  // - Validation issue tooltips
+  // - Row selection and highlighting
+  // - Export preview functionality
 
-  const displayData = mappedData.slice(0, maxRows);
-  const issueCount = validationResults.filter(r => !r.valid).length;
+  if (isLoading) {
+    return (
+      <div className="preview-pane loading">
+        <div className="loading-indicator">
+          <span className="spinner">⏳</span>
+          <span>Loading preview...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="preview-pane empty">
+        <div className="empty-state">
+          <span className="empty-icon">📄</span>
+          <h3>No Data to Preview</h3>
+          <p>Upload a file and configure mappings to see a preview</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <div className="flex items-center gap-2">
-              <Eye className="w-5 h-5" />
-              Daten-Vorschau
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Badge variant="default" size="sm">
-                  {displayData.length} von {mappedData.length} Zeilen
-                </Badge>
-                {issueCount > 0 && (
-                  <Badge variant="error" size="sm">
-                    <AlertTriangle className="w-3 h-3 mr-1" />
-                    {issueCount} Probleme
-                  </Badge>
-                )}
-              </div>
+    <div className="preview-pane">
+      {/* TODO: Preview header with stats */}
+      <div className="preview-header">
+        <div className="preview-stats">
+          <span className="stat">
+            <strong>{data.rows.length}</strong> rows
+          </span>
+          <span className="stat">
+            <strong>{data.headers.length}</strong> columns
+          </span>
+          {showValidation && (
+            <span className="stat validation-stat">
+              <strong>{data.validationIssues.length}</strong> issues
+            </span>
+          )}
+        </div>
+        
+        <div className="preview-actions">
+          <button className="export-preview-btn">📤 Export Preview</button>
+          <button className="toggle-validation-btn">
+            {showValidation ? '👁️ Hide Issues' : '👁️ Show Issues'}
+          </button>
+        </div>
+      </div>
+
+      {/* TODO: Preview table */}
+      <div className="preview-table-container">
+        <table className="preview-table">
+          <thead>
+            <tr>
+              <th className="row-number-header">#</th>
+              {data.headers.map((header, index) => (
+                <th key={index} className="preview-header-cell">
+                  <div className="header-content">
+                    <span className="header-name">{header}</span>
+                    {data.mappings[header] && (
+                      <span className="mapped-field">
+                        → {data.mappings[header]}
+                      </span>
+                    )}
+                  </div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {data.rows.slice(0, maxRows).map((row, rowIndex) => {
+              const rowIssues = data.validationIssues.filter(issue => issue.row === rowIndex);
+              const hasErrors = rowIssues.some(issue => issue.type === 'error');
+              const hasWarnings = rowIssues.some(issue => issue.type === 'warning');
               
-              <div className="flex items-center gap-2">
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={showIssuesOnly}
-                    onChange={() => {}}
-                    className="rounded border-gray-300"
-                  />
-                  Nur Probleme zeigen
-                </label>
-              </div>
-            </div>
-            
-            <div className="border rounded-lg overflow-hidden">
-              <div className="bg-gray-50 px-3 py-2 border-b">
-                <div className="text-sm font-medium">
-                  TODO: Interaktive Daten-Tabelle mit Validierungs-Highlighting
-                </div>
-              </div>
-              
-              <div className="max-h-96 overflow-auto">
-                {displayData.length > 0 ? (
-                  <div className="divide-y">
-                    {displayData.map((row, index) => (
-                      <div key={index} className="px-3 py-2 hover:bg-gray-50">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500 w-8">
-                            {index + 1}
+              return (
+                <tr
+                  key={rowIndex}
+                  className={`preview-row ${hasErrors ? 'has-errors' : ''} ${hasWarnings ? 'has-warnings' : ''}`}
+                  onClick={() => onRowClick?.(rowIndex)}
+                >
+                  <td className="row-number">{rowIndex + 1}</td>
+                  {row.map((cell, cellIndex) => {
+                    const cellIssues = rowIssues.filter(
+                      issue => issue.column === data.headers[cellIndex]
+                    );
+                    
+                    return (
+                      <td
+                        key={cellIndex}
+                        className={`preview-cell ${cellIssues.length > 0 ? 'has-issues' : ''}`}
+                        title={cellIssues.map(issue => issue.message).join('\n')}
+                      >
+                        <span className="cell-content">{cell}</span>
+                        {cellIssues.length > 0 && showValidation && (
+                          <span className="issue-indicator">
+                            {cellIssues.some(i => i.type === 'error') ? '❌' : '⚠️'}
                           </span>
-                          <div className="flex-1 text-sm">
-                            {Object.entries(row).slice(0, 3).map(([key, value]) => (
-                              <span key={key} className="mr-4">
-                                <span className="font-medium">{key}:</span>{' '}
-                                <span>{String(value || '—')}</span>
-                              </span>
-                            ))}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {validationResults[index]?.valid ? (
-                              <CheckCircle className="w-4 h-4 text-success-500" />
-                            ) : (
-                              <AlertTriangle className="w-4 h-4 text-error-500" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="px-3 py-8 text-center text-gray-500">
-                    <Info className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                    <div className="text-sm">Keine Daten für Vorschau verfügbar</div>
-                  </div>
-                )}
+                        )}
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* TODO: Validation issues summary */}
+      {showValidation && data.validationIssues.length > 0 && (
+        <div className="validation-issues-summary">
+          <h4>Validation Issues</h4>
+          <div className="issues-list">
+            {data.validationIssues.slice(0, 10).map((issue, index) => (
+              <div key={index} className={`issue-item ${issue.type}`}>
+                <span className="issue-icon">
+                  {issue.type === 'error' ? '❌' : issue.type === 'warning' ? '⚠️' : 'ℹ️'}
+                </span>
+                <span className="issue-location">
+                  Row {issue.row + 1}, Column {issue.column}:
+                </span>
+                <span className="issue-message">{issue.message}</span>
               </div>
-            </div>
-            
-            <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
-              💡 TODO: Echtzeit-Vorschau mit Validierung, Highlighting und Export-Optionen
-            </div>
+            ))}
+            {data.validationIssues.length > 10 && (
+              <div className="more-issues">
+                ... and {data.validationIssues.length - 10} more issues
+              </div>
+            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      )}
+
+      {/* TODO: Pagination for large datasets */}
+      {data.rows.length > maxRows && (
+        <div className="preview-pagination">
+          <span>Showing first {maxRows} of {data.rows.length} rows</span>
+          <button className="load-more-btn">Load More</button>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default PreviewPane;

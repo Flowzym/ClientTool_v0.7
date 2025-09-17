@@ -1,110 +1,112 @@
 /**
- * Column selection component for Importer V2
- * Smart field selection with search and filtering
+ * Enhanced column selection dropdown
+ * Smart field selection with search, grouping, and suggestions
  */
 
 import React from 'react';
-import { Search, Filter } from 'lucide-react';
 
-// TODO: Implement smart column selection
-// - Searchable field list
-// - Category-based filtering
-// - Confidence-based sorting
+// TODO: Implement enhanced column selection component
+// - Searchable dropdown with field grouping
+// - Confidence-based suggestions
+// - Field descriptions and examples
+// - Recently used fields
 // - Custom field creation
-// - Field usage statistics
 
 interface ColumnSelectProps {
-  availableFields: string[];
-  selectedField?: string;
-  onFieldSelect: (field: string) => void;
-  onFieldClear: () => void;
+  value?: string;
+  onChange: (field: string) => void;
   suggestions?: Array<{
     field: string;
     confidence: number;
     reason: string;
   }>;
+  disabled?: boolean;
+  placeholder?: string;
+  showConfidence?: boolean;
 }
 
-export function ColumnSelect({
-  availableFields,
-  selectedField,
-  onFieldSelect,
-  onFieldClear,
-  suggestions = []
-}: ColumnSelectProps) {
-  // TODO: Implement column selection logic
+export const ColumnSelect: React.FC<ColumnSelectProps> = ({
+  value,
+  onChange,
+  suggestions = [],
+  disabled = false,
+  placeholder = "Select field...",
+  showConfidence = true
+}) => {
+  // TODO: Implement dropdown state and interactions
   // - Search functionality
-  // - Category filtering
-  // - Suggestion ranking
-  // - Custom field creation
-  // - Field description tooltips
+  // - Keyboard navigation
+  // - Field grouping (required, optional, custom)
+  // - Suggestion highlighting
+  // - Custom field creation modal
 
   return (
-    <div className="space-y-4">
-      <div className="text-sm text-gray-600">
-        TODO: Intelligente Feld-Auswahl mit Suche und Vorschlägen
-      </div>
-      
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+    <div className="column-select">
+      {/* TODO: Dropdown trigger */}
+      <div className="select-trigger">
         <input
           type="text"
-          placeholder="Feld suchen..."
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md"
+          value={value || ''}
+          placeholder={placeholder}
+          disabled={disabled}
+          readOnly
+          className="select-input"
         />
+        <span className="select-arrow">▼</span>
       </div>
-      
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-500" />
-          <span className="text-sm text-gray-600">Kategorien:</span>
-          <div className="flex gap-1">
-            {['Basis', 'Kontakt', 'AMS', 'Intern'].map(category => (
-              <button
-                key={category}
-                className="px-2 py-1 text-xs border rounded hover:bg-gray-50"
-              >
-                {category}
-              </button>
+
+      {/* TODO: Dropdown content */}
+      <div className="select-dropdown" style={{ display: 'none' }}>
+        {/* TODO: Search input */}
+        <div className="dropdown-search">
+          <input
+            type="text"
+            placeholder="Search fields..."
+            className="search-input"
+          />
+        </div>
+
+        {/* TODO: Suggestions section */}
+        {suggestions.length > 0 && (
+          <div className="suggestions-section">
+            <div className="section-header">Suggestions</div>
+            {suggestions.map((suggestion, index) => (
+              <div key={index} className="suggestion-item">
+                <span className="field-name">{suggestion.field}</span>
+                {showConfidence && (
+                  <span className="confidence-badge">
+                    {Math.round(suggestion.confidence * 100)}%
+                  </span>
+                )}
+                <span className="suggestion-reason">{suggestion.reason}</span>
+              </div>
             ))}
+          </div>
+        )}
+
+        {/* TODO: Field groups */}
+        <div className="field-groups">
+          <div className="field-group">
+            <div className="group-header">Required Fields</div>
+            {/* TODO: Required field options */}
+          </div>
+          
+          <div className="field-group">
+            <div className="group-header">Optional Fields</div>
+            {/* TODO: Optional field options */}
+          </div>
+          
+          <div className="field-group">
+            <div className="group-header">Custom Fields</div>
+            {/* TODO: Custom field options */}
+            <div className="create-custom-field">
+              <button className="create-field-btn">+ Create Custom Field</button>
+            </div>
           </div>
         </div>
       </div>
-      
-      <div className="max-h-48 overflow-y-auto border rounded">
-        {availableFields.map(field => (
-          <button
-            key={field}
-            onClick={() => onFieldSelect(field)}
-            className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 ${
-              selectedField === field ? 'bg-blue-50 text-blue-700' : ''
-            }`}
-          >
-            {field}
-          </button>
-        ))}
-      </div>
-      
-      {suggestions.length > 0 && (
-        <div className="space-y-2">
-          <div className="text-sm font-medium text-gray-700">Vorschläge:</div>
-          {suggestions.map((suggestion, index) => (
-            <button
-              key={index}
-              onClick={() => onFieldSelect(suggestion.field)}
-              className="w-full flex items-center justify-between p-2 border rounded hover:bg-gray-50"
-            >
-              <span className="text-sm">{suggestion.field}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">{suggestion.reason}</span>
-                <span className="text-xs font-medium">
-                  {Math.round(suggestion.confidence * 100)}%
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
-}
+};
+
+export default ColumnSelect;

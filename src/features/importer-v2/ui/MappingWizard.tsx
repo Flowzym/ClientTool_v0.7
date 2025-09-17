@@ -1,109 +1,74 @@
 /**
- * Enhanced mapping wizard for Importer V2
- * Intelligent column mapping with templates and suggestions
+ * Main mapping wizard component for Importer V2
+ * Guides users through the import mapping process
  */
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '../../../components/Card';
-import { Button } from '../../../components/Button';
-import { Badge } from '../../../components/Badge';
-import { Wand2, Save, Upload, Eye } from 'lucide-react';
 
-// TODO: Implement enhanced mapping wizard
-// - Step-by-step mapping process
-// - Intelligent suggestions with confidence scores
-// - Template selection and creation
-// - Real-time validation feedback
-// - Preview with sample data
-// - Batch mapping operations
+// TODO: Implement mapping wizard component
+// - Step-by-step import process
+// - File upload and parsing
+// - Column mapping interface
+// - Validation and preview
+// - Template management integration
 
 interface MappingWizardProps {
-  headers: string[];
-  sampleData: any[][];
-  onMappingComplete: (mappings: Record<string, string>) => void;
-  onCancel: () => void;
+  onComplete?: (mappings: Record<string, string>) => void;
+  onCancel?: () => void;
+  initialFile?: File;
+  suggestedTemplate?: string;
 }
 
-export function MappingWizard({
-  headers,
-  sampleData,
-  onMappingComplete,
-  onCancel
-}: MappingWizardProps) {
+export const MappingWizard: React.FC<MappingWizardProps> = ({
+  onComplete,
+  onCancel,
+  initialFile,
+  suggestedTemplate
+}) => {
   // TODO: Implement wizard state management
   // - Current step tracking
-  // - Mapping state with confidence scores
-  // - Template selection state
-  // - Validation results
-  // - Preview data preparation
+  // - File parsing state
+  // - Mapping state
+  // - Validation state
+  // - Template state
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-semibold text-gray-900">
-          Intelligente Spalten-Zuordnung
-        </h2>
-        <Badge variant="warning" size="md">
-          Importer V2 (Experimental)
-        </Badge>
+    <div className="mapping-wizard">
+      {/* TODO: Implement wizard UI */}
+      <div className="wizard-header">
+        <h2>Import Mapping Wizard</h2>
+        <p>Configure column mappings for your import file</p>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>
-            <div className="flex items-center gap-2">
-              <Wand2 className="w-5 h-5" />
-              Automatische Erkennung
-            </div>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="text-sm text-gray-600">
-              TODO: Implementiere intelligente Spalten-Erkennung
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <h4 className="font-medium mb-2">Erkannte Spalten</h4>
-                <div className="space-y-2">
-                  {headers.map((header, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 border rounded">
-                      <span className="text-sm">{header}</span>
-                      <Badge variant="default" size="sm">
-                        TODO: Confidence
-                      </Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-2">Vorgeschlagene Zuordnung</h4>
-                <div className="text-sm text-gray-500">
-                  TODO: Intelligente Mapping-Vorschläge basierend auf:
-                  <ul className="list-disc ml-4 mt-2">
-                    <li>Spaltenname-Ähnlichkeit</li>
-                    <li>Datenformat-Analyse</li>
-                    <li>Gespeicherte Templates</li>
-                    <li>Benutzer-Feedback</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-end gap-3">
-        <Button variant="ghost" onClick={onCancel}>
-          Abbrechen
-        </Button>
-        <Button onClick={() => onMappingComplete({})}>
-          <Save className="w-4 h-4 mr-2" />
-          Zuordnung übernehmen
-        </Button>
+      
+      <div className="wizard-content">
+        {/* TODO: Step indicators */}
+        {/* TODO: File upload step */}
+        {/* TODO: Template selection step */}
+        {/* TODO: Column mapping step */}
+        {/* TODO: Validation step */}
+        {/* TODO: Preview step */}
+        
+        <div className="placeholder-content">
+          <p>Mapping wizard implementation pending...</p>
+          <p>Features to implement:</p>
+          <ul>
+            <li>File upload and parsing</li>
+            <li>Template auto-detection</li>
+            <li>Interactive column mapping</li>
+            <li>Real-time validation</li>
+            <li>Data preview</li>
+            <li>Template saving</li>
+          </ul>
+        </div>
+      </div>
+      
+      <div className="wizard-actions">
+        {/* TODO: Navigation buttons */}
+        <button onClick={onCancel}>Cancel</button>
+        <button onClick={() => onComplete?.({})}>Complete</button>
       </div>
     </div>
   );
-}
+};
+
+export default MappingWizard;

@@ -1,100 +1,142 @@
 /**
- * Template management bar for Importer V2
- * Quick access to saved templates and template operations
+ * Template management bar component
+ * Quick access to templates and template actions
  */
 
 import React from 'react';
-import { Button } from '../../../components/Button';
-import { Badge } from '../../../components/Badge';
-import { 
-  BookOpen, 
-  Save, 
-  Download, 
-  Upload, 
-  Star,
-  Clock,
-  Users
-} from 'lucide-react';
 
-// TODO: Implement template management
-// - Quick template selection
-// - Template saving and loading
-// - Template sharing
-// - Usage statistics
-// - Template recommendations
+// TODO: Implement template management bar
+// - Template selection dropdown
+// - Save current mapping as template
+// - Template auto-detection indicator
+// - Template management actions
+// - Usage statistics display
 
-interface TemplateBarProps {
-  currentTemplate?: any;
-  availableTemplates: any[];
-  onTemplateSelect: (template: any) => void;
-  onTemplateSave: (name: string) => void;
-  onTemplateDelete: (id: string) => void;
+interface Template {
+  id: string;
+  name: string;
+  description?: string;
+  confidence?: number;
+  lastUsed?: string;
+  usageCount: number;
 }
 
-export function TemplateBar({
+interface TemplateBarProps {
+  currentTemplate?: Template;
+  availableTemplates: Template[];
+  onTemplateSelect: (templateId: string) => void;
+  onSaveAsTemplate: () => void;
+  onManageTemplates: () => void;
+  autoDetectedTemplate?: Template;
+  isLoading?: boolean;
+}
+
+export const TemplateBar: React.FC<TemplateBarProps> = ({
   currentTemplate,
   availableTemplates,
   onTemplateSelect,
-  onTemplateSave,
-  onTemplateDelete
-}: TemplateBarProps) {
-  // TODO: Implement template bar logic
+  onSaveAsTemplate,
+  onManageTemplates,
+  autoDetectedTemplate,
+  isLoading = false
+}) => {
+  // TODO: Implement template bar state and interactions
   // - Template dropdown with search
-  // - Quick save functionality
-  // - Template metadata display
-  // - Usage tracking
-  // - Sharing controls
+  // - Auto-detection notification
+  // - Template confidence display
+  // - Quick actions menu
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-gray-50 border rounded-lg">
-      <div className="flex items-center gap-2">
-        <BookOpen className="w-4 h-4 text-gray-500" />
-        <span className="text-sm font-medium">Templates:</span>
-      </div>
-      
-      <select className="px-3 py-1 border border-gray-300 rounded text-sm">
-        <option value="">Neues Mapping</option>
-        {availableTemplates.map((template, index) => (
-          <option key={index} value={template.id}>
-            {template.name || `Template ${index + 1}`}
-          </option>
-        ))}
-      </select>
-      
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="sm" title="Template speichern">
-          <Save className="w-4 h-4" />
-        </Button>
-        <Button variant="ghost" size="sm" title="Template exportieren">
-          <Download className="w-4 h-4" />
-        </Button>
-        <Button variant="ghost" size="sm" title="Template importieren">
-          <Upload className="w-4 h-4" />
-        </Button>
-      </div>
-      
-      {currentTemplate && (
-        <div className="flex items-center gap-2 ml-auto">
-          <Badge variant="default" size="sm">
-            <Star className="w-3 h-3 mr-1" />
-            {currentTemplate.name}
-          </Badge>
-          <Badge variant="default" size="sm">
-            <Clock className="w-3 h-3 mr-1" />
-            {currentTemplate.usageCount || 0}x verwendet
-          </Badge>
-          {currentTemplate.shared && (
-            <Badge variant="success" size="sm">
-              <Users className="w-3 h-3 mr-1" />
-              Geteilt
-            </Badge>
-          )}
+    <div className="template-bar">
+      {/* TODO: Auto-detection notification */}
+      {autoDetectedTemplate && (
+        <div className="auto-detection-notice">
+          <span className="detection-icon">🔍</span>
+          <span className="detection-text">
+            Auto-detected template: <strong>{autoDetectedTemplate.name}</strong>
+            ({Math.round((autoDetectedTemplate.confidence || 0) * 100)}% confidence)
+          </span>
+          <button 
+            onClick={() => onTemplateSelect(autoDetectedTemplate.id)}
+            className="apply-template-btn"
+          >
+            Apply
+          </button>
+          <button className="dismiss-btn">×</button>
         </div>
       )}
-      
-      <div className="text-xs text-gray-500">
-        TODO: Template-Management mit Auto-Erkennung und Sharing
+
+      {/* TODO: Template selection and actions */}
+      <div className="template-controls">
+        <div className="template-selector">
+          <label>Template:</label>
+          <select
+            value={currentTemplate?.id || ''}
+            onChange={(e) => onTemplateSelect(e.target.value)}
+            disabled={isLoading}
+            className="template-select"
+          >
+            <option value="">-- No Template --</option>
+            {availableTemplates.map(template => (
+              <option key={template.id} value={template.id}>
+                {template.name}
+                {template.usageCount > 0 && ` (used ${template.usageCount}x)`}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="template-actions">
+          <button
+            onClick={onSaveAsTemplate}
+            className="save-template-btn"
+            title="Save current mapping as template"
+          >
+            💾 Save as Template
+          </button>
+          
+          <button
+            onClick={onManageTemplates}
+            className="manage-templates-btn"
+            title="Manage templates"
+          >
+            ⚙️ Manage
+          </button>
+        </div>
       </div>
+
+      {/* TODO: Current template info */}
+      {currentTemplate && (
+        <div className="current-template-info">
+          <div className="template-details">
+            <span className="template-name">{currentTemplate.name}</span>
+            {currentTemplate.description && (
+              <span className="template-description">{currentTemplate.description}</span>
+            )}
+          </div>
+          
+          <div className="template-stats">
+            {currentTemplate.lastUsed && (
+              <span className="last-used">
+                Last used: {new Date(currentTemplate.lastUsed).toLocaleDateString()}
+              </span>
+            )}
+            <span className="usage-count">
+              Used {currentTemplate.usageCount} times
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* TODO: Loading indicator */}
+      {isLoading && (
+        <div className="template-loading">
+          <span className="loading-spinner">⏳</span>
+          <span>Loading templates...</span>
+        </div>
+      )}
     </div>
   );
-}
+};
+
+export default TemplateBar;
