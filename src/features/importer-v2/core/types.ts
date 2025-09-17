@@ -57,15 +57,35 @@ export interface MappingResult {
   userOverride?: InternalField;
 }
 
-export interface TemplateV2 {
+export interface MappingTemplateV2 {
   id: string;
   name: string;
   description?: string;
   sourcePattern: string; // regex or glob for auto-detection
-  mappings: Record<string, InternalField>;
+  columnMappings: Record<string, InternalField>;
+  normalizationRules: NormalizationRule[];
+  validationRules: ValidationRule[];
   createdAt: string;
   updatedAt: string;
-  usageCount: number;
+  usageCount?: number;
+}
+
+export interface NormalizationRule {
+  id: string;
+  type: 'mojibake_repair' | 'whitespace_cleanup' | 'diacritic_removal' | 'token_split';
+  field?: InternalField;
+  parameters: Record<string, any>;
+  enabled: boolean;
+  order: number;
+}
+
+export interface ValidationRule {
+  id: string;
+  type: 'required' | 'format' | 'range' | 'cross_field';
+  field: InternalField;
+  parameters: Record<string, any>;
+  severity: 'error' | 'warning';
+  enabled: boolean;
 }
 
 export interface ValidationIssue {
@@ -90,7 +110,43 @@ export interface ValidationResult {
 }
 
 export interface ContentHint {
-  type: 'date' | 'email' | 'phone' | 'zip' | 'svNumber' | 'amsId';
+  type: 'date' | 'email' | 'phone' | 'zip' | 'svNumber' | 'amsId' | 'name' | 'address';
   confidence: number;
   samples: string[];
+  pattern?: string;
 }
+
+export interface ContentAnalysis {
+  hints: ContentHint[];
+  patterns: {
+    datePattern?: RegExp;
+    emailPattern?: RegExp;
+    phonePattern?: RegExp;
+    zipPattern?: RegExp;
+    svPattern?: RegExp;
+    amsIdPattern?: RegExp;
+  };
+}
+
+export interface NormalizationResult {
+  fixed: string;
+  tokens: string[];
+  original: string;
+  repairs: string[];
+}
+
+export interface ScoringWeights {
+  exactAlias: number;
+  tokenOverlap: number;
+  fuzzyMatch: number;
+  contentHint: number;
+  positionHint: number;
+}
+
+export const DEFAULT_SCORING_WEIGHTS: ScoringWeights = {
+  exactAlias: 1.0,
+  tokenOverlap: 0.7,
+  fuzzyMatch: 0.4,
+  contentHint: 0.6,
+  positionHint: 0.2
+};
