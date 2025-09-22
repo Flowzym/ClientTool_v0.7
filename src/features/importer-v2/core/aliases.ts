@@ -1,207 +1,264 @@
 /**
- * Comprehensive alias dictionary for German/Austrian field mapping
+ * Comprehensive alias dictionary for German/Austrian field names
  * Includes broken encoding variants and common synonyms
  */
 
 import type { InternalField } from './types';
 
+/**
+ * Comprehensive alias mappings for all internal fields
+ * Includes broken encoding variants (� artifacts) and regional synonyms
+ */
 export const ALIASES: Record<InternalField, string[]> = {
+  // AMS ID
   amsId: [
-    'ams id', 'ams-id', 'amsid', 'ams nummer', 'ams-nummer', 'amsnummer',
-    'kundennummer', 'kunden-nummer', 'kunden nummer', 'id', 'nummer',
-    'ams�id', 'ams�nummer' // broken encoding variants
+    'ams', 'ams-id', 'ams_id', 'amsid', 'ams nummer', 'ams-nummer', 'amsnummer',
+    'kundennummer', 'kunden-nummer', 'kunden_nummer', 'clientid', 'client-id',
+    'id', 'nummer', 'number', 'kundenid', 'kunden-id',
+    // Broken variants
+    'ams�id', 'ams�nummer', 'kunden�nummer'
   ],
-  
+
+  // Names
   firstName: [
-    'vorname', 'vor name', 'vor-name', 'firstname', 'first name', 'first-name',
-    'rufname', 'ruf name', 'ruf-name', 'taufname', 'vornamen',
-    'vorname�', 'vor�name', 'rufname�' // broken encoding variants
+    'vorname', 'vor-name', 'vor_name', 'first name', 'firstname', 'rufname',
+    'taufname', 'given name', 'givenname', 'prename',
+    // Broken variants
+    'vor�name', 'vorname�', 'ruf�name'
   ],
   
   lastName: [
-    'nachname', 'nach name', 'nach-name', 'lastname', 'last name', 'last-name',
-    'familienname', 'familien name', 'familien-name', 'zuname', 'name',
-    'nachname�', 'nach�name', 'familienname�' // broken encoding variants
+    'nachname', 'nach-name', 'nach_name', 'last name', 'lastname', 'familienname',
+    'zuname', 'surname', 'family name', 'familyname',
+    // Broken variants
+    'nach�name', 'nachname�', 'familien�name'
   ],
   
   title: [
-    'titel', 'title', 'anrede', 'grad', 'akademischer grad', 'akademischer-grad',
-    'titel�', 'anrede�' // broken encoding variants
+    'titel', 'anrede', 'title', 'prefix', 'academic title', 'grad',
+    'akademischer titel', 'dr', 'prof', 'mag', 'dipl',
+    // Broken variants
+    'titel�', 'an�rede'
   ],
-  
+
+  // Personal data
   gender: [
-    'geschlecht', 'sex', 'gender', 'geschl', 'geschl.',
-    'geschlecht�' // broken encoding variants
+    'geschlecht', 'gender', 'sex', 'geschl', 'male/female', 'm/f',
+    'männlich/weiblich', 'mann/frau',
+    // Broken variants
+    'geschlecht�', 'geschl�', 'm�nnlich', 'weib�lich'
   ],
   
   birthDate: [
-    'geburtsdatum', 'geburts datum', 'geburts-datum', 'birth date', 'birthdate',
-    'geb datum', 'geb-datum', 'geb.', 'geboren', 'geboren am',
-    'geburtsdatum�', 'geburts�datum' // broken encoding variants
+    'geburtsdatum', 'geburts-datum', 'geburts_datum', 'birth date', 'birthdate',
+    'geboren', 'geb', 'date of birth', 'dob', 'birthday',
+    'geburtsdatum', 'geb-datum', 'geb_datum',
+    // Broken variants
+    'geburts�datum', 'geburtsdatum�', 'geb�datum'
   ],
   
   svNumber: [
-    'sv nummer', 'sv-nummer', 'svnummer', 'sv nr', 'sv-nr', 'sv.nr.',
-    'sozialversicherungsnummer', 'sozialversicherungs nummer', 'sozialversicherungs-nummer',
-    'versicherungsnummer', 'versicherungs nummer', 'versicherungs-nummer',
-    'sv�nummer', 'sozialversicherungs�nummer' // broken encoding variants
+    'sv-nummer', 'sv nummer', 'svnummer', 'sv_nummer', 'sozialversicherungsnummer',
+    'social security', 'versicherungsnummer', 'sv nr', 'sv-nr', 'svnr',
+    'sozialversicherung', 'sv', 'versicherung',
+    // Broken variants
+    'sv�nummer', 'sozialversicherungs�nummer', 'versicherungs�nummer'
   ],
-  
+
+  // Contact information
   phone: [
-    'telefon', 'tel', 'phone', 'telefonnummer', 'telefon nummer', 'telefon-nummer',
-    'tel nr', 'tel-nr', 'tel.nr.', 'handy', 'mobil', 'mobile',
-    'festnetz', 'fest netz', 'fest-netz', 'rufnummer', 'ruf nummer', 'ruf-nummer',
-    'telefon�', 'telefonnummer�', 'tel�nr' // broken encoding variants
+    'telefon', 'tel', 'phone', 'telephone', 'telefonnummer', 'tel-nr', 'tel nr',
+    'tel_nr', 'telefon-nr', 'telefon nr', 'telefon_nr', 'handy', 'mobil',
+    'mobile', 'cell', 'cellular', 'fon', 'phone number',
+    // Broken variants
+    'tele�fon', 'telefon�', 'telefon�nummer', 'han�dy'
   ],
   
   email: [
-    'email', 'e-mail', 'e mail', 'mail', 'e-mail-adresse', 'email adresse',
-    'e-mailadresse', 'emailadresse', 'elektronische post', 'elektronische-post',
-    'email�', 'e�mail', 'mail�adresse' // broken encoding variants
+    'email', 'e-mail', 'e_mail', 'mail', 'e-mail-adresse', 'email-adresse',
+    'emailadresse', 'e-mailadresse', 'electronic mail', 'mail-adresse',
+    'mailadresse', 'email address', 'e-mail address',
+    // Broken variants
+    'e�mail', 'email�', 'e�mail�adresse', 'mail�adresse'
   ],
   
   address: [
-    'adresse', 'address', 'anschrift', 'wohnadresse', 'wohn adresse', 'wohn-adresse',
-    'strasse', 'straße', 'str', 'str.', 'hausnummer', 'haus nummer', 'haus-nummer',
-    'postadresse', 'post adresse', 'post-adresse',
-    'adresse�', 'anschrift�', 'stra�e', 'stra�ennummer' // broken encoding variants
+    'adresse', 'address', 'straße', 'strasse', 'str', 'street', 'anschrift',
+    'wohnadresse', 'wohn-adresse', 'postadresse', 'post-adresse',
+    'straße und hausnummer', 'straße nr', 'straße nummer',
+    // Broken variants
+    'adres�se', 'stra�e', 'stra�e nr', 'ansch�rift', 'wohn�adresse'
   ],
   
   zip: [
-    'plz', 'postleitzahl', 'post leitzahl', 'post-leitzahl', 'zip', 'postal code',
-    'plz�', 'postleitzahl�' // broken encoding variants
+    'plz', 'postleitzahl', 'post-leitzahl', 'post_leitzahl', 'zip', 'zipcode',
+    'zip code', 'postal code', 'postalcode', 'postcode',
+    // Broken variants
+    'post�leitzahl', 'plz�'
   ],
   
   city: [
-    'ort', 'stadt', 'city', 'wohnort', 'wohn ort', 'wohn-ort',
-    'gemeinde', 'ortschaft',
-    'ort�', 'stadt�' // broken encoding variants
+    'ort', 'stadt', 'city', 'place', 'wohnort', 'wohn-ort', 'wohn_ort',
+    'gemeinde', 'municipality', 'location', 'locality',
+    // Broken variants
+    'wohn�ort', 'gemein�de'
   ],
-  
+
+  // Phone components
   countryCode: [
-    'land', 'country', 'ländercode', 'länder code', 'länder-code',
-    'country code', 'countrycode', 'landeskennzeichen',
-    'land�', 'l�ndercode', 'l�nder�code' // broken encoding variants
+    'ländercode', 'laendercode', 'country code', 'countrycode', 'land',
+    'country', 'länder-code', 'laender-code', 'vorwahl land',
+    // Broken variants
+    'l�ndercode', 'laender�code', 'l�nder�code'
   ],
   
   areaCode: [
-    'vorwahl', 'vor wahl', 'vor-wahl', 'area code', 'areacode',
-    'ortsvorwahl', 'orts vorwahl', 'orts-vorwahl',
-    'vorwahl�', 'vor�wahl' // broken encoding variants
+    'vorwahl', 'vor-wahl', 'vor_wahl', 'area code', 'areacode', 'ortsvorwahl',
+    'orts-vorwahl', 'orts_vorwahl', 'city code', 'regional code',
+    // Broken variants
+    'vor�wahl', 'orts�vorwahl'
   ],
   
   phoneNumber: [
-    'rufnummer', 'ruf nummer', 'ruf-nummer', 'phone number', 'phonenumber',
-    'telefonnummer', 'telefon nummer', 'telefon-nummer',
-    'rufnummer�', 'telefonnummer�' // broken encoding variants
+    'rufnummer', 'ruf-nummer', 'ruf_nummer', 'phone number', 'phonenumber',
+    'nummer', 'number', 'telefonnummer', 'anschlussnummer',
+    // Broken variants
+    'ruf�nummer', 'anschluss�nummer', 'telefon�nummer'
   ],
-  
+
+  // AMS specific dates
   amsBookingDate: [
-    'ams buchung', 'ams-buchung', 'amsbuchung', 'ams buchungsdatum', 'ams-buchungsdatum',
-    'zubuchung', 'zu buchung', 'zu-buchung', 'zubuchungsdatum', 'zubuchungs datum',
-    'ams�buchung', 'zu�buchung' // broken encoding variants
+    'zubuchung', 'zubuchungsdatum', 'zubuchu ng-datum', 'zubuchungs-datum',
+    'booking date', 'bookingdate', 'ams zubuchung', 'ams-zubuchung',
+    'buchung', 'buchungsdatum', 'gebucht am', 'gebucht',
+    // Broken variants
+    'zubu�chung', 'zubuchungs�datum', 'bu�chung'
   ],
   
   entryDate: [
-    'eintrittsdatum', 'eintritts datum', 'eintritts-datum', 'entry date', 'entrydate',
-    'eintritt', 'beginn', 'start', 'startdatum', 'start datum', 'start-datum',
-    'eintrittsdatum�', 'eintritts�datum' // broken encoding variants
+    'eintritt', 'eintrittsdatum', 'eintritts-datum', 'eintritts_datum',
+    'entry date', 'entrydate', 'start', 'startdatum', 'start-datum',
+    'beginn', 'beginndatum', 'beginn-datum', 'von', 'ab',
+    // Broken variants
+    'ein�tritt', 'eintritts�datum', 'be�ginn'
   ],
   
   exitDate: [
-    'austrittsdatum', 'austritts datum', 'austritts-datum', 'exit date', 'exitdate',
-    'austritt', 'ende', 'end', 'enddatum', 'end datum', 'end-datum',
-    'austrittsdatum�', 'austritts�datum' // broken encoding variants
+    'austritt', 'austrittsdatum', 'austritts-datum', 'austritts_datum',
+    'exit date', 'exitdate', 'end', 'enddatum', 'end-datum',
+    'ende', 'bis', 'beendet', 'beendet am',
+    // Broken variants
+    'aus�tritt', 'austritts�datum', 'en�de'
   ],
-  
+
+  // AMS staff
   amsAgentLastName: [
-    'ams berater nachname', 'ams-berater-nachname', 'ams berater nach name',
-    'ams agent nachname', 'ams-agent-nachname', 'ams agent nach name',
-    'berater nachname', 'berater nach name', 'berater-nachname',
-    'ams�berater�nachname', 'berater�nachname' // broken encoding variants
+    'ams betreuer nachname', 'ams-betreuer-nachname', 'ams betreuer name',
+    'ams agent lastname', 'ams agent name', 'betreuer nachname',
+    'agent nachname', 'ams nachname', 'ams name',
+    // Broken variants
+    'ams�betreuer', 'betreu�er', 'ams�nachname'
   ],
   
   amsAgentFirstName: [
-    'ams berater vorname', 'ams-berater-vorname', 'ams berater vor name',
-    'ams agent vorname', 'ams-agent-vorname', 'ams agent vor name',
-    'berater vorname', 'berater vor name', 'berater-vorname',
-    'ams�berater�vorname', 'berater�vorname' // broken encoding variants
+    'ams betreuer vorname', 'ams-betreuer-vorname', 'ams agent firstname',
+    'ams agent vorname', 'betreuer vorname', 'agent vorname', 'ams vorname',
+    // Broken variants
+    'ams�betreuer�vorname', 'betreu�er�vorname'
   ],
   
   amsAdvisor: [
-    'ams berater', 'ams-berater', 'amsberater', 'ams betreuer', 'ams-betreuer',
-    'ams agent', 'ams-agent', 'berater', 'betreuer', 'advisor', 'adviser',
-    'sachbearbeiter', 'sach bearbeiter', 'sach-bearbeiter',
-    'ams�berater', 'ams�betreuer', 'sach�bearbeiter' // broken encoding variants
+    'ams berater', 'ams-berater', 'ams_berater', 'amsberater', 'berater',
+    'advisor', 'adviser', 'betreuer', 'ams betreuer', 'ams-betreuer',
+    'sachbearbeiter', 'sach-bearbeiter', 'fallmanager', 'fall-manager',
+    // Broken variants
+    'ams�berater', 'bera�ter', 'betreu�er', 'sach�bearbeiter'
   ],
-  
+
+  // Internal fields
   note: [
-    'notiz', 'note', 'notes', 'notizen', 'bemerkung', 'bemerkungen',
-    'anmerkung', 'anmerkungen', 'kommentar', 'kommentare', 'hinweis', 'hinweise',
-    'notiz�', 'bemerkung�', 'anmerkung�' // broken encoding variants
+    'notiz', 'notizen', 'note', 'notes', 'bemerkung', 'bemerkungen',
+    'anmerkung', 'anmerkungen', 'kommentar', 'kommentare', 'hinweis',
+    'hinweise', 'text', 'beschreibung', 'info', 'information',
+    // Broken variants
+    'no�tiz', 'bemer�kung', 'anmer�kung', 'kommen�tar'
   ],
   
   internalCode: [
-    'interner code', 'internal code', 'code', 'interne nummer', 'interne-nummer',
-    'referenz', 'referenznummer', 'referenz nummer', 'referenz-nummer',
-    'interner�code', 'interne�nummer' // broken encoding variants
+    'interner code', 'internal code', 'internalcode', 'intern code',
+    'intern-code', 'intern_code', 'code', 'referenz', 'reference',
+    'ref', 'internal id', 'internalid', 'intern id', 'internid',
+    // Broken variants
+    'inter�ner', 'inter�nal', 'refe�renz'
   ],
-  
+
+  // Status and workflow
   status: [
-    'status', 'zustand', 'state', 'bearbeitungsstatus', 'bearbeitungs status',
-    'bearbeitungs-status', 'fallstatus', 'fall status', 'fall-status',
-    'status�', 'bearbeitungs�status' // broken encoding variants
+    'status', 'zustand', 'state', 'bearbeitungsstatus', 'bearbeitungs-status',
+    'workflow status', 'workflowstatus', 'prozess status', 'prozessstatus',
+    'fallstatus', 'fall-status', 'case status', 'casestatus',
+    // Broken variants
+    'sta�tus', 'zu�stand', 'bearbeitungs�status'
   ],
   
   priority: [
-    'priorität', 'priority', 'prio', 'wichtigkeit', 'dringlichkeit',
-    'prioritätsstufe', 'prioritäts stufe', 'prioritäts-stufe',
-    'priorit�t', 'priorit�tsstufe', 'dringlichkeit�' // broken encoding variants
+    'priorität', 'prioritaet', 'priority', 'prio', 'wichtigkeit', 'urgency',
+    'dringlichkeit', 'rang', 'ranking', 'gewichtung', 'relevanz',
+    // Broken variants
+    'priorit�t', 'priorit�t', 'wichtig�keit', 'dring�lichkeit'
   ],
   
   result: [
-    'ergebnis', 'result', 'resultat', 'outcome', 'ausgang',
-    'bearbeitungsergebnis', 'bearbeitungs ergebnis', 'bearbeitungs-ergebnis',
-    'ergebnis�', 'bearbeitungs�ergebnis' // broken encoding variants
+    'ergebnis', 'result', 'resultat', 'outcome', 'ausgang', 'erfolg',
+    'abschluss', 'bearbeitungsergebnis', 'bearbeitungs-ergebnis',
+    'fallabschluss', 'fall-abschluss', 'resolution',
+    // Broken variants
+    'ergeb�nis', 'resul�tat', 'ab�schluss'
   ],
   
   angebot: [
     'angebot', 'offer', 'maßnahme', 'massnahme', 'maßnahmen', 'massnahmen',
-    'leistung', 'leistungen', 'service', 'services', 'programm', 'programme',
-    'angebot�', 'ma�nahme', 'ma�nahmen', 'leistung�' // broken encoding variants
+    'programm', 'program', 'kurs', 'course', 'training', 'schulung',
+    'förderung', 'foerderung', 'unterstützung', 'unterstuetzung',
+    // Broken variants
+    'ange�bot', 'ma�nahme', 'ma�nahmen', 'f�rderung', 'unterst�tzung'
   ],
-  
+
+  // Dates and activity
   followUp: [
-    'nachfass', 'nach fass', 'nach-fass', 'follow up', 'followup', 'follow-up',
-    'wiedervorlage', 'wieder vorlage', 'wieder-vorlage', 'termin', 'termine',
-    'nachfasstermin', 'nachfass termin', 'nachfass-termin',
-    'nachfa�', 'wieder�vorlage', 'nachfa��termin' // broken encoding variants
+    'follow up', 'followup', 'follow-up', 'wiedervorlage', 'wieder-vorlage',
+    'wieder_vorlage', 'termin', 'nächster termin', 'naechster termin',
+    'next appointment', 'next contact', 'callback', 'rückruf', 'rueckruf',
+    // Broken variants
+    'wieder�vorlage', 'n�chster', 'naech�ster', 'r�ckruf'
   ],
   
   lastActivity: [
-    'letzte aktivität', 'letzte-aktivität', 'letzteaktivität', 'last activity',
-    'lastactivity', 'last-activity', 'letzte aktion', 'letzte-aktion',
-    'letzter kontakt', 'letzter-kontakt', 'letzterkontakt',
-    'letzte�aktivit�t', 'letzte�aktion', 'letzter�kontakt' // broken encoding variants
+    'letzte aktivität', 'letzte aktivitaet', 'last activity', 'lastactivity',
+    'letzter kontakt', 'last contact', 'lastcontact', 'zuletzt aktiv',
+    'zuletzt bearbeitet', 'last modified', 'lastmodified', 'updated',
+    // Broken variants
+    'letzte�aktivit�t', 'letz�ter', 'zuletzt�aktiv'
   ],
   
   assignedTo: [
-    'zugewiesen an', 'zugewiesen-an', 'zugewiesenan', 'assigned to', 'assignedto',
-    'assigned-to', 'verantwortlich', 'verantwortlicher', 'zuständig', 'zuständiger',
-    'bearbeiter', 'sachbearbeiter', 'sach bearbeiter', 'sach-bearbeiter',
-    'zugewiesen�an', 'zust�ndig', 'zust�ndiger', 'sach�bearbeiter' // broken encoding variants
+    'zugewiesen an', 'zugewiesen', 'assigned to', 'assignedto', 'assigned',
+    'zuständig', 'zustaendig', 'responsible', 'owner', 'bearbeiter',
+    'sachbearbeiter', 'fallmanager', 'case manager', 'casemanager',
+    // Broken variants
+    'zuge�wiesen', 'zust�ndig', 'zustaen�dig', 'bear�beiter'
   ]
 };
 
 /**
- * Gets all aliases for a given internal field
+ * Get all aliases for a specific field
  */
 export function getAliases(field: InternalField): string[] {
   return ALIASES[field] || [];
 }
 
 /**
- * Finds internal field by alias (case-insensitive)
+ * Find field by alias (case-ins ensitive)
  */
 export function findFieldByAlias(alias: string): InternalField | null {
   const normalizedAlias = alias.toLowerCase().trim();
@@ -216,16 +273,51 @@ export function findFieldByAlias(alias: string): InternalField | null {
 }
 
 /**
- * Gets all possible aliases across all fields (for reverse lookup)
+ * Get all possible aliases across all fields (for search/autocomplete)
  */
-export function getAllAliases(): Record<string, InternalField> {
-  const result: Record<string, InternalField> = {};
+export function getAllAliases(): string[] {
+  const allAliases = new Set<string>();
   
-  for (const [field, aliases] of Object.entries(ALIASES)) {
-    for (const alias of aliases) {
-      result[alias.toLowerCase()] = field as InternalField;
-    }
+  for (const aliases of Object.values(ALIASES)) {
+    aliases.forEach(alias => allAliases.add(alias));
   }
   
-  return result;
+  return Array.from(allAliases).sort();
+}
+
+/**
+ * Check if an alias contains broken encoding artifacts
+ */
+export function hasBrokenEncoding(alias: string): boolean {
+  return alias.includes('�') || 
+         alias.includes('Ã¤') || // ä
+         alias.includes('Ã¶') || // ö
+         alias.includes('Ã¼') || // ü
+         alias.includes('ÃŸ') || // ß
+         alias.includes('Ã„') || // Ä
+         alias.includes('Ã–') || // Ö
+         alias.includes('Ãœ');   // Ü
+}
+
+/**
+ * Get statistics about alias coverage
+ */
+export function getAliasStats() {
+  const stats = {
+    totalFields: Object.keys(ALIASES).length,
+    totalAliases: 0,
+    brokenEncodingAliases: 0,
+    averageAliasesPerField: 0,
+    fieldCoverage: {} as Record<InternalField, number>
+  };
+  
+  for (const [field, aliases] of Object.entries(ALIASES)) {
+    stats.totalAliases += aliases.length;
+    stats.brokenEncodingAliases += aliases.filter(hasBrokenEncoding).length;
+    stats.fieldCoverage[field as InternalField] = aliases.length;
+  }
+  
+  stats.averageAliasesPerField = Math.round(stats.totalAliases / stats.totalFields);
+  
+  return stats;
 }

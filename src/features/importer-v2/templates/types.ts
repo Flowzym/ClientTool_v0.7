@@ -3,14 +3,9 @@
  * Types for mapping templates, rules, and template management
  */
 
-// TODO: Define template-specific types
-// - Template metadata and versioning
-// - Rule definitions and parameters
-// - Template sharing and permissions
-// - Template validation and migration
-// - Usage analytics and optimization
+import type { InternalField, ValidationRule, NormalizationRule } from '../core/types';
 
-export interface TemplateMetadataV2 {
+export interface TemplateMetadata {
   id: string;
   name: string;
   description?: string;
@@ -21,26 +16,69 @@ export interface TemplateMetadataV2 {
   lastUsed?: string;
   usageCount?: number;
   tags?: string[];
+  category?: 'system' | 'user' | 'shared';
 }
 
-export interface TemplateRuleV2 {
-  id: string;
-  type: 'normalization' | 'validation' | 'transformation';
-  field: string;
-  parameters: Record<string, any>;
-  enabled: boolean;
-  order: number;
+export interface ImportTemplate {
+  metadata: TemplateMetadata;
+  
+  // Detection patterns for auto-matching
+  detection: {
+    fileNamePatterns?: string[]; // Glob patterns for filename matching
+    headerPatterns?: string[];   // Required headers for detection
+    contentHints?: string[];     // Content patterns that suggest this template
+    confidence?: number;         // Minimum confidence for auto-detection
+  };
+  
+  // Column mappings
+  columnMappings: Record<string, InternalField>;
+  
+  // Custom fields defined in this template
+  customFields?: Array<{
+    id: string;
+    name: string;
+    label: string;
+    dataType: 'text' | 'number' | 'date' | 'boolean' | 'email' | 'phone';
+    required: boolean;
+    defaultValue?: any;
+    validationRules: ValidationRule[];
+  }>;
+  
+  // Normalization rules
+  normalizationRules?: NormalizationRule[];
+  
+  // Validation rules
+  validationRules?: ValidationRule[];
+  
+  // Transform options
+  transformOptions?: {
+    dateFormat?: 'auto' | 'dd.mm.yyyy' | 'yyyy-mm-dd';
+    phoneFormat?: 'split' | 'combined';
+    genderMapping?: Record<string, 'M' | 'F' | 'D'>;
+    addressFormat?: 'combined' | 'split';
+  };
 }
 
-export interface TemplateVersionV2 {
-  version: string;
-  changes: string[];
-  createdAt: string;
-  author?: string;
-  breaking: boolean;
+export interface TemplateMatchResult {
+  template: ImportTemplate;
+  confidence: number;
+  reasons: string[];
+  matchedPatterns: {
+    fileName?: boolean;
+    headers?: string[];
+    content?: string[];
+  };
 }
 
-export interface TemplateUsageV2 {
+export interface TemplateSearchQuery {
+  fileName?: string;
+  headers?: string[];
+  sampleData?: string[][];
+  category?: 'system' | 'user' | 'shared';
+  tags?: string[];
+}
+
+export interface TemplateUsage {
   templateId: string;
   fileName: string;
   timestamp: string;
@@ -49,18 +87,32 @@ export interface TemplateUsageV2 {
     rowsProcessed: number;
     errorsFound: number;
     warningsFound: number;
+    mappingQuality: number;
   };
   userFeedback?: {
     rating: 1 | 2 | 3 | 4 | 5;
     comments?: string;
+    suggestedImprovements?: string[];
   };
 }
 
-export interface TemplateShareV2 {
-  templateId: string;
-  sharedBy: string;
-  sharedWith: string[];
-  permissions: ('read' | 'write' | 'delete')[];
-  sharedAt: string;
-  expiresAt?: string;
+export interface TemplateExport {
+  version: string;
+  exportedAt: string;
+  templates: ImportTemplate[];
+  metadata: {
+    exportedBy?: string;
+    description?: string;
+    compatibility: string[];
+  };
+}
+
+export interface TemplateImport {
+  templates: ImportTemplate[];
+  conflicts?: Array<{
+    templateId: string;
+    existingName: string;
+    importedName: string;
+    resolution: 'skip' | 'overwrite' | 'rename';
+  }>;
 }
