@@ -8,7 +8,7 @@
     "dev:perf": "vite --open /dev/perf",
     "perf:play": "npm run dev:perf",
     "build": "vite build",
-    "lint": "eslint .",
+    "lint": "npx eslint .",
     "preview": "vite preview",
     "test": "vitest",
     "test:ui": "vitest --ui",
