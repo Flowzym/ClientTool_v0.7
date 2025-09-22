@@ -6,6 +6,7 @@
 export const FEATURES = {
   IMPORTER_V2: false, // default OFF - new import pipeline with enhanced mapping
   IMPORTER_V2: false, // default OFF - new import pipeline with enhanced mapping
+  IMPORTER_V2: false, // default OFF - new import pipeline with enhanced mapping
   VIRTUAL_ROWS: false, // existing virtual rows feature
   ADVANCED_FILTERS: true, // existing advanced filters
   BULK_OPERATIONS: true, // existing bulk operations
