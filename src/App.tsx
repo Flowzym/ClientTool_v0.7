@@ -19,6 +19,11 @@ const PerfPlayground = import.meta.env.DEV
   ? React.lazy(() => import('./dev/PerfPlayground').then(m => ({ default: m.PerfPlayground })))
   : null;
 
+// Dev-only Importer V2 page
+const ImporterV2Page = import.meta.env.DEV 
+  ? React.lazy(() => import('./dev/ImporterV2Page').then(m => ({ default: m.ImporterV2Page })))
+  : null;
+
 export default function App() {
   return (
     <AuthProvider>
@@ -47,6 +52,17 @@ export default function App() {
                 element={
                   <React.Suspense fallback={<div className="p-6">Loading Performance Playground...</div>}>
                     <PerfPlayground />
+                  </React.Suspense>
+                } 
+              />
+            )}
+            
+            {import.meta.env.DEV && ImporterV2Page && (
+              <Route 
+                path="/dev/importer-v2" 
+                element={
+                  <React.Suspense fallback={<div className="p-6">Loading Importer V2...</div>}>
+                    <ImporterV2Page />
                   </React.Suspense>
                 } 
               />

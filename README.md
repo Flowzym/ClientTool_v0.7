@@ -123,6 +123,28 @@ Opens `/dev/perf` route with:
 
 Use this to validate virtualization benefits with large datasets.
 
+### Importer V2 Testing (Development)
+
+For testing the enhanced import pipeline:
+
+```bash
+# Enable feature flag in browser console:
+FEATURES.IMPORTER_V2 = true
+
+# Or temporarily in src/config/featureFlags.ts:
+IMPORTER_V2: true
+```
+
+Then navigate to `/dev/importer-v2` for:
+- **Enhanced mapping wizard**: Intelligent column detection
+- **Mojibake repair**: Automatic encoding fix (Stra�e → Straße)
+- **Template system**: Save and reuse mapping configurations
+- **Custom fields**: Define additional fields beyond standard schema
+- **Advanced validation**: Austrian/German domain-specific rules
+- **Dry-run mode**: Test without affecting existing data
+
+**Note**: All Importer V2 operations are dry-runs in development. No actual data persistence occurs.
+
 ### Performance Playground (Development)
 
 For testing Board virtualization performance:
