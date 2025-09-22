@@ -1,112 +1,193 @@
 /**
- * Tests for header normalization functions
+ * Tests for header normalization and encoding repair
  */
 
 import { describe, it, expect } from 'vitest';
-import { normalizeHeader, displayHeader, headersMatch, getTokenOverlap } from '../normalize';
+import { normalizeHeader, displayHeader, levenshteinDistance, jaroWinklerSimilarity, tokenOverlapRatio } from '../normalize';
 
-describe('normalizeHeader', () => {
-  it('should repair common mojibake patterns', () => {
-    const result = normalizeHeader('Stra�e');
-    expect(result.fixed).toBe('strasse');
-    expect(result.repairs).toContain('� → ');
+describe('Header Normalization', () => {
+  describe('normalizeHeader', () => {
+    it('should repair broken umlauts and ß', () => {
+      const testCases = [
+        { input: 'Stra�e', expected: 'Straße' },
+        { input: 'Ma�nahme', expected: 'Maßnahme' },
+        { input: 'Ma�nahmennummer', expected: 'Maßnahmennummer' },
+        { input: 'Geb�ude', expected: 'Gebäude' },
+        { input: 'Gr��e', expected: 'Größe' },
+        { input: 'Priorit�t', expected: 'Priorität' },
+        { input: 'Aktivit�t', expected: 'Aktivität' }
+      ];
+
+      testCases.forEach(({ input, expected }) => {
+        const result = normalizeHeader(input);
+        expect(result.fixed).toBe(expected);
+        expect(result.repairs.length).toBeGreaterThan(0);
+      });
+    });
+
+    it('should handle UTF-8 mojibake artifacts', () => {
+      const testCases = [
+        { input: 'Ã¤', expected: 'ä' },
+        { input: 'Ã¶', expected: 'ö' },
+        { input: 'Ã¼', expected: 'ü' },
+        { input: 'ÃŸ', expected: 'ß' },
+        { input: 'Ã„', expected: 'Ä' }
+      ];
+
+      testCases.forEach(({ input, expected }) => {
+        const result = normalizeHeader(input);
+        expect(result.fixed).toBe(expected);
+      });
+    });
+
+    it('should normalize whitespace and clean text', () => {
+      const result = normalizeHeader('  Vor   name   ');
+      expect(result.fixed).toBe('Vor name');
+      expect(result.tokens).toContain('vor');
+      expect(result.tokens).toContain('name');
+    });
+
+    it('should tokenize headers correctly', () => {
+      const result = normalizeHeader('AMS-Berater_Nachname');
+      expect(result.tokens).toEqual(['ams', 'berater', 'nachname']);
+    });
+
+    it('should handle empty and invalid input', () => {
+      expect(normalizeHeader('').fixed).toBe('');
+      expect(normalizeHeader(null as any).fixed).toBe('');
+      expect(normalizeHeader(undefined as any).fixed).toBe('');
+    });
+
+    it('should preserve original for reference', () => {
+      const original = 'Stra�e mit Fehlern';
+      const result = normalizeHeader(original);
+      expect(result.original).toBe(original);
+      expect(result.fixed).toBe('Straße mit Fehlern');
+    });
   });
 
-  it('should repair specific broken field names', () => {
-    const result = normalizeHeader('Ma�nahmennummer');
-    expect(result.fixed).toBe('massnahmennummer');
-    expect(result.repairs).toContain('Ma�nahmennummer → Maßnahmennummer');
+  describe('displayHeader', () => {
+    it('should return display-friendly headers', () => {
+      expect(displayHeader('stra�e')).toBe('Straße');
+      expect(displayHeader('ma�nahme')).toBe('Maßnahme');
+      expect(displayHeader('vor name')).toBe('Vor Name');
+      expect(displayHeader('ams-id')).toBe('Ams-Id');
+    });
+
+    it('should handle empty input gracefully', () => {
+      expect(displayHeader('')).toBe('');
+      expect(displayHeader(null as any)).toBe('');
+      expect(displayHeader(undefined as any)).toBe('');
+    });
   });
 
-  it('should remove diacritics for matching', () => {
-    const result = normalizeHeader('Größe');
-    expect(result.fixed).toBe('groesse');
-    expect(result.tokens).toContain('groesse');
+  describe('levenshteinDistance', () => {
+    it('should calculate edit distance correctly', () => {
+      expect(levenshteinDistance('', '')).toBe(0);
+      expect(levenshteinDistance('abc', 'abc')).toBe(0);
+      expect(levenshteinDistance('abc', 'ab')).toBe(1);
+      expect(levenshteinDistance('abc', 'def')).toBe(3);
+      expect(levenshteinDistance('telefon', 'telefonnummer')).toBe(6);
+    });
+
+    it('should handle German characters', () => {
+      expect(levenshteinDistance('straße', 'strasse')).toBe(1);
+      expect(levenshteinDistance('größe', 'groesse')).toBe(2);
+    });
   });
 
-  it('should handle ß correctly', () => {
-    const result = normalizeHeader('Straße');
-    expect(result.fixed).toBe('strasse');
-    expect(result.tokens).toContain('strasse');
+  describe('jaroWinklerSimilarity', () => {
+    it('should calculate similarity correctly', () => {
+      expect(jaroWinklerSimilarity('', '')).toBe(1.0);
+      expect(jaroWinklerSimilarity('abc', 'abc')).toBe(1.0);
+      expect(jaroWinklerSimilarity('', 'abc')).toBe(0.0);
+      expect(jaroWinklerSimilarity('abc', '')).toBe(0.0);
+    });
+
+    it('should give higher scores for prefix matches', () => {
+      const prefixScore = jaroWinklerSimilarity('telefon', 'telefonnummer');
+      const noPrefix = jaroWinklerSimilarity('telefon', 'nummerfon');
+      expect(prefixScore).toBeGreaterThan(noPrefix);
+    });
+
+    it('should handle German field names', () => {
+      const score = jaroWinklerSimilarity('nachname', 'nach-name');
+      expect(score).toBeGreaterThan(0.8);
+    });
   });
 
-  it('should normalize special characters', () => {
-    const result = normalizeHeader('Telefon-Nr./Handy');
-    expect(result.fixed).toBe('telefon nr handy');
-    expect(result.tokens).toEqual(['telefon', 'nr', 'handy']);
+  describe('tokenOverlapRatio', () => {
+    it('should calculate token overlap correctly', () => {
+      expect(tokenOverlapRatio(['a', 'b'], ['a', 'b'])).toBe(1.0);
+      expect(tokenOverlapRatio(['a', 'b'], ['a', 'c'])).toBe(0.5);
+      expect(tokenOverlapRatio(['a'], ['b'])).toBe(0.0);
+      expect(tokenOverlapRatio([], ['a'])).toBe(0.0);
+    });
+
+    it('should handle German tokens', () => {
+      const ratio = tokenOverlapRatio(
+        ['ams', 'berater', 'nachname'],
+        ['ams', 'betreuer', 'nachname']
+      );
+      expect(ratio).toBeGreaterThan(0.5); // 2/3 overlap
+    });
   });
 
-  it('should handle multiple whitespace', () => {
-    const result = normalizeHeader('  Vor   Name  ');
-    expect(result.fixed).toBe('vor name');
-    expect(result.tokens).toEqual(['vor', 'name']);
-  });
+  describe('real-world broken headers', () => {
+    it('should fix common Excel export artifacts', () => {
+      const brokenHeaders = [
+        'Stra�ennummer',
+        'Geb�hren',
+        'Pr�fung',
+        'Erg�nzung',
+        'Erl�uterung',
+        'Verf�gung',
+        'Zust�ndigkeit',
+        'T�tigkeit',
+        'Qualit�t'
+      ];
 
-  it('should filter out common German stop words', () => {
-    const result = normalizeHeader('Name von der Person');
-    expect(result.tokens).toEqual(['name', 'person']);
-  });
+      const expectedFixed = [
+        'Straßennummer',
+        'Gebühren',
+        'Prüfung',
+        'Ergänzung',
+        'Erläuterung',
+        'Verfügung',
+        'Zuständigkeit',
+        'Tätigkeit',
+        'Qualität'
+      ];
 
-  it('should handle empty or invalid input', () => {
-    expect(normalizeHeader('').fixed).toBe('');
-    expect(normalizeHeader(null as any).fixed).toBe('');
-    expect(normalizeHeader(undefined as any).fixed).toBe('');
-  });
-});
+      brokenHeaders.forEach((broken, index) => {
+        const result = normalizeHeader(broken);
+        expect(result.fixed).toBe(expectedFixed[index]);
+        expect(result.repairs.length).toBeGreaterThan(0);
+      });
+    });
 
-describe('displayHeader', () => {
-  it('should repair mojibake but preserve formatting', () => {
-    expect(displayHeader('Stra�e')).toBe('Straße');
-    expect(displayHeader('Ma�nahmennummer')).toBe('Maßnahmennummer');
-  });
+    it('should handle complex broken headers', () => {
+      const result = normalizeHeader('AMS-Ma�nahmen_Stra�e Nr.');
+      expect(result.fixed).toBe('AMS-Maßnahmen_Straße Nr.');
+      expect(result.tokens).toEqual(['ams', 'massnahmen', 'strasse', 'nr']);
+      expect(result.repairs.length).toBe(2); // Two repairs
+    });
 
-  it('should preserve proper German capitalization', () => {
-    expect(displayHeader('NACHNAME')).toBe('NACHNAME');
-    expect(displayHeader('nachname')).toBe('nachname');
-  });
+    it('should preserve readable headers unchanged', () => {
+      const goodHeaders = [
+        'Vorname',
+        'Nachname', 
+        'E-Mail',
+        'Telefon',
+        'Straße',
+        'Maßnahme'
+      ];
 
-  it('should clean up whitespace but preserve case', () => {
-    expect(displayHeader('  Vor   Name  ')).toBe('Vor Name');
-  });
-
-  it('should handle empty input', () => {
-    expect(displayHeader('')).toBe('');
-    expect(displayHeader(null as any)).toBe('');
-  });
-});
-
-describe('headersMatch', () => {
-  it('should match equivalent headers', () => {
-    expect(headersMatch('Straße', 'Strasse')).toBe(true);
-    expect(headersMatch('Telefon-Nr.', 'Telefon Nr')).toBe(true);
-    expect(headersMatch('  Vor Name  ', 'VorName')).toBe(true);
-  });
-
-  it('should match broken and fixed variants', () => {
-    expect(headersMatch('Stra�e', 'Straße')).toBe(true);
-    expect(headersMatch('Ma�nahme', 'Maßnahme')).toBe(true);
-  });
-
-  it('should not match different headers', () => {
-    expect(headersMatch('Vorname', 'Nachname')).toBe(false);
-    expect(headersMatch('Telefon', 'Email')).toBe(false);
-  });
-});
-
-describe('getTokenOverlap', () => {
-  it('should calculate correct overlap ratios', () => {
-    expect(getTokenOverlap('Vor Name', 'Vorname')).toBeCloseTo(1.0);
-    expect(getTokenOverlap('Telefon Nummer', 'Telefon Nr')).toBeCloseTo(0.5);
-    expect(getTokenOverlap('Email Adresse', 'Telefon Nummer')).toBe(0);
-  });
-
-  it('should handle identical headers', () => {
-    expect(getTokenOverlap('Nachname', 'Nachname')).toBe(1.0);
-  });
-
-  it('should handle empty headers', () => {
-    expect(getTokenOverlap('', '')).toBe(1.0);
-    expect(getTokenOverlap('Test', '')).toBe(0);
-    expect(getTokenOverlap('', 'Test')).toBe(0);
+      goodHeaders.forEach(header => {
+        const result = normalizeHeader(header);
+        expect(result.fixed).toBe(header);
+        expect(result.repairs).toHaveLength(0);
+      });
+    });
   });
 });
