@@ -14,10 +14,10 @@ import React from 'react';
 
 interface MappingTableProps {
   headers: string[];
-  sampleData?: string[][];
+  _sampleData?: string[][];
   mappings: Record<string, string>;
   onMappingChange: (column: string, field: string) => void;
-  validationIssues?: Array<{
+  _validationIssues?: Array<{
     column: string;
     type: 'error' | 'warning';
     message: string;
@@ -26,10 +26,9 @@ interface MappingTableProps {
 
 export const MappingTable: React.FC<MappingTableProps> = ({
   headers,
-  sampleData,
+  _sampleData,
   mappings,
-  onMappingChange,
-  validationIssues
+  onMappingChange
 }) => {
   // TODO: Implement table state and interactions
   // - Column sorting and filtering

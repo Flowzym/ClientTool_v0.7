@@ -513,13 +513,13 @@ export function ImportExcel() {
     
     // Log suggestions für Debugging
     if (import.meta.env.DEV) {
-      console.log(`🤖 Auto-mapping applied: ${Object.keys(detectedMapping).length} columns mapped`);
+      console.warn(`🤖 Auto-mapping applied: ${Object.keys(detectedMapping).length} columns mapped`);
       suggestions.forEach(s => {
         if (s.repairs.length > 0) {
-          console.log(`🔧 Mojibake repaired: ${s.repairs.join(', ')}`);
+          console.warn(`🔧 Mojibake repaired: ${s.repairs.join(', ')}`);
         }
         if (s.field) {
-          console.log(`✅ ${s.header} → ${s.field} (${Math.round(s.confidence * 100)}%: ${s.reason})`);
+          console.warn(`✅ ${s.header} → ${s.field} (${Math.round(s.confidence * 100)}%: ${s.reason})`);
         }
       });
     }

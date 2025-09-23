@@ -4,7 +4,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import { db } from '../../data/db';
-import { cryptoManager } from '../../data/crypto'; // Keep this import
+import { cryptoManager } from '../../data/crypto';
 import type { Client, User } from '../../domain/models';
 import type { 
   FilterChip, 
@@ -15,64 +15,16 @@ import type {
   BoardColumnVisibility, 
   BoardView
 } from './useBoardData.helpers';
-import { defaultView, loadViewFromStorage, saveViewToStorage } from './useBoardData.helpers';
+import { defaultView, loadViewFromStorage, saveViewToStorage, byString, byEnum, byDateISO, byNumber, withPinnedFirst } from './useBoardData.helpers';
 
 // Sorting helper functions
-const byFullName = () => (a: any, b: any) => {
+const byFullName = (a: any, b: any) => {
   const aName = `${a?.lastName ?? ''} ${a?.firstName ?? ''}`.trim();
   const bName = `${b?.lastName ?? ''} ${b?.firstName ?? ''}`.trim();
   return aName.localeCompare(bName, 'de', { sensitivity: 'base' });
 };
 
-const byNoteText = () => (a: any, b: any) => {
-  const aText = String(a?.note ?? '');
-  const bText = String(b?.note ?? '');
-  if (aText.length !== bText.length) return aText.length - bText.length;
-  return aText.localeCompare(bText, 'de', { sensitivity: 'base', numeric: true });
-};
-
-const byString = (key: string) => (a: any, b: any) => {
-  const aVal = String(a?.[key] ?? '');
-  const bVal = String(b?.[key] ?? '');
-  return aVal.localeCompare(bVal, 'de', { sensitivity: 'base', numeric: true });
-};
-
-const byEnum = (key: string, order: string[]) => (a: any, b: any) => {
-  const ord = order.map(v => String(v).toLowerCase());
-  const unknown = ord.length;
-  const av = String(a?.[key] ?? '').toLowerCase();
-  const bv = String(b?.[key] ?? '').toLowerCase();
-  const ai = ord.indexOf(av); const bi = ord.indexOf(bv);
-  const aIndex = ai === -1 ? unknown : ai;
-  const bIndex = bi === -1 ? unknown : bi;
-  if (aIndex !== bIndex) return aIndex - bIndex;
-  const aName = `${a?.lastName ?? ''} ${a?.firstName ?? ''}`.trim();
-  const bName = `${b?.lastName ?? ''} ${b?.firstName ?? ''}`.trim();
-  return aName.localeCompare(bName, 'de', { sensitivity: 'base' });
-};
-
-const byDateISO = (key: string) => (a: any, b: any) => {
-  const aDate = a?.[key] ? new Date(a[key]).getTime() : Number.POSITIVE_INFINITY;
-  const bDate = b?.[key] ? new Date(b[key]).getTime() : Number.POSITIVE_INFINITY;
-  return aDate - bDate;
-};
-
-const byNumber = (key: string) => (a: any, b: any) => {
-  const aVal = Number(a?.[key] ?? 0);
-  const bVal = Number(b?.[key] ?? 0);
-  return aVal - bVal;
-};
-
-const withPinnedFirst = (sortFn: (a: any, b: any) => number) => (a: any, b: any) => {
-  if (a.isPinned && !b.isPinned) return -1;
-  if (!a.isPinned && b.isPinned) return 1;
-  return sortFn(a, b);
-};
-
-const countNotes = (client: Client) => {
-  return (client.notes || []).length;
-};
-
+const byNoteText = (a: any, b: any) => {
 export function useBoardData() {
   const [clients, setClients] = useState<Client[]>([]);
   const overlayedClients = useOptimisticOverlay(clients);
@@ -290,16 +242,20 @@ export function useBoardData() {
       
       switch (view.sort.key) {
         case 'name':
-          sorted.sort(withPinnedFirst((a, b) => byFullName()(a, b) * direction));
+          sorted.sort(withPinnedFirst((a, b) => byFullName(a, b) * direction));
           break;
         case 'status':
+          {
           const statusOrder = ['offen', 'terminVereinbart', 'inBearbeitung', 'wartetRueckmeldung', 'erledigt', 'nichtErreichbar', 'abgebrochen'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('status', statusOrder)(a, b) * direction));
           break;
+          }
         case 'priority':
+          {
           const priorityOrder = ['niedrig', 'normal', 'hoch', 'dringend'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('priority', priorityOrder)(a, b) * direction));
           break;
+          }
         case 'assignedTo':
           sorted.sort(withPinnedFirst((a, b) => {
             const aUser = users.find(u => u.id === a.assignedTo)?.name || '';
@@ -317,19 +273,23 @@ export function useBoardData() {
           sorted.sort(withPinnedFirst((a, b) => byNumber('contactCount')(a, b) * direction));
           break;
         case 'notes':
-          sorted.sort(withPinnedFirst((a, b) => byNoteText()(a, b) * direction));
+          sorted.sort(withPinnedFirst((a, b) => byNoteText(a, b) * direction));
           break;
         case 'booking':
           sorted.sort(withPinnedFirst((a, b) => byDateISO('amsBookingDate')(a, b) * direction));
           break;
         case 'offer':
+          {
           const angebotOrder = ['BAM', 'LL/B+', 'BwB', 'NB'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('angebot', angebotOrder)(a, b) * direction));
           break;
+          }
         case 'result':
+          {
           const resultOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch', 'keineReaktion'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('result', resultOrder)(a, b) * direction));
           break;
+          }
       }
     } else {
       // Default sorting by urgency when no specific sort is applied
@@ -363,59 +323,6 @@ export function useBoardData() {
     
     return sorted;
   }, [filteredClients, view.sort, users]);
-
-  // Legacy sorting modes for backward compatibility
-  const legacySortedClients = useMemo(() => {
-    const filtered = [...filteredClients];
-    
-    // Only apply legacy sorting if no new sort is active
-    if (view.sort.key) {
-      return sortedClients;
-    }
-    
-    switch (view.sort.mode) {
-      case 'urgency':
-        // Already handled in default case above
-        break;
-        
-      case 'activity':
-        filtered.sort((a, b) => {
-          // Gepinnte Clients immer oben
-          if (a.isPinned && !b.isPinned) return -1;
-          if (!a.isPinned && b.isPinned) return 1;
-          
-          if (a.lastActivity && b.lastActivity) {
-            return new Date(b.lastActivity).getTime() - new Date(a.lastActivity).getTime();
-          }
-          if (a.lastActivity && !b.lastActivity) return -1;
-          if (!a.lastActivity && b.lastActivity) return 1;
-          return 0;
-        });
-        break;
-        
-      case 'assignee':
-        filtered.sort((a, b) => {
-          // Gepinnte Clients immer oben
-          if (a.isPinned && !b.isPinned) return -1;
-          if (!a.isPinned && b.isPinned) return 1;
-          
-          const aUser = users.find(u => u.id === a.assignedTo)?.name || '';
-          const bUser = users.find(u => u.id === b.assignedTo)?.name || '';
-          
-          if (aUser !== bUser) return aUser.localeCompare(bUser);
-          
-          // Secondary: priority
-          const priorityOrder = { dringend: 4, hoch: 3, normal: 2, niedrig: 1 };
-          const aPrio = priorityOrder[a.priority] || 0;
-          const bPrio = priorityOrder[b.priority] || 0;
-          
-          return bPrio - aPrio;
-        });
-        break;
-    }
-    
-    return filtered;
-  }, [filteredClients, sortedClients, view.sort, users]);
 
   // Zähler
   const counts = useMemo(() => {

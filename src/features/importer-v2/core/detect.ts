@@ -11,7 +11,7 @@ const PATTERNS = {
   zip: /^\d{4,5}$/,
   
   // Austrian phone numbers
-  phone: /^(\+43|0043|0)\s*\d{1,4}[\s/-]*\d{3,4}[\s/-]*\d{3,4}$/,
+  phone: /^(\+43|0043|0)\s*\d{1,4}[\s\/-]*\d{3,4}[\s\/-]*\d{3,4}$/,
   
   // Austrian SV numbers (10 digits, sometimes with space after 4th)
   svNumber: /^\d{4}\s?\d{6}$/,

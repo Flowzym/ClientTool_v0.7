@@ -184,14 +184,14 @@ export function autoMapHeaders(
       field: match.field,
       confidence: match.confidence,
       reason: match.reason,
-      repairs: normalized.repairs
+      repairs: _normalized.repairs
     });
     
     // Nur bei ausreichender Confidence automatisch zuordnen
     if (match.field && match.confidence >= confidenceThreshold) {
-      mapping[index.toString()] = match.field;
+      _mapping[index.toString()] = match.field;
     }
   });
   
-  return { mapping, suggestions };
+  return { mapping: _mapping, suggestions };
 }

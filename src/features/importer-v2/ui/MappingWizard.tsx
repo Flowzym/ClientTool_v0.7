@@ -56,9 +56,7 @@ interface CustomField {
 
 export const MappingWizard: React.FC<MappingWizardProps> = ({
   onComplete,
-  onCancel,
-  initialFile,
-  suggestedTemplate
+  onCancel
 }) => {
   // TODO: Implement wizard state management
   // - Current step tracking
@@ -69,7 +67,7 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
 
   const [state, setState] = useState<WizardState>({
     currentStep: 1,
-    file: initialFile || null,
+    file: null,
     headersRaw: [],
     headersNormalized: [],
     mapping: new Map(),

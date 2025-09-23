@@ -275,7 +275,7 @@ export function applyMapping(
   row: any[],
   headers: string[],
   mapping: Map<string, InternalField>,
-  _options: TransformOptions
+  options: TransformOptions
 ): Partial<InternalRecord> {
   const record: Partial<InternalRecord> = {};
 
@@ -300,7 +300,7 @@ export function applyMapping(
       case 'amsBookingDate':
       case 'followUp':
       case 'lastActivity': {
-        record[field] = parseDate(stringValue, { format: _options.dateFormat });
+        record[field] = parseDate(stringValue, { format: options.dateFormat });
         break;
       }
       case 'phone': {
@@ -345,27 +345,33 @@ export function applyMapping(
   });
 
   // Handle custom fields
-  _options.customFields.forEach(customField => {
+  options.customFields.forEach(customField => {
     const headerIndex = headers.findIndex(h => h === customField.name);
     if (headerIndex >= 0 && row[headerIndex] !== undefined) {
       const value = row[headerIndex];
       
       switch (customField.type) {
         case 'number': {
+          {
           const num = parseFloat(value.toString());
           if (!isNaN(num)) {
             (record as any)[customField.name] = num;
           }
           break;
+          }
         }
         case 'boolean': {
+          {
           const boolValue = value.toString().toLowerCase();
           (record as any)[customField.name] = ['true', '1', 'yes', 'ja', 'y'].includes(boolValue);
           break;
+          }
         }
         case 'date': {
+          {
           (record as any)[customField.name] = parseDate(value);
           break;
+          }
         }
         default:
           (record as any)[customField.name] = value.toString();

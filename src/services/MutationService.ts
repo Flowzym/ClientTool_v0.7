@@ -50,7 +50,7 @@ class MutationService {
       return { success: true };
 
     } catch (error) {
-      console.error('❌ MutationService: Patch failed:', error);
+      console.warn('❌ MutationService: Patch failed:', error);
       return { 
         success: false, 
         error: error instanceof Error ? error.message : 'Unknown error' 
