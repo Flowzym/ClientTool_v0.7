@@ -25,6 +25,11 @@ const byFullName = (a: any, b: any) => {
 };
 
 const byNoteText = (a: any, b: any) => {
+  const aNote = a?.notes?.text || '';
+  const bNote = b?.notes?.text || '';
+  return aNote.localeCompare(bNote, 'de', { sensitivity: 'base' });
+};
+
 export function useBoardData() {
   const [clients, setClients] = useState<Client[]>([]);
   const overlayedClients = useOptimisticOverlay(clients);
