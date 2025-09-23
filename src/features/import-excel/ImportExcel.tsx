@@ -1,7 +1,7 @@
 /**
  * Excel/CSV-Import mit Delta-Sync und Mapping-Presets
  */
-import React, { useState, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
@@ -69,8 +69,8 @@ export function ImportExcel() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-Mapping für deutsche Spaltennamen (memoized)
-  const autoMapping = useMemo(() => ({
+  // Auto-Mapping für deutsche Spaltennamen
+  const autoMapping: Record<string, string> = {
     'nachname': 'lastName',
     'vorname': 'firstName',
     'titel': 'title',
@@ -108,7 +108,7 @@ export function ImportExcel() {
     'berater': 'amsAdvisor',
     'advisor': 'amsAdvisor',
     'betreuer': 'amsAdvisor'
-  }), []);
+  };
 
   // Datei-Upload-Handler
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -292,7 +292,7 @@ export function ImportExcel() {
       setStep('preview');
       
     } catch (error) {
-      console.error('❌ Mapping step failed:', error);
+      console.warn('❌ Mapping step failed:', error);
       setUploadError(error instanceof Error ? error.message : 'Fehler beim Verarbeiten des Mappings');
     } finally {
       setIsProcessing(false);
