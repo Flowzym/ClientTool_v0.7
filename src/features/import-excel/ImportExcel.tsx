@@ -70,7 +70,7 @@ export function ImportExcel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Auto-Mapping für deutsche Spaltennamen
-  const autoMapping: Record<string, string> = {
+  const autoMapping: Record<string, string> = useCallback(() => ({
     'nachname': 'lastName',
     'vorname': 'firstName',
     'titel': 'title',
@@ -108,7 +108,7 @@ export function ImportExcel() {
     'berater': 'amsAdvisor',
     'advisor': 'amsAdvisor',
     'betreuer': 'amsAdvisor'
-  };
+  }), []);
 
   // Datei-Upload-Handler
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,7 +179,7 @@ export function ImportExcel() {
       headers.forEach((header, index) => {
         if (!header) return;
         const normalized = header.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-        const targetField = autoMapping[normalized];
+        const targetField = autoMapping()[normalized];
         if (targetField) {
           detectedMapping[index.toString()] = targetField;
         }
@@ -513,17 +513,17 @@ export function ImportExcel() {
     
     // Log suggestions für Debugging
     if (import.meta.env.DEV) {
-      console.warn(`🤖 Auto-mapping applied: ${Object.keys(detectedMapping).length} columns mapped`);
+      console.log(`🤖 Auto-mapping applied: ${Object.keys(detectedMapping).length} columns mapped`);
       suggestions.forEach(s => {
         if (s.repairs.length > 0) {
-          console.warn(`🔧 Mojibake repaired: ${s.repairs.join(', ')}`);
+          console.log(`🔧 Mojibake repaired: ${s.repairs.join(', ')}`);
         }
         if (s.field) {
-          console.warn(`✅ ${s.header} → ${s.field} (${Math.round(s.confidence * 100)}%: ${s.reason})`);
+          console.log(`✅ ${s.header} → ${s.field} (${Math.round(s.confidence * 100)}%: ${s.reason})`);
         }
       });
     }
-  }, [importData, autoMapping]);
+  }, [importData]);
 
   // Render-Funktionen
   const renderFileStep = () => (
