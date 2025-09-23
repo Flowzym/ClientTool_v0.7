@@ -28,7 +28,7 @@ const VALIDATION_PATTERNS = {
   zip: /^\d{4,5}$/,
   svNumber: /^\d{4}\s?\d{6}$/,
   amsId: /^A\d{4,6}$/,
-  date: /^\d{1,2}[.\/]\d{1,2}[.\/]\d{4}$|^\d{4}-\d{2}-\d{2}$/
+  date: /^\d{1,2}[./]\d{1,2}[./]\d{4}$|^\d{4}-\d{2}-\d{2}$/
 };
 
 // Valid enum values

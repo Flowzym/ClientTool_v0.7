@@ -283,7 +283,7 @@ class TemplateStore {
       // Remove from cache
       this.cache.delete(id);
       
-      console.log(`✅ Template deleted: ${template.metadata.name}`);
+      console.warn(`✅ Template deleted: ${template.metadata.name}`);
       return true;
       
     } catch (error) {

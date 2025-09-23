@@ -169,14 +169,14 @@ export function autoMapHeaders(
     repairs: string[];
   }>;
 } {
-  const mapping: Record<string, string> = {};
+  const _mapping: Record<string, string> = {};
   const suggestions: any[] = [];
   
   headers.forEach((header, index) => {
     if (!header) return;
     
-    const _normalized = normalizeHeader(header);
-    const targetField = HEADER_MAPPING[_normalized];
+    const normalized = normalizeHeader(header);
+    const match = findBestMapping(header, preset);
     
     suggestions.push({
       index,
@@ -184,7 +184,7 @@ export function autoMapHeaders(
       field: match.field,
       confidence: match.confidence,
       reason: match.reason,
-      repairs: _normalized.repairs
+      repairs: normalized.repairs
     });
     
     // Nur bei ausreichender Confidence automatisch zuordnen

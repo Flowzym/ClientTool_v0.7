@@ -4,8 +4,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import { db } from '../../data/db';
-import { cryptoManager } from '../../data/crypto';
-import type { Client, User } from '../../domain/models';
 import type { FilterChip, SortKey, BoardView } from './useBoardData.helpers';
 import { defaultView, loadViewFromStorage, saveViewToStorage, byEnum, byDateISO, byNumber, withPinnedFirst } from './useBoardData.helpers';
 
@@ -243,18 +241,14 @@ export function useBoardData() {
           break;
         }
         case 'status': {
-          {
           const statusOrder = ['offen', 'terminVereinbart', 'inBearbeitung', 'wartetRueckmeldung', 'erledigt', 'nichtErreichbar', 'abgebrochen'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('status', statusOrder)(a, b) * direction));
           break;
-          }
         }
         case 'priority': {
-          {
           const priorityOrder = ['niedrig', 'normal', 'hoch', 'dringend'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('priority', priorityOrder)(a, b) * direction));
           break;
-          }
         }
         case 'assignedTo': {
           sorted.sort(withPinnedFirst((a, b) => {
@@ -285,18 +279,14 @@ export function useBoardData() {
           break;
         }
         case 'offer': {
-          {
           const angebotOrder = ['BAM', 'LL/B+', 'BwB', 'NB'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('angebot', angebotOrder)(a, b) * direction));
           break;
-          }
         }
         case 'result': {
-          {
           const resultOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch', 'keineReaktion'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('result', resultOrder)(a, b) * direction));
           break;
-          }
         }
       }
     } else {

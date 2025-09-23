@@ -11,11 +11,10 @@ import {
   createTransformSummary,
   importRecordsViaService,
   type TransformOptions,
-  type BatchTransformResult,
-  type InternalRecord
+  type BatchTransformResult
 } from '../core/transform';
 import { findBestMappings, validateMappingQuality } from '../core/score';
-import { normalizeHeader, displayHeader } from '../core/normalize';
+import { normalizeHeader } from '../core/normalize';
 import type { InternalField } from '../core/types';
 
 // TODO: Implement mapping wizard component

@@ -49,10 +49,7 @@ async function computeInverse(forward: Patch<any>[]): Promise<Patch<any>[]> {
     const prevValues = pick(before as any, keys);
     inverses.push({ id: (before?.id ?? p.id) as any, changes: prevValues });
   }
-  return inverses;
 }
-
-// ---- public API ----
 /** Wendet Patches über zentralen MutationService an */
 export async function bulkApply<T>(patches: Patch<T>[]): Promise<void> {
   await mutationService.applyPatches(patches);

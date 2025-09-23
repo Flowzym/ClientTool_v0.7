@@ -139,14 +139,13 @@ class NetworkGuard {
     // Wrap XHR
     this.originalXHROpen = XMLHttpRequest.prototype.open;
     const original = this.originalXHROpen;
-    const guardInstance = this;
     XMLHttpRequest.prototype.open = function(this: XMLHttpRequest, method: string, url: string, async?: boolean, user?: string|null, password?: string|null) {
       const m = (method || 'GET').toUpperCase();
-      if (!guardInstance.isAllowed(url)) {
-        guardInstance.logBlocked('xhr', m, url);
+      if (!networkGuard.isAllowed(url)) {
+        networkGuard.logBlocked('xhr', m, url);
         throw new TypeError(`NetworkGuard: External request blocked - ${url}`);
       }
-      // @ts-expect-error: XHR method signature varies across environments
+      // @ts-expect-error XHR method signature varies across environments
       return original.apply(this, [method, url, async, user, password]);
     };
   }

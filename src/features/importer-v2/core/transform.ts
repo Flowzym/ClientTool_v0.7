@@ -345,37 +345,32 @@ export function applyMapping(
   });
 
   // Handle custom fields
-  options.customFields.forEach(customField => {
+  _options.customFields.forEach(customField => {
     const headerIndex = headers.findIndex(h => h === customField.name);
     if (headerIndex >= 0 && row[headerIndex] !== undefined) {
       const value = row[headerIndex];
       
       switch (customField.type) {
         case 'number': {
-          {
           const num = parseFloat(value.toString());
           if (!isNaN(num)) {
             (record as any)[customField.name] = num;
           }
           break;
-          }
         }
         case 'boolean': {
-          {
           const boolValue = value.toString().toLowerCase();
           (record as any)[customField.name] = ['true', '1', 'yes', 'ja', 'y'].includes(boolValue);
           break;
-          }
         }
         case 'date': {
-          {
           (record as any)[customField.name] = parseDate(value);
           break;
-          }
         }
-        default:
+        default: {
           (record as any)[customField.name] = value.toString();
           break;
+        }
       }
     }
   });
