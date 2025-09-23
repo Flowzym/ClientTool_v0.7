@@ -1,42 +1,71 @@
 /**
  * Data transformation utilities for Importer V2
- * Converts raw mapped data to normalized internal records
+ * Handles normalization and conversion of imported data
  */
 
-import type { InternalField } from './types';
-import { safeParseToISO } from '../../../utils/date/safeParseToISO';
-import { normalizeStatus, normalizePriority } from '../../../utils/normalize';
+import type { InternalField, InternalRecord } from './types';
 
-export interface PhoneComponents {
+/**
+ * Phone number parsing result
+ */
+export interface PhoneResult {
   countryDialCode?: string;
   areaDialCode?: string;
   phoneNumber?: string;
   phoneDisplay: string;
 }
 
+/**
+ * Transform options for data processing
+ */
 export interface TransformOptions {
-  dateFormat?: 'auto' | 'dd.mm.yyyy' | 'yyyy-mm-dd';
-  phoneFormat?: 'split' | 'combined';
-  genderMapping?: Record<string, 'M' | 'F' | 'D'>;
-  addressFormat?: 'combined' | 'split';
-  strictValidation?: boolean;
-}
-
-export interface InternalRecord {
-  [key: string]: any;
-  // Core fields that should always be present
-  firstName?: string;
-  lastName?: string;
-  amsId?: string;
-  status?: string;
-  priority?: string;
+  dateFormat: 'auto' | 'dd.mm.yyyy' | 'yyyy-mm-dd' | 'mm/dd/yyyy';
+  phoneFormat: 'international' | 'national' | 'local';
+  genderMapping: Record<string, string>;
+  customFields: Array<{
+    name: string;
+    type: 'text' | 'number' | 'date' | 'boolean';
+    required?: boolean;
+  }>;
 }
 
 /**
- * Builds phone components from various input formats
+ * Validation result for transformed records
  */
-export function buildPhone(input: string | { country?: string; area?: string; number?: string }): PhoneComponents {
-  if (typeof input === 'object' && input !== null) {
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+/**
+ * Batch transform result
+ */
+export interface BatchTransformResult {
+  successful: InternalRecord[];
+  failed: Array<{
+    rowIndex: number;
+    data: any[];
+    errors: string[];
+  }>;
+  stats: {
+    total: number;
+    successful: number;
+    failed: number;
+    processingTime: number;
+  };
+}
+
+/**
+ * Build normalized phone number from various input formats
+ */
+export function buildPhone(input: string | { country?: string; area?: string; number?: string }): PhoneResult {
+  if (!input) {
+    return { phoneDisplay: '' };
+  }
+
+  // Handle object input
+  if (typeof input === 'object') {
     const { country, area, number } = input;
     const display = [country, area, number].filter(Boolean).join(' ');
     return {
@@ -47,320 +76,409 @@ export function buildPhone(input: string | { country?: string; area?: string; nu
     };
   }
 
-  const phoneStr = String(input || '').trim();
-  if (!phoneStr) {
+  const phone = input.toString().trim();
+  if (!phone) {
     return { phoneDisplay: '' };
   }
 
-  // Austrian/German phone number patterns
+  // Austrian phone number patterns
   const patterns = [
-    // +43 1 234 5678 (Austrian landline)
-    /^(\+43|0043)\s*(\d{1,4})\s*(\d{3,4})\s*(\d{3,4})$/,
-    // +43 664 123 4567 (Austrian mobile)
-    /^(\+43|0043)\s*(\d{3})\s*(\d{3})\s*(\d{4})$/,
-    // 01 234 5678 (Local Austrian)
-    /^0(\d{1,4})\s*(\d{3,4})\s*(\d{3,4})$/,
-    // International format
-    /^(\+\d{1,3})\s*(\d{1,4})\s*(.+)$/
+    // International format: +43 1 234 5678 or +43 664 123 4567
+    /^\+(\d{1,3})\s*(\d{1,4})\s*(.+)$/,
+    // National format: 01 234 5678 or 0664 123 4567
+    /^0(\d{1,4})\s*(.+)$/,
+    // Local format: 234 5678
+    /^(\d{3,4})\s*(.+)$/
   ];
 
   for (const pattern of patterns) {
-    const match = phoneStr.match(pattern);
+    const match = phone.match(pattern);
     if (match) {
-      const [, country, area, ...rest] = match;
-      return {
-        countryDialCode: country?.startsWith('+') ? country : `+${country}`,
-        areaDialCode: area,
-        phoneNumber: rest.join(' '),
-        phoneDisplay: phoneStr
-      };
+      if (phone.startsWith('+')) {
+        // International format
+        return {
+          countryDialCode: `+${match[1]}`,
+          areaDialCode: match[2],
+          phoneNumber: match[3],
+          phoneDisplay: phone
+        };
+      } else if (phone.startsWith('0')) {
+        // National format - assume Austrian
+        return {
+          countryDialCode: '+43',
+          areaDialCode: match[1],
+          phoneNumber: match[2],
+          phoneDisplay: phone
+        };
+      } else {
+        // Local format - assume US/international
+        return {
+          countryDialCode: '+1',
+          areaDialCode: match[1],
+          phoneNumber: match[2],
+          phoneDisplay: phone
+        };
+      }
     }
   }
 
   // Fallback: return as-is
-  return { phoneDisplay: phoneStr };
+  return { phoneDisplay: phone };
 }
 
 /**
- * Parses date with various format options
+ * Parse date from various formats and return ISO string
  */
-export function parseDate(value: any, opts: TransformOptions = {}): string | null {
+export function parseDate(value: any, options: { format?: string } = {}): string | null {
   if (!value) return null;
 
-  const { dateFormat = 'auto' } = opts;
-  
+  const dateStr = value.toString().trim();
+  if (!dateStr) return null;
+
   try {
-    // Use existing safe parser
-    const result = safeParseToISO(value);
-    return result || null;
+    let date: Date;
+
+    // Try German format first (dd.mm.yyyy or d.m.yyyy)
+    const germanMatch = dateStr.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+    if (germanMatch) {
+      const [, day, month, year] = germanMatch;
+      date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+    }
+    // Try ISO format
+    else if (dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+      date = new Date(dateStr);
+    }
+    // Try US format (mm/dd/yyyy)
+    else if (dateStr.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
+      date = new Date(dateStr);
+    }
+    // Fallback to Date constructor
+    else {
+      date = new Date(dateStr);
+    }
+
+    // Validate the date
+    if (isNaN(date.getTime())) {
+      return null;
+    }
+
+    return date.toISOString();
   } catch {
     return null;
   }
 }
 
 /**
- * Normalizes gender values to standard format
+ * Normalize gender values to standard format
  */
-export function normalizeGender(value: any): 'M' | 'F' | 'D' | null {
+export function normalizeGender(value: any): string | null {
   if (!value) return null;
 
-  const str = String(value).toLowerCase().trim();
+  const gender = value.toString().toLowerCase().trim();
   
-  const maleVariants = ['m', 'male', 'mann', 'männlich', 'maennlich', 'herr'];
-  const femaleVariants = ['f', 'w', 'female', 'frau', 'weiblich', 'dame'];
-  const diverseVariants = ['d', 'diverse', 'divers', 'other', 'x', 'non-binary'];
-
-  if (maleVariants.includes(str)) return 'M';
-  if (femaleVariants.includes(str)) return 'F';
-  if (diverseVariants.includes(str)) return 'D';
-
+  // Male variants
+  if (['m', 'male', 'mann', 'männlich', 'maennlich', '1'].includes(gender)) {
+    return 'M';
+  }
+  
+  // Female variants
+  if (['f', 'w', 'female', 'frau', 'weiblich', '2'].includes(gender)) {
+    return 'F';
+  }
+  
+  // Diverse variants
+  if (['d', 'diverse', 'divers', 'other', 'x', '3'].includes(gender)) {
+    return 'D';
+  }
+  
+  // Unknown/empty
+  if (['unknown', 'unbekannt', '', '-', 'n/a'].includes(gender)) {
+    return null;
+  }
+  
+  // Return as-is for custom values
   return null;
 }
 
 /**
- * Normalizes booking status with enum + freetext support
+ * Normalize booking status values
  */
 export function normalizeBookingStatus(value: any): string {
-  if (!value) return 'offen';
+  if (!value) return '';
 
-  const str = String(value).trim();
-  
-  // Use existing status normalizer
-  return normalizeStatus(str);
+  const status = value.toString().trim();
+  const normalized = status.toLowerCase();
+
+  // Known status mappings
+  const statusMap: Record<string, string> = {
+    'offen': 'offen',
+    'open': 'offen',
+    'gebucht': 'gebucht',
+    'booked': 'gebucht',
+    'reserviert': 'gebucht',
+    'reserved': 'gebucht',
+    'abgeschlossen': 'abgeschlossen',
+    'completed': 'abgeschlossen',
+    'finished': 'abgeschlossen',
+    'beendet': 'abgeschlossen',
+    'storniert': 'storniert',
+    'cancelled': 'storniert',
+    'canceled': 'storniert',
+    'abgebrochen': 'storniert'
+  };
+
+  return statusMap[normalized] || status;
 }
 
 /**
- * Applies column mapping to raw row data
+ * Apply field mapping to a data row
  */
 export function applyMapping(
-  rawRow: Record<string, any>,
-  mapping: Record<string, InternalField>,
-  options: TransformOptions = {}
-): InternalRecord {
-  const record: InternalRecord = {};
-  const errors: string[] = [];
+  row: any[],
+  headers: string[],
+  mapping: Map<string, InternalField>,
+  options: TransformOptions
+): Partial<InternalRecord> {
+  const record: Partial<InternalRecord> = {};
 
-  // Apply mapped fields
-  for (const [columnIndex, field] of Object.entries(mapping)) {
-    const rawValue = rawRow[columnIndex];
-    if (rawValue == null || rawValue === '') continue;
+  // Process each column
+  headers.forEach((header, index) => {
+    const field = mapping.get(header);
+    const value = row[index];
 
-    try {
-      switch (field) {
-        case 'firstName':
-        case 'lastName':
-        case 'title':
-        case 'amsId':
-        case 'note':
-        case 'internalCode':
-        case 'address':
-        case 'city':
-        case 'svNumber':
-          record[field] = String(rawValue).trim();
-          break;
+    if (!field || value === undefined || value === null || value === '') {
+      return;
+    }
 
-        case 'phone':
-          const phoneComponents = buildPhone(rawValue);
-          record.phone = phoneComponents.phoneDisplay;
-          if (options.phoneFormat === 'split') {
-            record.countryCode = phoneComponents.countryDialCode;
-            record.areaCode = phoneComponents.areaDialCode;
-            record.phoneNumber = phoneComponents.phoneNumber;
+    const stringValue = value.toString().trim();
+    if (!stringValue) return;
+
+    // Apply field-specific transformations
+    switch (field) {
+      case 'birthDate':
+      case 'entryDate':
+      case 'exitDate':
+      case 'amsBookingDate':
+      case 'followUp':
+      case 'lastActivity':
+        record[field] = parseDate(stringValue, { format: options.dateFormat });
+        break;
+
+      case 'phone':
+        const phoneResult = buildPhone(stringValue);
+        record.phone = phoneResult.phoneDisplay;
+        if (phoneResult.countryDialCode) record.countryCode = phoneResult.countryDialCode;
+        if (phoneResult.areaDialCode) record.areaCode = phoneResult.areaDialCode;
+        if (phoneResult.phoneNumber) record.phoneNumber = phoneResult.phoneNumber;
+        break;
+
+      case 'gender':
+        record.gender = normalizeGender(stringValue);
+        break;
+
+      case 'status':
+        record.status = normalizeBookingStatus(stringValue);
+        break;
+
+      case 'email':
+        // Basic email validation and normalization
+        record.email = stringValue.toLowerCase();
+        break;
+
+      case 'zip':
+        // Ensure ZIP is string and remove leading zeros for Austrian format
+        record.zip = stringValue.replace(/^0+/, '') || stringValue;
+        break;
+
+      case 'svNumber':
+        // Remove spaces and dashes from SV number
+        record.svNumber = stringValue.replace(/[\s-]/g, '');
+        break;
+
+      default:
+        // Direct assignment for other fields
+        record[field] = stringValue;
+        break;
+    }
+  });
+
+  // Handle custom fields
+  options.customFields.forEach(customField => {
+    const headerIndex = headers.findIndex(h => h === customField.name);
+    if (headerIndex >= 0 && row[headerIndex] !== undefined) {
+      const value = row[headerIndex];
+      
+      switch (customField.type) {
+        case 'number':
+          const num = parseFloat(value.toString());
+          if (!isNaN(num)) {
+            (record as any)[customField.name] = num;
           }
           break;
-
-        case 'email':
-          const email = String(rawValue).trim().toLowerCase();
-          if (email.includes('@')) {
-            record.email = email;
-          }
+        case 'date':
+          (record as any)[customField.name] = parseDate(value);
           break;
-
-        case 'gender':
-          record.gender = normalizeGender(rawValue);
+        case 'boolean':
+          const boolValue = value.toString().toLowerCase();
+          (record as any)[customField.name] = ['true', '1', 'yes', 'ja', 'wahr'].includes(boolValue);
           break;
-
-        case 'zip':
-          const zip = String(rawValue).trim();
-          if (/^\d{4,5}$/.test(zip)) {
-            record.zip = zip;
-          }
-          break;
-
-        case 'birthDate':
-        case 'entryDate':
-        case 'exitDate':
-        case 'amsBookingDate':
-        case 'followUp':
-        case 'lastActivity':
-          const dateResult = parseDate(rawValue, options);
-          if (dateResult) {
-            record[field] = dateResult;
-          }
-          break;
-
-        case 'status':
-          record.status = normalizeBookingStatus(rawValue);
-          break;
-
-        case 'priority':
-          record.priority = normalizePriority(rawValue);
-          break;
-
-        case 'assignedTo':
-        case 'result':
-        case 'angebot':
-          record[field] = String(rawValue).trim();
-          break;
-
         default:
-          // Custom fields or unknown fields
-          record[field] = rawValue;
+          (record as any)[customField.name] = value.toString();
           break;
       }
-    } catch (error) {
-      errors.push(`Field ${field}: ${error instanceof Error ? error.message : 'Transform error'}`);
     }
-  }
-
-  // Apply defaults for required fields
-  if (!record.firstName && !record.lastName) {
-    record.firstName = 'Unbekannt';
-    record.lastName = 'Unbekannt';
-  }
-
-  if (!record.status) {
-    record.status = 'offen';
-  }
-
-  if (!record.priority) {
-    record.priority = 'normal';
-  }
-
-  if (!record.contactCount) {
-    record.contactCount = 0;
-  }
-
-  if (!record.contactLog) {
-    record.contactLog = [];
-  }
-
-  if (record.isArchived === undefined) {
-    record.isArchived = false;
-  }
-
-  // Add transform metadata
-  (record as any).__transformErrors = errors;
-  (record as any).__transformedAt = new Date().toISOString();
+  });
 
   return record;
 }
 
 /**
- * Validates transformed record for completeness
+ * Validate a transformed record
  */
-export function validateTransformedRecord(record: InternalRecord): {
-  valid: boolean;
-  errors: string[];
-  warnings: string[];
-} {
+export function validateTransformedRecord(
+  record: Partial<InternalRecord>,
+  requiredFields: string[]
+): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Required field validation
-  if (!record.firstName && !record.lastName) {
-    errors.push('Weder Vor- noch Nachname vorhanden');
-  }
+  // Check required fields
+  requiredFields.forEach(field => {
+    const value = (record as any)[field];
+    if (value === undefined || value === null || value === '') {
+      errors.push(`${field} ist erforderlich`);
+    }
+  });
 
-  // Email validation
-  if (record.email && !record.email.includes('@')) {
-    errors.push('Ungültige E-Mail-Adresse');
-  }
-
-  // Phone validation
-  if (record.phone && record.phone.length < 5) {
-    warnings.push('Telefonnummer sehr kurz');
-  }
-
-  // Date validation
-  const dateFields = ['birthDate', 'entryDate', 'exitDate', 'amsBookingDate', 'followUp'];
-  for (const field of dateFields) {
-    if (record[field] && !record[field].match(/^\d{4}-\d{2}-\d{2}T/)) {
-      warnings.push(`${field}: Ungewöhnliches Datumsformat`);
+  // Validate email format
+  if (record.email && record.email.trim()) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(record.email)) {
+      errors.push('email hat ungültiges Format');
     }
   }
 
-  // Transform errors
-  if ((record as any).__transformErrors?.length > 0) {
-    warnings.push(...(record as any).__transformErrors);
+  // Validate Austrian ZIP codes
+  if (record.zip && record.zip.trim()) {
+    const zipRegex = /^\d{4}$/;
+    if (!zipRegex.test(record.zip)) {
+      warnings.push('PLZ sollte 4-stellig sein (österreichisches Format)');
+    }
+  }
+
+  // Validate SV number format (Austrian)
+  if (record.svNumber && record.svNumber.trim()) {
+    const svRegex = /^\d{10}$/;
+    if (!svRegex.test(record.svNumber.replace(/[\s-]/g, ''))) {
+      warnings.push('SV-Nummer sollte 10-stellig sein');
+    }
+  }
+
+  // Validate phone numbers
+  if (record.phone && record.phone.trim()) {
+    const phoneRegex = /^[\+]?[\d\s\-\(\)]{7,}$/;
+    if (!phoneRegex.test(record.phone)) {
+      warnings.push('Telefonnummer hat ungewöhnliches Format');
+    }
   }
 
   return {
-    valid: errors.length === 0,
+    isValid: errors.length === 0,
     errors,
     warnings
   };
 }
 
 /**
- * Batch transforms raw rows to internal records
+ * Transform data in batches with progress reporting
  */
-export function batchTransform(
-  rawRows: Record<string, any>[],
-  mapping: Record<string, InternalField>,
-  options: TransformOptions = {},
-  onProgress?: (progress: number, current: number, total: number) => void
-): {
-  records: InternalRecord[];
-  errors: Array<{ row: number; errors: string[]; warnings: string[] }>;
-  stats: { total: number; valid: number; warnings: number; errors: number };
-} {
-  const records: InternalRecord[] = [];
-  const errors: Array<{ row: number; errors: string[]; warnings: string[] }> = [];
-  const stats = { total: rawRows.length, valid: 0, warnings: 0, errors: 0 };
+export async function batchTransform(
+  rows: any[][],
+  headers: string[],
+  mapping: Map<string, InternalField>,
+  options: TransformOptions,
+  requiredFields: string[],
+  onProgress?: (progress: { processed: number; total: number; current?: any }) => void,
+  batchSize: number = 200
+): Promise<BatchTransformResult> {
+  const startTime = Date.now();
+  const successful: InternalRecord[] = [];
+  const failed: Array<{ rowIndex: number; data: any[]; errors: string[] }> = [];
 
-  for (let i = 0; i < rawRows.length; i++) {
-    try {
-      const record = applyMapping(rawRows[i], mapping, options);
-      const validation = validateTransformedRecord(record);
-
-      records.push(record);
-
-      if (validation.valid) {
-        stats.valid++;
-      } else {
-        stats.errors++;
-      }
-
-      if (validation.warnings.length > 0) {
-        stats.warnings++;
-      }
-
-      if (!validation.valid || validation.warnings.length > 0) {
-        errors.push({
-          row: i + 1,
-          errors: validation.errors,
-          warnings: validation.warnings
+  for (let i = 0; i < rows.length; i += batchSize) {
+    const batch = rows.slice(i, i + batchSize);
+    
+    for (let j = 0; j < batch.length; j++) {
+      const rowIndex = i + j;
+      const row = batch[j];
+      
+      try {
+        // Transform the row
+        const transformed = applyMapping(row, headers, mapping, options);
+        
+        // Validate the result
+        const validation = validateTransformedRecord(transformed, requiredFields);
+        
+        if (validation.isValid) {
+          successful.push(transformed as InternalRecord);
+        } else {
+          failed.push({
+            rowIndex,
+            data: row,
+            errors: validation.errors
+          });
+        }
+      } catch (error) {
+        failed.push({
+          rowIndex,
+          data: row,
+          errors: [`Transformationsfehler: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`]
         });
       }
-
+      
       // Report progress
-      if (onProgress && i % 50 === 0) {
-        onProgress((i + 1) / rawRows.length, i + 1, rawRows.length);
+      if (onProgress) {
+        onProgress({
+          processed: rowIndex + 1,
+          total: rows.length,
+          current: row
+        });
       }
-    } catch (error) {
-      stats.errors++;
-      errors.push({
-        row: i + 1,
-        errors: [error instanceof Error ? error.message : 'Unbekannter Transform-Fehler'],
-        warnings: []
-      });
     }
+    
+    // Allow UI to update between batches
+    await new Promise(resolve => setTimeout(resolve, 0));
   }
 
-  if (onProgress) {
-    onProgress(1.0, rawRows.length, rawRows.length);
-  }
+  const processingTime = Date.now() - startTime;
 
-  return { records, errors, stats };
+  return {
+    successful,
+    failed,
+    stats: {
+      total: rows.length,
+      successful: successful.length,
+      failed: failed.length,
+      processingTime
+    }
+  };
+}
+
+/**
+ * Create a sample InternalRecord for testing/preview
+ */
+export function createSampleRecord(): Partial<InternalRecord> {
+  return {
+    firstName: 'Max',
+    lastName: 'Mustermann',
+    email: 'max.mustermann@example.com',
+    phone: '+43 1 234 5678',
+    address: 'Musterstraße 123',
+    zip: '1010',
+    city: 'Wien',
+    birthDate: '1990-01-15T00:00:00.000Z',
+    gender: 'M',
+    svNumber: '1234567890',
+    amsId: 'AMS123456'
+  };
 }
