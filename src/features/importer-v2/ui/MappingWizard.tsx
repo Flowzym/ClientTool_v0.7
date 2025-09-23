@@ -5,19 +5,18 @@
 
 import React from 'react';
 import { useState, useCallback, useMemo } from 'react';
-import { Upload, FileText, Settings, CheckCircle, AlertTriangle, X, Download } from 'lucide-react';
-import Papa from 'papaparse';
+import { Upload, FileText, Settings, CheckCircle, AlertTriangle, X, Download, Play, Pause } from 'lucide-react';
 import { 
-  applyMapping, 
   batchTransform, 
-  validateTransformedRecord,
   createTransformSummary,
+  importRecordsViaService,
   type TransformOptions,
-  type BatchTransformResult 
+  type BatchTransformResult,
+  type InternalRecord
 } from '../core/transform';
-import { guessColumn } from '../core/score';
-import { validateMapping } from '../core/validate';
+import { findBestMappings, validateMappingQuality } from '../core/score';
 import { normalizeHeader, displayHeader } from '../core/normalize';
+import type { InternalField } from '../core/types';
 
 // TODO: Implement mapping wizard component
 // - Step-by-step import process
@@ -38,13 +37,14 @@ interface WizardState {
   file: File | null;
   headersRaw: string[];
   headersNormalized: string[];
-  mapping: Record<string, string>;
+  mapping: Map<string, InternalField>;
   customFields: CustomField[];
   preview: string[][];
-  validation: ValidationResult | null;
+  validation: any | null;
   importing: boolean;
   importProgress: { processed: number; total: number } | null;
   importResult: BatchTransformResult | null;
+  transformResult: BatchTransformResult | null;
 }
 
 interface CustomField {
@@ -52,14 +52,6 @@ interface CustomField {
   name: string;
   type: 'text' | 'number' | 'date' | 'boolean';
   required: boolean;
-}
-
-interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-  mappedFields: string[];
-  unmappedFields: string[];
 }
 
 export const MappingWizard: React.FC<MappingWizardProps> = ({
@@ -80,60 +72,69 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
     file: initialFile || null,
     headersRaw: [],
     headersNormalized: [],
-    mapping: {},
+    mapping: new Map(),
     customFields: [],
     preview: [],
     validation: null,
     importing: false,
     importProgress: null,
-    importResult: null
+    importResult: null,
+    transformResult: null
   });
 
-  // Parse CSV file
+  // Parse CSV file (simplified for demo)
   const parseFile = useCallback((file: File) => {
-    Papa.parse(file, {
-      header: false,
-      preview: 100, // Only parse first 100 rows for preview
-      complete: (results) => {
-        const data = results.data as string[][];
-        if (data.length > 0) {
-          const headers = data[0];
-          const normalized = headers.map(normalizeHeader);
-          
-          setState(prev => ({
-            ...prev,
-            file,
-            headersRaw: headers,
-            headersNormalized: normalized,
-            preview: data,
-            mapping: {} // Reset mapping when new file is loaded
-          }));
-        }
-      },
-      error: (error) => {
-        console.error('CSV parsing error:', error);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const lines = text.split('\n').filter(line => line.trim());
+      const data = lines.map(line => line.split(',').map(cell => cell.trim()));
+      
+      if (data.length > 0) {
+        const headers = data[0];
+        const normalized = headers.map(h => normalizeHeader(h));
+        
+        setState(prev => ({
+          ...prev,
+          file,
+          headersRaw: headers,
+          headersNormalized: normalized.map(n => n.fixed),
+          preview: data,
+          mapping: new Map() // Reset mapping when new file is loaded
+        }));
       }
-    });
+    };
+    reader.readAsText(file);
   }, []);
 
   // Auto-suggest mappings based on header names
   const autoSuggestMappings = useCallback(() => {
-    const targetFields = ['firstName', 'lastName', 'email', 'phone', 'company'];
-    const suggestions: Record<string, string> = {};
+    const targetFields: InternalField[] = ['firstName', 'lastName', 'email', 'phone', 'amsId'];
+    const suggestions = findBestMappings(targetFields, state.headersRaw);
     
-    targetFields.forEach(field => {
-      const bestMatch = guessColumn(field, state.headersNormalized);
-      if (bestMatch.score > 0.7) {
-        suggestions[field] = state.headersRaw[bestMatch.index];
+    const newMapping = new Map<string, InternalField>();
+    
+    Object.entries(suggestions).forEach(([columnIndex, guess]) => {
+      if (guess.confidence > 0.5) {
+        const header = state.headersRaw[parseInt(columnIndex)];
+        newMapping.set(header, guess.field);
       }
     });
     
-    setState(prev => ({ ...prev, mapping: { ...prev.mapping, ...suggestions } }));
+    setState(prev => ({ ...prev, mapping: newMapping }));
   }, [state.headersRaw, state.headersNormalized]);
 
   // Validate current mapping
   const validateCurrentMapping = useCallback(() => {
-    const result = validateMapping(state.headersRaw, state.mapping, state.customFields);
+    const mappingRecord: Record<string, any> = {};
+    state.mapping.forEach((field, header) => {
+      const columnIndex = state.headersRaw.indexOf(header);
+      if (columnIndex >= 0) {
+        mappingRecord[columnIndex.toString()] = { field, confidence: 1.0, reasons: [] };
+      }
+    });
+    
+    const result = validateMappingQuality(mappingRecord, ['firstName', 'lastName']);
     setState(prev => ({ ...prev, validation: result }));
   }, [state.headersRaw, state.mapping, state.customFields]);
 
@@ -145,17 +146,14 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
     customFields: state.customFields
   }), [state.customFields]);
 
-  // Start import process
-  const handleStartImport = useCallback(async () => {
-    if (!state.validation?.isValid || state.preview.length === 0) {
-      return;
-    }
+  // Transform data step
+  const handleTransformData = useCallback(async () => {
+    if (state.preview.length === 0) return;
 
     setState(prev => ({ 
       ...prev, 
-      importing: true, 
-      importProgress: { processed: 0, total: state.preview.length },
-      importResult: null 
+      importing: true,
+      importProgress: { processed: 0, total: state.preview.length - 1 }
     }));
 
     try {
@@ -168,7 +166,7 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
         state.headersRaw,
         state.mapping,
         transformOptions,
-        ['firstName', 'lastName'], // Required fields - could be configurable
+        ['firstName', 'lastName'], // Required fields
         (progress) => {
           setState(prev => ({ 
             ...prev, 
@@ -177,23 +175,67 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
         }
       );
 
-      // TODO: Here we would call the existing service layer
-      // For now, we just simulate the import
-      console.log('Import simulation:', {
-        successful: result.successful.length,
-        failed: result.failed.length,
-        data: result.successful.slice(0, 3) // Log first 3 records
-      });
+      setState(prev => ({ 
+        ...prev, 
+        importing: false,
+        importProgress: null,
+        transformResult: result,
+        currentStep: 4
+      }));
 
-      // In a real implementation, this would be:
-      // await importClients(result.successful);
-      // or similar service call
+    } catch (error) {
+      console.error('Transform failed:', error);
+      setState(prev => ({ 
+        ...prev, 
+        importing: false,
+        importProgress: null,
+        transformResult: {
+          successful: [],
+          failed: [{ rowIndex: 0, data: [], errors: ['Transform failed: ' + (error as Error).message] }],
+          stats: { total: 0, successful: 0, failed: 1, processingTime: 0 }
+        }
+      }));
+    }
+  }, [state.preview, state.headersRaw, state.mapping, transformOptions]);
+
+  // Start import process
+  const handleStartImport = useCallback(async () => {
+    if (!state.transformResult || state.transformResult.successful.length === 0) {
+      return;
+    }
+
+    setState(prev => ({ 
+      ...prev, 
+      importing: true, 
+      importProgress: { processed: 0, total: state.transformResult.successful.length },
+      importResult: null 
+    }));
+
+    try {
+      // Import via existing service layer (simulated for now)
+      const result = await importRecordsViaService(
+        state.transformResult.successful,
+        (progress) => {
+          setState(prev => ({ 
+            ...prev, 
+            importProgress: { processed: progress.processed, total: progress.total }
+          }));
+        }
+      );
 
       setState(prev => ({ 
         ...prev, 
         importing: false,
         importProgress: null,
-        importResult: result
+        importResult: {
+          successful: state.transformResult.successful,
+          failed: result.errors.map((error, index) => ({ 
+            rowIndex: index, 
+            data: [], 
+            errors: [error] 
+          })),
+          stats: { total: state.transformResult.successful.length, successful: result.imported, failed: result.errors.length, processingTime: 0 }
+        }
       }));
 
     } catch (error) {
@@ -209,7 +251,7 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
         }
       }));
     }
-  }, [state.validation, state.preview, state.headersRaw, state.mapping, transformOptions]);
+  }, [state.transformResult]);
 
   // Render current step
   const renderStep = () => {
@@ -280,14 +322,69 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
                 Automatische Zuordnung vorschlagen
               </button>
 
-              {/* Mapping interface would go here */}
+              {/* Mapping interface */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <p className="text-sm text-gray-600">
-                  Mapping-Interface wird hier implementiert...
-                </p>
-                <pre className="text-xs text-gray-500 mt-2">
-                  Headers: {JSON.stringify(state.headersRaw, null, 2)}
-                </pre>
+                <h4 className="font-medium mb-3">Spalten-Zuordnung</h4>
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {state.headersRaw.map((header, index) => {
+                    const normalizedHeader = normalizeHeader(header);
+                    const displayHeader = displayHeader(header);
+                    const mappedField = state.mapping.get(header);
+                    
+                    return (
+                      <div key={index} className="flex items-center gap-3 p-2 border border-gray-200 rounded">
+                        <div className="w-32 text-sm">
+                          <div className="font-medium truncate" title={header}>
+                            {displayHeader}
+                          </div>
+                          {normalizedHeader.repairs.length > 0 && (
+                            <div className="text-xs text-green-600">
+                              ✓ {normalizedHeader.repairs.length} Encoding-Fix(es)
+                            </div>
+                          )}
+                        </div>
+                        <div className="text-gray-400">→</div>
+                        <select
+                          value={mappedField || ''}
+                          onChange={(e) => {
+                            const newMapping = new Map(state.mapping);
+                            if (e.target.value) {
+                              newMapping.set(header, e.target.value as InternalField);
+                            } else {
+                              newMapping.delete(header);
+                            }
+                            setState(prev => ({ ...prev, mapping: newMapping }));
+                          }}
+                          className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                        >
+                          <option value="">Ignorieren</option>
+                          <option value="amsId">AMS-ID</option>
+                          <option value="firstName">Vorname</option>
+                          <option value="lastName">Nachname</option>
+                          <option value="title">Titel</option>
+                          <option value="gender">Geschlecht</option>
+                          <option value="birthDate">Geburtsdatum</option>
+                          <option value="phone">Telefon</option>
+                          <option value="email">E-Mail</option>
+                          <option value="address">Adresse</option>
+                          <option value="zip">PLZ</option>
+                          <option value="city">Ort</option>
+                          <option value="status">Status</option>
+                          <option value="priority">Priorität</option>
+                          <option value="angebot">Angebot</option>
+                          <option value="note">Notiz</option>
+                        </select>
+                        <div className="w-24 text-xs text-gray-500">
+                          {state.preview.length > 1 && state.preview[1][index] && (
+                            <div className="truncate" title={state.preview[1][index]}>
+                              {state.preview[1][index]}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
@@ -297,58 +394,70 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <Settings className="h-12 w-12 text-blue-600 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Validierung
+                Transform-Optionen
               </h3>
               <p className="text-sm text-gray-600">
-                Überprüfung der Zuordnungen und Datenvorschau
+                Konfigurieren Sie die Datenverarbeitung
               </p>
             </div>
 
-            <button
-              onClick={validateCurrentMapping}
-              className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
-            >
-              Zuordnungen validieren
-            </button>
-
-            {state.validation && (
-              <div className={`rounded-lg p-4 ${
-                state.validation.isValid 
-                  ? 'bg-green-50 border border-green-200' 
-                  : 'bg-red-50 border border-red-200'
-              }`}>
-                <div className="flex items-center mb-2">
-                  {state.validation.isValid ? (
-                    <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                  ) : (
-                    <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
-                  )}
-                  <span className={`text-sm font-medium ${
-                    state.validation.isValid ? 'text-green-800' : 'text-red-800'
-                  }`}>
-                    {state.validation.isValid ? 'Validierung erfolgreich' : 'Validierungsfehler'}
-                  </span>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Datumsformat</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="auto">Automatisch erkennen</option>
+                    <option value="dd.mm.yyyy">DD.MM.YYYY (Deutsch)</option>
+                    <option value="yyyy-mm-dd">YYYY-MM-DD (ISO)</option>
+                    <option value="mm/dd/yyyy">MM/DD/YYYY (US)</option>
+                  </select>
                 </div>
                 
-                {state.validation.errors.length > 0 && (
-                  <ul className="text-sm text-red-600 list-disc list-inside">
-                    {state.validation.errors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
-                )}
-                
-                {state.validation.warnings.length > 0 && (
-                  <ul className="text-sm text-yellow-600 list-disc list-inside mt-2">
-                    {state.validation.warnings.map((warning, index) => (
-                      <li key={index}>{warning}</li>
-                    ))}
-                  </ul>
-                )}
+                <div>
+                  <label className="block text-sm font-medium mb-2">Telefon-Format</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-md">
+                    <option value="international">International (+43 1 234 5678)</option>
+                    <option value="national">National (01 234 5678)</option>
+                    <option value="local">Lokal (234 5678)</option>
+                  </select>
+                </div>
               </div>
-            )}
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Geschlecht-Mapping</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>m, männlich →</span>
+                    <span className="font-medium">M</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>f, w, weiblich →</span>
+                    <span className="font-medium">F</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>d, diverse →</span>
+                    <span className="font-medium">D</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>Andere →</span>
+                    <span className="font-medium">null</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <button
+                onClick={handleTransformData}
+                disabled={state.mapping.size === 0}
+                className="px-6 py-3 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+              >
+                <Play className="h-4 w-4" />
+                <span>Daten transformieren</span>
+              </button>
+            </div>
           </div>
         );
 
@@ -358,7 +467,9 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
             <div className="space-y-6">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Import läuft...</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {state.transformResult ? 'Import läuft...' : 'Transformiere Daten...'}
+                </h3>
                 {state.importProgress && (
                   <div className="space-y-2">
                     <p className="text-sm text-gray-600">
@@ -373,6 +484,79 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
                       ></div>
                     </div>
                   </div>
+                )}
+              </div>
+            </div>
+          );
+        }
+
+        if (state.transformResult && !state.importResult) {
+          const { stats, failed } = state.transformResult;
+          return (
+            <div className="space-y-6">
+              <div className="text-center">
+                <CheckCircle className="h-12 w-12 text-green-600 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Transformation abgeschlossen
+                </h3>
+              </div>
+
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-green-600">{stats.successful}</div>
+                    <div className="text-sm text-gray-600">Erfolgreich</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-red-600">{stats.failed}</div>
+                    <div className="text-sm text-gray-600">Fehler</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-gray-600">{stats.processingTime}ms</div>
+                    <div className="text-sm text-gray-600">Verarbeitungszeit</div>
+                  </div>
+                </div>
+              </div>
+
+              {failed.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-gray-900">Fehlerhafte Datensätze:</h4>
+                  <div className="max-h-32 overflow-y-auto space-y-1">
+                    {failed.slice(0, 5).map((error, index) => (
+                      <div key={index} className="bg-red-50 border border-red-200 rounded p-2">
+                        <div className="text-sm text-red-800">
+                          Zeile {error.rowIndex + 2}: {error.errors.join(', ')}
+                        </div>
+                      </div>
+                    ))}
+                    {failed.length > 5 && (
+                      <div className="text-sm text-gray-600 text-center py-2">
+                        ... und {failed.length - 5} weitere Fehler
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-center space-x-4">
+                <button
+                  onClick={() => setState(prev => ({ 
+                    ...prev, 
+                    currentStep: 2,
+                    transformResult: null 
+                  }))}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                >
+                  Mapping ändern
+                </button>
+                {stats.successful > 0 && (
+                  <button
+                    onClick={handleStartImport}
+                    className="px-6 py-3 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 flex items-center space-x-2"
+                  >
+                    <CheckCircle className="h-4 w-4" />
+                    <span>Import starten ({stats.successful} Datensätze)</span>
+                  </button>
                 )}
               </div>
             </div>
@@ -443,6 +627,7 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
                     onClick={() => {
                       // TODO: Navigate to imported data or show success page
                       console.log('Navigate to imported data');
+                      onComplete?.(Object.fromEntries(state.mapping));
                     }}
                     className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
                   >
@@ -454,42 +639,10 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
           );
         }
 
+        // Fallback case
         return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <CheckCircle className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                Bereit zum Import
-              </h3>
-              <p className="text-sm text-gray-600">
-                Alle Validierungen erfolgreich. Import kann gestartet werden.
-              </p>
-            </div>
-
-            {state.validation && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center mb-2">
-                  <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
-                  <span className="text-sm font-medium text-green-800">
-                    {state.validation.mappedFields.length} Felder zugeordnet
-                  </span>
-                </div>
-                <p className="text-sm text-green-600">
-                  {state.preview.length - 1} Datensätze bereit zum Import
-                </p>
-              </div>
-            )}
-
-            <div className="flex justify-center">
-              <button
-                onClick={handleStartImport}
-                disabled={!state.validation?.isValid}
-                className="px-6 py-3 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-              >
-                <CheckCircle className="h-4 w-4" />
-                <span>Import starten</span>
-              </button>
-            </div>
+          <div className="text-center py-8">
+            <div className="text-gray-500">Unbekannter Zustand</div>
           </div>
         );
     }
@@ -542,15 +695,15 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
           <button
             onClick={() => setState(prev => ({ ...prev, currentStep: prev.currentStep + 1 }))}
             disabled={
-              (state.currentStep === 3 && !state.validation?.isValid) ||
+              (state.currentStep === 1 && !state.file) ||
+              (state.currentStep === 2 && state.mapping.size === 0) ||
               (state.currentStep === 4 && state.importing)
             }
             className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {state.currentStep === 4 ? 'Abschließen' : 'Weiter'}
+            {state.currentStep === 3 ? 'Transformieren' : 'Weiter'}
           </button>
         )}
-        <button onClick={() => onComplete?.({})}>Complete</button>
       </div>
     </div>
   );
