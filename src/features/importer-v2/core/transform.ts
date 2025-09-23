@@ -275,7 +275,7 @@ export function applyMapping(
   row: any[],
   headers: string[],
   mapping: Map<string, InternalField>,
-  options: TransformOptions
+  _options: TransformOptions
 ): Partial<InternalRecord> {
   const record: Partial<InternalRecord> = {};
 
@@ -293,49 +293,50 @@ export function applyMapping(
 
     // Apply field-specific transformations
     switch (field) {
-      case 'birthDate':
+      case 'birthDate': {
+      }
       case 'entryDate':
       case 'exitDate':
       case 'amsBookingDate':
       case 'followUp':
-      case 'lastActivity':
-        record[field] = parseDate(stringValue, { format: options.dateFormat });
+      case 'lastActivity': {
+        record[field] = parseDate(stringValue, { format: _options.dateFormat });
         break;
-
-      case 'phone':
+      }
+      case 'phone': {
         const phoneResult = buildPhone(stringValue);
         record.phone = phoneResult.phoneDisplay;
         record.countryCode = phoneResult.countryDialCode;
         record.areaCode = phoneResult.areaDialCode;
         record.phoneNumber = phoneResult.phoneNumber;
         break;
-
-      case 'gender':
+      }
+      case 'gender': {
         record.gender = normalizeGender(stringValue);
         break;
-
-      case 'email':
+      }
+      case 'email': {
         // Basic email validation and normalization
         const email = stringValue.toLowerCase();
         if (email.includes('@') && email.includes('.')) {
           record.email = email;
         }
         break;
-
-      case 'zip':
+      }
+      case 'zip': {
         // Ensure ZIP is string and remove leading zeros for Austrian format
         const zip = stringValue.replace(/^0+/, '') || '0';
         record.zip = zip.length >= 4 ? zip : stringValue;
         break;
-
-      case 'svNumber':
+      }
+      case 'svNumber': {
         // Format SV number (remove spaces, ensure correct format)
         const svNumber = stringValue.replace(/\s/g, '');
         if (svNumber.match(/^\d{10}$/)) {
           record.svNumber = svNumber;
         }
         break;
-
+      }
       default:
         // Direct assignment for other fields
         record[field] = stringValue;
@@ -344,25 +345,28 @@ export function applyMapping(
   });
 
   // Handle custom fields
-  options.customFields.forEach(customField => {
+  _options.customFields.forEach(customField => {
     const headerIndex = headers.findIndex(h => h === customField.name);
     if (headerIndex >= 0 && row[headerIndex] !== undefined) {
       const value = row[headerIndex];
       
       switch (customField.type) {
-        case 'number':
+        case 'number': {
           const num = parseFloat(value.toString());
           if (!isNaN(num)) {
             (record as any)[customField.name] = num;
           }
           break;
-        case 'boolean':
+        }
+        case 'boolean': {
           const boolValue = value.toString().toLowerCase();
           (record as any)[customField.name] = ['true', '1', 'yes', 'ja', 'y'].includes(boolValue);
           break;
-        case 'date':
+        }
+        case 'date': {
           (record as any)[customField.name] = parseDate(value);
           break;
+        }
         default:
           (record as any)[customField.name] = value.toString();
           break;

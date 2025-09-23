@@ -272,7 +272,7 @@ export function ColumnSelect({
                 <button
                   onClick={() => {
                     // TODO: Create custom field with search term
-                    console.log('Create field from search:', searchTerm);
+                    console.warn('Create field from search:', searchTerm);
                   }}
                   className="mt-2 text-xs text-accent-600 hover:text-accent-700"
                 >

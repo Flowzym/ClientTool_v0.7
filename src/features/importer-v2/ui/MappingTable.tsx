@@ -76,7 +76,7 @@ export const MappingTable: React.FC<MappingTableProps> = ({
                 <td className="sample-data">
                   {/* TODO: Sample data preview */}
                   <div className="sample-values">
-                    {sampleRows?.[index]?.slice(0, 3).map((value, i) => (
+                    {_sampleData?.[index]?.slice(0, 3).map((value, i) => (
                       <span key={i} className="sample-value">{value}</span>
                     ))}
                   </div>

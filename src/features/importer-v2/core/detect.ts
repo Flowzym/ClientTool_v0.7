@@ -11,7 +11,7 @@ const PATTERNS = {
   zip: /^\d{4,5}$/,
   
   // Austrian phone numbers
-  phone: /^(\+43|0043|0)\s*\d{1,4}[\s\/-]*\d{3,4}[\s\/-]*\d{3,4}$/,
+  phone: /^(\+43|0043|0)\s*\d{1,4}[\s/-]*\d{3,4}[\s/-]*\d{3,4}$/,
   
   // Austrian SV numbers (10 digits, sometimes with space after 4th)
   svNumber: /^\d{4}\s?\d{6}$/,
@@ -23,7 +23,7 @@ const PATTERNS = {
   email: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
   
   // German date patterns
-  date: /^\d{1,2}[.\/]\d{1,2}[.\/]\d{4}$|^\d{4}-\d{2}-\d{2}$/,
+  date: /^\d{1,2}[./]\d{1,2}[./]\d{4}$|^\d{4}-\d{2}-\d{2}$/,
   
   // Austrian address patterns
   address: /^.+\s+\d+[a-zA-Z]?$/,

@@ -5,7 +5,7 @@
 
 import type { InternalField, ColumnGuess, ScoringWeights, DEFAULT_SCORING_WEIGHTS } from './types';
 import { getAliases } from './aliases';
-import { normalizeHeader, levenshteinDistance, jaroWinklerSimilarity, tokenOverlapRatio } from './normalize';
+import { normalizeHeader, jaroWinklerSimilarity, tokenOverlapRatio } from './normalize';
 import { suggestFieldsFromContent } from './detect';
 
 /**

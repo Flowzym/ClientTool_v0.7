@@ -11,8 +11,6 @@ import {
   FolderOpen, 
   Settings, 
   Wand2,
-  Download,
-  Upload,
   X
 } from 'lucide-react';
 import type { ImportTemplate } from '../templates/types';

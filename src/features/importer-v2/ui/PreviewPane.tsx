@@ -11,8 +11,8 @@ import {
   EyeOff, 
   Download, 
   AlertCircle, 
-  CheckCircle,
-  Info
+  Info,
+  X
 } from 'lucide-react';
 
 interface PreviewData {

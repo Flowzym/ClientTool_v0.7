@@ -328,15 +328,12 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {state.headersRaw.map((header, index) => {
                     const normalizedHeader = normalizeHeader(header);
-                    const displayHeader = displayHeader(header);
                     const mappedField = state.mapping.get(header);
                     
                     return (
                       <div key={index} className="flex items-center gap-3 p-2 border border-gray-200 rounded">
                         <div className="w-32 text-sm">
-                          <div className="font-medium truncate" title={header}>
-                            {displayHeader}
-                          </div>
+                          <div className="font-medium truncate" title={header}>{header}</div>
                           {normalizedHeader.repairs.length > 0 && (
                             <div className="text-xs text-green-600">
                               ✓ {normalizedHeader.repairs.length} Encoding-Fix(es)

@@ -13,6 +13,15 @@ import { featureManager } from '../../config/features';
 import { getAllColumns } from './columns/registry';
 import { useColumnVisibility } from './hooks/useColumnVisibility';
 
+// Stable refs for exhaustive-deps compliance
+function useStableRefs(users: any[]) {
+  const usersRef = useRef(users);
+  useEffect(() => { 
+    usersRef.current = users; 
+  }, [users]);
+  return { usersRef };
+}
+
 // Extracted components for stable hook order
 function ClassicClientList({ 
   clients, 
@@ -115,9 +124,11 @@ function Board() {
   const lastIndexRef = useRef<number | null>(null);
   const [lastPinAnchorIndex, setLastPinAnchorIndex] = useState<number | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const [clientInfoDialogId, setClientInfoDialogId] = useState<string | null>(null);
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
+
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
+  const { usersRef } = useStableRefs(users);
 
   // Column visibility management
   const allColumns = useMemo(() => getAllColumns(), []);
@@ -207,47 +218,58 @@ function Board() {
       const direction = sortStateResolved.direction === 'desc' ? -1 : 1;
       
       switch (sortStateResolved.key) {
-        case 'name':
+        case 'name': {
           sorted.sort(withPinnedFirst((a, b) => byFullName()(a, b) * direction));
           break;
-        case 'status':
+        }
+        case 'status': {
           const statusOrder = ['offen', 'terminVereinbart', 'inBearbeitung', 'wartetRueckmeldung', 'erledigt', 'nichtErreichbar', 'abgebrochen'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('status', statusOrder)(a, b) * direction));
           break;
-        case 'priority':
+        }
+        case 'priority': {
           const priorityOrder = ['niedrig', 'normal', 'hoch', 'dringend'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('priority', priorityOrder)(a, b) * direction));
           break;
-        case 'assignedTo':
+        }
+        case 'assignedTo': {
           sorted.sort(withPinnedFirst((a, b) => {
-            const aUser = users.find(u => u.id === a.assignedTo)?.name || '';
-            const bUser = users.find(u => u.id === b.assignedTo)?.name || '';
+            const aUser = usersRef.current.find(u => u.id === a.assignedTo)?.name || '';
+            const bUser = usersRef.current.find(u => u.id === b.assignedTo)?.name || '';
             return _cmpStr(aUser, bUser) * direction;
           }));
           break;
-        case 'activity':
+        }
+        case 'activity': {
           sorted.sort(withPinnedFirst((a, b) => byDateISO('lastActivity')(a, b) * direction));
           break;
-        case 'followUp':
+        }
+        case 'followUp': {
           sorted.sort(withPinnedFirst((a, b) => byDateISO('followUp')(a, b) * direction));
           break;
-        case 'contacts':
+        }
+        case 'contacts': {
           sorted.sort(withPinnedFirst((a, b) => _cmpNum(a.contactCount ?? 0, b.contactCount ?? 0) * direction));
           break;
-        case 'notes':
+        }
+        case 'notes': {
           sorted.sort(withPinnedFirst((a, b) => byNoteText()(a, b) * direction));
           break;
-        case 'booking':
+        }
+        case 'booking': {
           sorted.sort(withPinnedFirst((a, b) => byDateISO('amsBookingDate')(a, b) * direction));
           break;
-        case 'offer':
+        }
+        case 'offer': {
           const angebotOrder = ['BAM', 'LL/B+', 'BwB', 'NB'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('angebot', angebotOrder)(a, b) * direction));
           break;
-        case 'result':
+        }
+        case 'result': {
           const resultOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch', 'keineReaktion'];
           sorted.sort(withPinnedFirst((a, b) => byEnum('result', resultOrder)(a, b) * direction));
           break;
+        }
       }
     } else {
       // Default sorting by urgency when no specific sort is applied
@@ -276,7 +298,7 @@ function Board() {
     }
     
     return sorted;
-  }, [visibleClients, sortStateResolved, users]);
+  }, [visibleClients, sortStateResolved]);
 
   // Selektion/IDs NACH sortedClients ableiten
   const allIds = useMemo(() => sortedClients.map((c: any) => c.id as string), [sortedClients]);

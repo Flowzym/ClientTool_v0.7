@@ -2,7 +2,6 @@
  * Notes-Helfer (für NameCell-Badge)
  * Pfad: src/features/board/utils/notes.ts
  */
-type NoteLike = { kind?: string; type?: string; text?: string } | string | null | undefined;
 
 function isNoteEntry(e: any): boolean {
   if (!e) return false;

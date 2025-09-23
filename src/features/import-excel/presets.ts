@@ -175,8 +175,8 @@ export function autoMapHeaders(
   headers.forEach((header, index) => {
     if (!header) return;
     
-    const normalized = normalizeHeader(header);
-    const match = findBestMapping(header, preset);
+    const _normalized = header.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+    const targetField = HEADER_MAPPING[_normalized];
     
     suggestions.push({
       index,

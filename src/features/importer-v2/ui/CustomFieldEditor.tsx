@@ -5,7 +5,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '../../../components/Button';
-import { Badge } from '../../../components/Badge';
 import { X, Plus, Trash2 } from 'lucide-react';
 
 interface CustomField {

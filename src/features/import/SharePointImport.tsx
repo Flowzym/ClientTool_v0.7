@@ -11,8 +11,6 @@ import {
   FolderOpen, 
   FileSpreadsheet,
   Download,
-  ArrowRight,
-  ArrowLeft,
   AlertCircle,
   CheckCircle,
   ExternalLink,

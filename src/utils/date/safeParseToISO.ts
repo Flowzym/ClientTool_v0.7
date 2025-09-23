@@ -39,7 +39,7 @@ export function safeParseToISO(input: unknown): ISODateString | undefined {
   }
 
   // German format: dd.mm.yyyy or dd/mm/yyyy
-  const germanMatch = s.match(/^(\d{1,2})[.\/](\d{1,2})[.\/](\d{4})$/);
+  const germanMatch = s.match(/^(\d{1,2})[./](\d{1,2})[./](\d{4})$/);
   if (germanMatch) {
     const [, day, month, year] = germanMatch;
     const d = new Date(Number(year), Number(month) - 1, Number(day));

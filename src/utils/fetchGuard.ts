@@ -132,20 +132,22 @@ class NetworkGuard {
         this.logBlocked('fetch', method, url);
         return Promise.reject(new TypeError(`NetworkGuard: External request blocked - ${url}`));
       }
-      return (this.originalFetch as any).call(globalThis, input, init);
+      // @ts-expect-error: fetch context binding differs in our environment
+      return this.originalFetch.call(globalThis, input, init);
     } as any;
 
     // Wrap XHR
     this.originalXHROpen = XMLHttpRequest.prototype.open;
     const original = this.originalXHROpen;
-    const self = this;
+    const guardInstance = this;
     XMLHttpRequest.prototype.open = function(this: XMLHttpRequest, method: string, url: string, async?: boolean, user?: string|null, password?: string|null) {
       const m = (method || 'GET').toUpperCase();
-      if (!self.isAllowed(url)) {
-        self.logBlocked('xhr', m, url);
+      if (!guardInstance.isAllowed(url)) {
+        guardInstance.logBlocked('xhr', m, url);
         throw new TypeError(`NetworkGuard: External request blocked - ${url}`);
       }
-      return (original as any).apply(this, [method, url, async, user, password]);
+      // @ts-expect-error: XHR method signature varies across environments
+      return original.apply(this, [method, url, async, user, password]);
     };
   }
 

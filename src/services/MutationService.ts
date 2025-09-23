@@ -47,7 +47,6 @@ class MutationService {
       // 4. Undo-Stack befüllen (nach erfolgreichem Persist)
       this.pushUndo(undoEntry);
 
-      console.log(`✅ MutationService: Patch applied for ${patch.id}`, patch.changes);
       return { success: true };
 
     } catch (error) {
@@ -116,7 +115,6 @@ class MutationService {
         this.redoStack.shift();
       }
 
-      console.log(`↶ MutationService: Undo applied for ${undoEntry.id}`);
       return { success: true };
 
     } catch (error) {
@@ -162,7 +160,6 @@ class MutationService {
         changes: undoChanges
       });
 
-      console.log(`↷ MutationService: Redo applied for ${redoEntry.id}`);
       return { success: true };
 
     } catch (error) {
@@ -209,7 +206,6 @@ class MutationService {
   clearStacks(): void {
     this.undoStack.length = 0;
     this.redoStack.length = 0;
-    console.log('🧹 MutationService: Undo/Redo stacks cleared');
   }
 }
 
