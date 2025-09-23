@@ -6,16 +6,8 @@ import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import { db } from '../../data/db';
 import { cryptoManager } from '../../data/crypto';
 import type { Client, User } from '../../domain/models';
-import type { 
-  FilterChip, 
-  SortKey,
-  SortDirection,
-  BoardFilters, 
-  BoardSort, 
-  BoardColumnVisibility, 
-  BoardView
-} from './useBoardData.helpers';
-import { defaultView, loadViewFromStorage, saveViewToStorage, byString, byEnum, byDateISO, byNumber, withPinnedFirst } from './useBoardData.helpers';
+import type { FilterChip, SortKey, BoardView } from './useBoardData.helpers';
+import { defaultView, loadViewFromStorage, saveViewToStorage, byEnum, byDateISO, byNumber, withPinnedFirst } from './useBoardData.helpers';
 
 // Sorting helper functions
 const byFullName = (a: any, b: any) => {
