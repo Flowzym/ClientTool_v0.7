@@ -3,7 +3,7 @@
  * Handles normalization and conversion of imported data
  */
 
-import type { InternalField, InternalRecord } from './types';
+import type { InternalField } from './types';
 
 /**
  * Phone number parsing result
@@ -27,6 +27,44 @@ export interface TransformOptions {
     type: 'text' | 'number' | 'date' | 'boolean';
     required?: boolean;
   }>;
+}
+
+/**
+ * Internal record type (matches Client domain model)
+ */
+export interface InternalRecord {
+  id?: string;
+  amsId?: string;
+  firstName: string;
+  lastName: string;
+  title?: string;
+  gender?: string;
+  birthDate?: string;
+  svNumber?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  zip?: string;
+  city?: string;
+  countryCode?: string;
+  areaCode?: string;
+  phoneNumber?: string;
+  amsBookingDate?: string;
+  entryDate?: string;
+  exitDate?: string;
+  amsAgentLastName?: string;
+  amsAgentFirstName?: string;
+  amsAdvisor?: string;
+  note?: string;
+  internalCode?: string;
+  status?: string;
+  priority?: string;
+  result?: string;
+  angebot?: string;
+  followUp?: string;
+  lastActivity?: string;
+  assignedTo?: string;
+  [key: string]: any;
 }
 
 /**
@@ -487,4 +525,46 @@ export function createTransformSummary(result: BatchTransformResult): string {
   }
   
   return summary;
+}
+
+/**
+ * Adapter function to import records via existing service layer
+ * This is where we would integrate with MutationService/BoardService
+ */
+export async function importRecordsViaService(
+  records: InternalRecord[],
+  onProgress?: (progress: { processed: number; total: number }) => void
+): Promise<{ success: boolean; imported: number; errors: string[] }> {
+  // TODO: Integrate with existing service layer
+  // For now, simulate the import process
+  
+  const errors: string[] = [];
+  let imported = 0;
+  
+  for (let i = 0; i < records.length; i++) {
+    try {
+      // Simulate service call delay
+      await new Promise(resolve => setTimeout(resolve, 10));
+      
+      // TODO: Replace with actual service call
+      // await mutationService.applyPatch({
+      //   id: records[i].id || crypto.randomUUID(),
+      //   changes: records[i]
+      // });
+      
+      imported++;
+      
+      if (onProgress) {
+        onProgress({ processed: i + 1, total: records.length });
+      }
+    } catch (error) {
+      errors.push(`Record ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  
+  return {
+    success: errors.length === 0,
+    imported,
+    errors
+  };
 }
