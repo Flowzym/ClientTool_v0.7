@@ -267,32 +267,35 @@ export function applyMapping(
       case 'phone':
         const phoneResult = buildPhone(stringValue);
         record.phone = phoneResult.phoneDisplay;
-        if (phoneResult.countryDialCode) record.countryCode = phoneResult.countryDialCode;
-        if (phoneResult.areaDialCode) record.areaCode = phoneResult.areaDialCode;
-        if (phoneResult.phoneNumber) record.phoneNumber = phoneResult.phoneNumber;
+        record.countryCode = phoneResult.countryDialCode;
+        record.areaCode = phoneResult.areaDialCode;
+        record.phoneNumber = phoneResult.phoneNumber;
         break;
 
       case 'gender':
         record.gender = normalizeGender(stringValue);
         break;
 
-      case 'status':
-        record.status = normalizeBookingStatus(stringValue);
-        break;
-
       case 'email':
         // Basic email validation and normalization
-        record.email = stringValue.toLowerCase();
+        const email = stringValue.toLowerCase();
+        if (email.includes('@') && email.includes('.')) {
+          record.email = email;
+        }
         break;
 
       case 'zip':
         // Ensure ZIP is string and remove leading zeros for Austrian format
-        record.zip = stringValue.replace(/^0+/, '') || stringValue;
+        const zip = stringValue.replace(/^0+/, '') || '0';
+        record.zip = zip.length >= 4 ? zip : stringValue;
         break;
 
       case 'svNumber':
-        // Remove spaces and dashes from SV number
-        record.svNumber = stringValue.replace(/[\s-]/g, '');
+        // Format SV number (remove spaces, ensure correct format)
+        const svNumber = stringValue.replace(/\s/g, '');
+        if (svNumber.match(/^\d{10}$/)) {
+          record.svNumber = svNumber;
+        }
         break;
 
       default:
@@ -315,12 +318,12 @@ export function applyMapping(
             (record as any)[customField.name] = num;
           }
           break;
-        case 'date':
-          (record as any)[customField.name] = parseDate(value);
-          break;
         case 'boolean':
           const boolValue = value.toString().toLowerCase();
-          (record as any)[customField.name] = ['true', '1', 'yes', 'ja', 'wahr'].includes(boolValue);
+          (record as any)[customField.name] = ['true', '1', 'yes', 'ja', 'y'].includes(boolValue);
+          break;
+        case 'date':
+          (record as any)[customField.name] = parseDate(value);
           break;
         default:
           (record as any)[customField.name] = value.toString();
@@ -351,36 +354,33 @@ export function validateTransformedRecord(
   });
 
   // Validate email format
-  if (record.email && record.email.trim()) {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(record.email)) {
-      errors.push('email hat ungültiges Format');
-    }
-  }
-
-  // Validate Austrian ZIP codes
-  if (record.zip && record.zip.trim()) {
-    const zipRegex = /^\d{4}$/;
-    if (!zipRegex.test(record.zip)) {
-      warnings.push('PLZ sollte 4-stellig sein (österreichisches Format)');
-    }
+  if (record.email && !record.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+    errors.push('email hat ungültiges Format');
   }
 
   // Validate SV number format (Austrian)
-  if (record.svNumber && record.svNumber.trim()) {
-    const svRegex = /^\d{10}$/;
-    if (!svRegex.test(record.svNumber.replace(/[\s-]/g, ''))) {
-      warnings.push('SV-Nummer sollte 10-stellig sein');
-    }
+  if (record.svNumber && !record.svNumber.match(/^\d{10}$/)) {
+    warnings.push('svNumber hat ungewöhnliches Format');
   }
 
-  // Validate phone numbers
-  if (record.phone && record.phone.trim()) {
-    const phoneRegex = /^[\+]?[\d\s\-\(\)]{7,}$/;
-    if (!phoneRegex.test(record.phone)) {
-      warnings.push('Telefonnummer hat ungewöhnliches Format');
-    }
+  // Validate ZIP code (Austrian)
+  if (record.zip && !record.zip.match(/^\d{4}$/)) {
+    warnings.push('zip sollte 4-stellig sein (österreichisches Format)');
   }
+
+  // Validate phone number
+  if (record.phone && !record.phone.match(/[\d\s\+\-\(\)]/)) {
+    warnings.push('phone enthält ungewöhnliche Zeichen');
+  }
+
+  // Validate dates
+  const dateFields = ['birthDate', 'entryDate', 'exitDate', 'amsBookingDate'] as const;
+  dateFields.forEach(field => {
+    const dateValue = record[field];
+    if (dateValue && !dateValue.match(/^\d{4}-\d{2}-\d{2}T/)) {
+      errors.push(`${field} hat ungültiges Datumsformat`);
+    }
+  });
 
   return {
     isValid: errors.length === 0,
@@ -432,7 +432,7 @@ export async function batchTransform(
         failed.push({
           rowIndex,
           data: row,
-          errors: [`Transformationsfehler: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`]
+          errors: [`Transformation error: ${error instanceof Error ? error.message : 'Unknown error'}`]
         });
       }
       
@@ -465,20 +465,26 @@ export async function batchTransform(
 }
 
 /**
- * Create a sample InternalRecord for testing/preview
+ * Create a summary of transformation results
  */
-export function createSampleRecord(): Partial<InternalRecord> {
-  return {
-    firstName: 'Max',
-    lastName: 'Mustermann',
-    email: 'max.mustermann@example.com',
-    phone: '+43 1 234 5678',
-    address: 'Musterstraße 123',
-    zip: '1010',
-    city: 'Wien',
-    birthDate: '1990-01-15T00:00:00.000Z',
-    gender: 'M',
-    svNumber: '1234567890',
-    amsId: 'AMS123456'
-  };
+export function createTransformSummary(result: BatchTransformResult): string {
+  const { stats, failed } = result;
+  
+  let summary = `Transformation abgeschlossen:\n`;
+  summary += `• ${stats.successful} Datensätze erfolgreich verarbeitet\n`;
+  summary += `• ${stats.failed} Datensätze mit Fehlern\n`;
+  summary += `• Verarbeitungszeit: ${(stats.processingTime / 1000).toFixed(1)}s\n`;
+  
+  if (failed.length > 0) {
+    summary += `\nFehlerhafte Zeilen:\n`;
+    failed.slice(0, 5).forEach(error => {
+      summary += `• Zeile ${error.rowIndex + 1}: ${error.errors.join(', ')}\n`;
+    });
+    
+    if (failed.length > 5) {
+      summary += `• ... und ${failed.length - 5} weitere Fehler\n`;
+    }
+  }
+  
+  return summary;
 }
