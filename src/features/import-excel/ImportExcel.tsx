@@ -11,6 +11,9 @@ import { extractTablesFromHtml } from '../../utils/htmlTable';
 import { sniffBuffer, firstBytesHex } from '../../utils/fileSniff';
 import { validateRow, dedupeImport } from './validators';
 import { buildRowKey, hashRow } from './dedupe';
+import { autoMapHeaders, PRESET_AMS_DEFAULT } from './presets';
+import { normalizeHeader } from './normalize';
+import { COMPUTED_FIELDS, computeAllFields } from './computed';
 import { savePreset, loadPreset } from './mappingPresets';
 import { nowISO } from '../../utils/date';
 import { db } from '../../data/db';
@@ -500,18 +503,26 @@ export function ImportExcel() {
   const autoSuggestMappings = useCallback(() => {
     if (!importData) return;
     
-    const detectedMapping: Record<string, string> = {};
-    importData.headers.forEach((header, index) => {
-      if (!header) return;
-      const normalized = header.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-      const targetField = autoMapping[normalized];
-      if (targetField) {
-        detectedMapping[index.toString()] = targetField;
-      }
-    });
+    const { mapping: detectedMapping, suggestions } = autoMapHeaders(
+      importData.headers,
+      PRESET_AMS_DEFAULT,
+      0.5 // Confidence threshold
+    );
     
     setMapping(detectedMapping);
-    console.log(`🤖 Auto-mapping applied: ${Object.keys(detectedMapping).length} columns mapped`);
+    
+    // Log suggestions für Debugging
+    if (import.meta.env.DEV) {
+      console.log(`🤖 Auto-mapping applied: ${Object.keys(detectedMapping).length} columns mapped`);
+      suggestions.forEach(s => {
+        if (s.repairs.length > 0) {
+          console.log(`🔧 Mojibake repaired: ${s.repairs.join(', ')}`);
+        }
+        if (s.field) {
+          console.log(`✅ ${s.header} → ${s.field} (${Math.round(s.confidence * 100)}%: ${s.reason})`);
+        }
+      });
+    }
   }, [importData, autoMapping]);
 
   // Render-Funktionen
@@ -652,14 +663,21 @@ export function ImportExcel() {
                   Automatische Zuordnung vorschlagen
                 </Button>
                 <div className="text-xs text-gray-500 mt-1 text-center">
-                  Erkennt deutsche Spaltennamen automatisch
+                  Erkennt deutsche Spaltennamen automatisch (inkl. Mojibake-Reparatur)
                 </div>
               </div>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {importData?.headers.map((header, index) => (
-                  <div key={index} className="flex items-center gap-3">
-                    <div className="w-32 text-sm font-medium truncate" title={header}>
-                      {header}
+                  <div key={index} className="flex items-center gap-3 p-2 border border-gray-100 rounded">
+                    <div className="w-32 text-sm">
+                      <div className="font-medium truncate" title={header}>
+                        {normalizeHeader(header).repaired}
+                      </div>
+                      {normalizeHeader(header).repairs.length > 0 && (
+                        <div className="text-xs text-green-600">
+                          ✓ Encoding repariert
+                        </div>
+                      )}
                     </div>
                     <ArrowRight className="w-4 h-4 text-gray-400" />
                     <select
@@ -685,7 +703,27 @@ export function ImportExcel() {
                       <option value="followUp">Follow-up</option>
                       <option value="amsAdvisor">AMS-Berater</option>
                       <option value="note">Notiz</option>
+                      <option value="gender">Geschlecht</option>
+                      <option value="svNumber">SV-Nummer</option>
+                      <option value="zip">PLZ</option>
+                      <option value="city">Ort</option>
+                      <option value="countryCode">Landesvorwahl</option>
+                      <option value="areaCode">Vorwahl</option>
+                      <option value="phoneNumber">Telefon-Nr</option>
+                      <option value="amsAgentTitle">Titel Betreuer</option>
+                      <option value="amsAgentFirstName">Vorname Betreuer</option>
+                      <option value="amsAgentLastName">Nachname Betreuer</option>
+                      <option value="measureNumber">Maßnahmennummer</option>
+                      <option value="eventNumber">Veranstaltungsnummer</option>
+                      <option value="internalCode">Interner Code</option>
                     </select>
+                    <div className="w-24 text-xs text-gray-500">
+                      {importData.rows.length > 0 && importData.rows[0][index] && (
+                        <div className="truncate" title={String(importData.rows[0][index])}>
+                          {String(importData.rows[0][index])}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
