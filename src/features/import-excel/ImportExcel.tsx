@@ -1,7 +1,7 @@
 /**
  * Excel/CSV-Import mit Delta-Sync und Mapping-Presets
  */
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
@@ -69,8 +69,8 @@ export function ImportExcel() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-Mapping für deutsche Spaltennamen
-  const autoMapping: Record<string, string> = useCallback(() => ({
+  // Auto-Mapping für deutsche Spaltennamen (memoized)
+  const autoMapping = useMemo(() => ({
     'nachname': 'lastName',
     'vorname': 'firstName',
     'titel': 'title',
@@ -179,7 +179,7 @@ export function ImportExcel() {
       headers.forEach((header, index) => {
         if (!header) return;
         const normalized = header.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-        const targetField = autoMapping()[normalized];
+        const targetField = autoMapping[normalized];
         if (targetField) {
           detectedMapping[index.toString()] = targetField;
         }
@@ -523,7 +523,7 @@ export function ImportExcel() {
         }
       });
     }
-  }, [importData]);
+  }, [importData, autoMapping]);
 
   // Render-Funktionen
   const renderFileStep = () => (
