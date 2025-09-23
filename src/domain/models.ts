@@ -106,6 +106,25 @@ export type Client = {
   measureNumber?: string;
   eventNumber?: string;
   
+  // Neue Import-Felder (standardmäßig unsichtbar im Board)
+  gender?: string;
+  svNumber?: string;
+  zip?: string;
+  city?: string;
+  countryCode?: string;
+  areaCode?: string;
+  phoneNumber?: string;
+  bookingStatus?: string;
+  planned?: string;
+  entryDate?: string;
+  exitDate?: string;
+  rgs?: string;
+  advisorTitle?: string;
+  advisorLastName?: string;
+  advisorFirstName?: string;
+  measureNumber?: string;
+  eventNumber?: string;
+  
   // Telefon-Komponenten (für kombinierte Anzeige)
   countryCode?: string;
   areaCode?: string;
