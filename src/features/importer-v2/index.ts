@@ -10,6 +10,7 @@ export * from './core/aliases';
 export * from './core/score';
 export * from './core/detect';
 export * from './core/validate';
+export * from './core/transform';
 
 // Template system
 export * from './templates/store';
