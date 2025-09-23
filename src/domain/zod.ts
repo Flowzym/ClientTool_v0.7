@@ -121,6 +121,22 @@ export const ClientSchema = z.object({
   // AMS-Berater Override
   amsAdvisor: z.string().optional(),
 
+  // Erweiterte AMS-Felder (für Import-Mapping)
+  amsAgentTitle: z.string().optional(),
+  measureNumber: z.string().optional(),
+  eventNumber: z.string().optional(),
+  
+  // Telefon-Komponenten (für kombinierte Anzeige)
+  countryCode: z.string().optional(),
+  areaCode: z.string().optional(),
+  phoneNumber: z.string().optional(),
+  
+  // Zusätzliche Basis-Felder
+  gender: z.string().optional(),
+  svNumber: z.string().optional(),
+  zip: z.string().optional(),
+  city: z.string().optional(),
+
   // Angebot
   angebot: z.enum(['BAM', 'LL/B+', 'BwB', 'NB']).optional(),
 

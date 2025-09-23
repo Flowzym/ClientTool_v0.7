@@ -101,6 +101,22 @@ export type Client = {
   // AMS-Berater Override
   amsAdvisor?: string;
 
+  // Erweiterte AMS-Felder (für Import-Mapping)
+  amsAgentTitle?: string;
+  measureNumber?: string;
+  eventNumber?: string;
+  
+  // Telefon-Komponenten (für kombinierte Anzeige)
+  countryCode?: string;
+  areaCode?: string;
+  phoneNumber?: string;
+  
+  // Zusätzliche Basis-Felder
+  gender?: string;
+  svNumber?: string;
+  zip?: string;
+  city?: string;
+
   // Angebot
   angebot?: 'BAM' | 'LL/B+' | 'BwB' | 'NB';
 
