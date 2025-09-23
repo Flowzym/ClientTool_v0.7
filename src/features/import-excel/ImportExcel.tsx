@@ -496,6 +496,24 @@ export function ImportExcel() {
     }
   }, [sourceId]);
 
+  // Auto-Suggest Mapping basierend auf Header-Namen
+  const autoSuggestMappings = useCallback(() => {
+    if (!importData) return;
+    
+    const detectedMapping: Record<string, string> = {};
+    importData.headers.forEach((header, index) => {
+      if (!header) return;
+      const normalized = header.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+      const targetField = autoMapping[normalized];
+      if (targetField) {
+        detectedMapping[index.toString()] = targetField;
+      }
+    });
+    
+    setMapping(detectedMapping);
+    console.log(`🤖 Auto-mapping applied: ${Object.keys(detectedMapping).length} columns mapped`);
+  }, [importData, autoMapping]);
+
   // Render-Funktionen
   const renderFileStep = () => (
     <div className="space-y-6">
@@ -622,6 +640,21 @@ export function ImportExcel() {
             
             <div className="border border-gray-200 rounded-lg p-4">
               <h4 className="font-medium mb-3">Spalten-Zuordnung</h4>
+              <div className="mb-4">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={autoSuggestMappings}
+                  disabled={!importData}
+                  className="w-full"
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  Automatische Zuordnung vorschlagen
+                </Button>
+                <div className="text-xs text-gray-500 mt-1 text-center">
+                  Erkennt deutsche Spaltennamen automatisch
+                </div>
+              </div>
               <div className="space-y-2 max-h-64 overflow-y-auto">
                 {importData?.headers.map((header, index) => (
                   <div key={index} className="flex items-center gap-3">
