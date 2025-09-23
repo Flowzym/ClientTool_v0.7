@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Settings } from 'lucide-react';
 import { Button } from '../../../components/Button';
 import ColumnPicker from './ColumnPicker';
-import { getAllColumns } from '../columns/registry';
-import { useColumnVisibility } from '../hooks/useColumnVisibility';
+import { getAllColumns, getDefaultVisibleColumns } from '../columns/registry';
 import { ExportCsvDialog } from './index';
 
 function BoardHeader({
@@ -11,17 +10,22 @@ function BoardHeader({
   getSelectedRows,
   onPinSelected,
   onUnpinSelected,
+  allColumns,
+  visibleColumns,
+  onToggleColumn,
+  onResetColumns
 }: {
   selectedCount: number;
   getSelectedRows: () => any[];
   onPinSelected: () => void;
   onUnpinSelected: () => void;
+  allColumns: any[];
+  visibleColumns: Set<string>;
+  onToggleColumn: (key: string) => void;
+  onResetColumns: () => void;
 }) {
   const [openCsv, setOpenCsv] = useState(false);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
-  
-  const allColumns = getAllColumns();
-  const { visible, toggle, reset } = useColumnVisibility(allColumns, 'board-main');
 
   return (
     <div className="mb-3 flex items-center justify-between">
@@ -65,9 +69,9 @@ function BoardHeader({
       
       <ColumnPicker
         columns={allColumns}
-        visibleKeys={visible}
-        onToggle={toggle}
-        onReset={reset}
+        visibleKeys={visibleColumns}
+        onToggle={onToggleColumn}
+        onReset={onResetColumns}
         isOpen={showColumnPicker}
         onClose={() => setShowColumnPicker(false)}
       />

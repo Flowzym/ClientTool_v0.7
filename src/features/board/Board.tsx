@@ -10,6 +10,8 @@ import { ClientRow } from './components/ClientRow';
 import BatchActionsBar from './components/BatchActionsBar';
 import { BoardHeader } from './components';
 import { featureManager } from '../../config/features';
+import { getAllColumns } from './columns/registry';
+import { useColumnVisibility } from './hooks/useColumnVisibility';
 
 // Extracted components for stable hook order
 function ClassicClientList({ 
@@ -116,6 +118,11 @@ function Board() {
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const [clientInfoDialogId, setClientInfoDialogId] = useState<string | null>(null);
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
+
+  // Column visibility management
+  const allColumns = useMemo(() => getAllColumns(), []);
+  const { visible, toggle, reset, getVisibleColumns } = useColumnVisibility(allColumns, 'board-main');
+  const activeColumns = useMemo(() => getVisibleColumns(), [getVisibleColumns]);
 
   // All hooks must be called before any early returns
   const { clients, users, isLoading, view, toggleSort } = useBoardData();
@@ -368,6 +375,10 @@ function Board() {
         getSelectedRows={selectedRowsProvider}
         onPinSelected={() => actions.bulkPin?.(selectedIds)}
         onUnpinSelected={() => actions.bulkUnpin?.(selectedIds)}
+        allColumns={allColumns}
+        visibleColumns={visible}
+        onToggleColumn={toggle}
+        onResetColumns={reset}
       />
 
       {selectedIds.length > 0 && (
