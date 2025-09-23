@@ -68,8 +68,8 @@ export function SyncSettings() {
       await syncManager.setupSyncFolder();
       await loadSettings();
       showMessage('success', 'Sync-Ordner erfolgreich konfiguriert');
-    } catch (error) {
-      console.error('Sync folder setup failed:', error);
+    } catch (_error) {
+      console.error('Sync folder setup failed:', _error);
       showMessage('error', 'Fehler beim Konfigurieren des Sync-Ordners');
     } finally {
       setIsLoading(false);

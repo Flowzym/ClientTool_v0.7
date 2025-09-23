@@ -13,7 +13,6 @@ import { validateRow, dedupeImport } from './validators';
 import { buildRowKey, hashRow } from './dedupe';
 import { autoMapHeaders, PRESET_AMS_DEFAULT } from './presets';
 import { normalizeHeader } from './normalize';
-import { COMPUTED_FIELDS, computeAllFields } from './computed';
 import { savePreset, loadPreset } from './mappingPresets';
 import { nowISO } from '../../utils/date';
 import { db } from '../../data/db';

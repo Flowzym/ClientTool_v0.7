@@ -74,47 +74,47 @@ export function suggestFieldsFromContent(
 
   for (const hint of hints) {
     switch (hint.type) {
-      case 'amsId':
+      case 'amsId': {
         suggestions.push({
           field: 'amsId',
           confidence: hint.confidence,
           reason: `${Math.round(hint.confidence * 100)}% der Werte entsprechen AMS-ID Pattern`
         });
         break;
-        
-      case 'email':
+      }
+      case 'email': {
         suggestions.push({
           field: 'email',
           confidence: hint.confidence,
           reason: `${Math.round(hint.confidence * 100)}% der Werte sind gültige E-Mail-Adressen`
         });
         break;
-        
-      case 'phone':
+      }
+      case 'phone': {
         suggestions.push({
           field: 'phone',
           confidence: hint.confidence,
           reason: `${Math.round(hint.confidence * 100)}% der Werte entsprechen österreichischen Telefonnummern`
         });
         break;
-        
-      case 'zip':
+      }
+      case 'zip': {
         suggestions.push({
           field: 'zip',
           confidence: hint.confidence,
           reason: `${Math.round(hint.confidence * 100)}% der Werte sind gültige Postleitzahlen`
         });
         break;
-        
-      case 'svNumber':
+      }
+      case 'svNumber': {
         suggestions.push({
           field: 'svNumber',
           confidence: hint.confidence,
           reason: `${Math.round(hint.confidence * 100)}% der Werte entsprechen SV-Nummern`
         });
         break;
-        
-      case 'date':
+      }
+      case 'date': {
         // Could be birthDate, entryDate, exitDate, etc.
         suggestions.push({
           field: 'birthDate',
@@ -122,8 +122,8 @@ export function suggestFieldsFromContent(
           reason: `${Math.round(hint.confidence * 100)}% der Werte sind Datumsangaben (möglicherweise Geburtsdatum)`
         });
         break;
-        
-      case 'name':
+      }
+      case 'name': {
         // Could be firstName or lastName
         suggestions.push({
           field: 'firstName',
@@ -136,14 +136,15 @@ export function suggestFieldsFromContent(
           reason: `${Math.round(hint.confidence * 100)}% der Werte entsprechen Namensmustern (möglicherweise Nachname)`
         });
         break;
-        
-      case 'address':
+      }
+      case 'address': {
         suggestions.push({
           field: 'address',
           confidence: hint.confidence,
           reason: `${Math.round(hint.confidence * 100)}% der Werte entsprechen Adressmustern`
         });
         break;
+      }
     }
   }
 

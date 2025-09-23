@@ -40,12 +40,6 @@ async function getByAnyId(table: any, id: any): Promise<any | undefined> {
   return found;
 }
 
-async function applyOne<T>(p: Patch<T>): Promise<void> {
-  const table = db.clients;
-  if (!table) throw new Error('BoardService: db.clients missing');
-  await performUpsert(table, p.id, p.changes);
-}
-
 async function computeInverse(forward: Patch<any>[]): Promise<Patch<any>[]> {
   const table = (db as any).clients;
   const inverses: Patch<any>[] = [];

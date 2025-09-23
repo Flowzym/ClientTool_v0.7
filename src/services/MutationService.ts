@@ -4,7 +4,7 @@
  */
 
 import { db } from '../data/db';
-import type { Patch, UndoRedoEntry, UndoRedoStack, MutationResult } from '../types/patch';
+import type { Patch, UndoRedoEntry, MutationResult } from '../types/patch';
 
 class MutationService {
   private undoStack: UndoRedoEntry<any>[] = [];

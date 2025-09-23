@@ -31,8 +31,7 @@ export function TemplateBar({
   onTemplateSelect,
   onSaveAsTemplate,
   onManageTemplates,
-  autoDetectedTemplate,
-  isLoading = false
+  autoDetectedTemplate
 }: TemplateBarProps) {
   const [showTemplateSelect, setShowTemplateSelect] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);

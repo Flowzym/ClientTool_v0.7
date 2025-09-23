@@ -28,8 +28,6 @@ import type { InternalField } from '../core/types';
 interface MappingWizardProps {
   onComplete?: (mappings: Record<string, string>) => void;
   onCancel?: () => void;
-  initialFile?: File;
-  suggestedTemplate?: string;
 }
 
 interface WizardState {

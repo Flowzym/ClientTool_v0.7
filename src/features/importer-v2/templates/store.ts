@@ -54,7 +54,7 @@ class TemplateStore {
       }
       
       this.initialized = true;
-      console.warn(`✅ Template store initialized with ${this.cache.size} templates`);
+      console.log(`✅ Template store initialized with ${this.cache.size} templates`);
       
     } catch (error) {
       console.error('❌ Template store initialization failed:', error);

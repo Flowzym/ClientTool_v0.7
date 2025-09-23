@@ -28,7 +28,7 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
   (async () => {
     try {
       const id = 'virtual:pwa-register';
-      // @ts-expect-error: Vite dynamic import path transformation
+      // @ts-expect-error Vite dynamic import path transformation
       const mod = await import(/* @vite-ignore */ id);
       if (mod && typeof mod.registerSW === 'function') {
         mod.registerSW({ immediate: true });

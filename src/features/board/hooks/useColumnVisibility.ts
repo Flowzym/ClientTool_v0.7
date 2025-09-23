@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import type { ColumnDef, ColumnKey } from '../columns/types';
 
 const STORAGE_KEY = (scopeId: string) => `board:columns:v1:${scopeId}`;

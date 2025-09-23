@@ -134,7 +134,7 @@ class NetworkGuard {
       }
       // @ts-expect-error: fetch context binding differs in our environment
       return this.originalFetch.call(globalThis, input, init);
-    } as any;
+    }
 
     // Wrap XHR
     this.originalXHROpen = XMLHttpRequest.prototype.open;
