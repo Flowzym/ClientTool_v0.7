@@ -201,7 +201,7 @@ function Board() {
   );
 
   const sortedClients = useMemo(() => {
-    let sorted = [...visibleClients];
+    const sorted = [...visibleClients];
     
     if (sortStateResolved.key && sortStateResolved.direction) {
       const direction = sortStateResolved.direction === 'desc' ? -1 : 1;

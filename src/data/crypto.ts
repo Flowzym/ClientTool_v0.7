@@ -4,7 +4,8 @@
  */
 
 import { argon2id } from '@noble/hashes/argon2';
-import { EnvelopeV1, EnvelopeError, base64urlEncode, base64urlDecode, validateEnvelope } from './envelope';
+import type { EnvelopeV1} from './envelope';
+import { EnvelopeError, base64urlEncode, base64urlDecode, validateEnvelope } from './envelope';
 import { getEncryptionMode } from '../utils/env';
 import { getOrCreateDevMasterKeyB64 } from '../utils/devKey';
 

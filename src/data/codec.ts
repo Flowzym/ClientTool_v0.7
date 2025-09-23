@@ -4,7 +4,7 @@
  */
 
 import { cryptoManager } from './crypto';
-import { EnvelopeV1 } from './envelope';
+import type { EnvelopeV1 } from './envelope';
 
 export type Envelope = EnvelopeV1;
 

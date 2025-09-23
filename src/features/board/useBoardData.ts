@@ -282,7 +282,7 @@ export function useBoardData() {
 
   // Sortierte Clients
   const sortedClients = useMemo(() => {
-    let sorted = [...filteredClients];
+    const sorted = [...filteredClients];
     
     // Sortierung
     if (view.sort.key && view.sort.direction) {
@@ -366,7 +366,7 @@ export function useBoardData() {
 
   // Legacy sorting modes for backward compatibility
   const legacySortedClients = useMemo(() => {
-    let filtered = [...filteredClients];
+    const filtered = [...filteredClients];
     
     // Only apply legacy sorting if no new sort is active
     if (view.sort.key) {

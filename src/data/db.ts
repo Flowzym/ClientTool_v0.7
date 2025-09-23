@@ -7,7 +7,8 @@
 import Dexie, { type Table } from 'dexie';
 import type { Client, User, ImportSession } from '../domain/models';
 import { codecFactory } from './codec';
-import { EnvelopeV1, validateEnvelope } from './envelope';
+import type { EnvelopeV1} from './envelope';
+import { validateEnvelope } from './envelope';
 import { getDbName } from '../utils/env';
 
 // Globaler Codec für diese DB-Instanz
