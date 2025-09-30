@@ -141,7 +141,7 @@ export function SidebarFilters() {
               </button>
             </div>
             
-            <div className\="space-y-1">
+            <div className="space-y-1">
               {users.map((user) => (
                 <label
                   key={user.id}
