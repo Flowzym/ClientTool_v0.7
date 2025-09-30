@@ -183,7 +183,7 @@ function Board() {
 
   const togglePinAtIndex = (index: number, id: string, event?: React.MouseEvent) => {
     const withShift = event?.shiftKey || false;
-    const currentClient = sortedClients.find((c: any) => c.id === id);
+    const currentClient = clients.find((c: any) => c.id === id);
     const targetPinState = !currentClient?.isPinned;
 
     if (!withShift || lastPinAnchorIndex == null) {
