@@ -49,17 +49,22 @@ function ClassicClientList({
   // Generate dynamic grid template for rows
   const rowGridTemplate = useMemo(() => {
     const baseColumns = ['64px']; // Selection + Pin column
-    
+
     visibleColumns.forEach(col => {
       const width = col.minWidth ? `${col.minWidth}px` : '120px';
       baseColumns.push(width);
     });
-    
+
     return baseColumns.join(' ');
   }, [visibleColumns]);
 
+  const minWidthValue = useMemo(() => {
+    const totalWidth = visibleColumns.reduce((sum, col) => sum + (col.minWidth || 120), 64);
+    return `${totalWidth}px`;
+  }, [visibleColumns]);
+
   return (
-    <div className="border rounded-lg overflow-hidden" style={{ minWidth: `${64 + visibleColumns.length * 120}px` }}>
+    <div className="border rounded-lg overflow-hidden" style={{ minWidth: minWidthValue }}>
       <div ref={containerRef} onScroll={onScroll} style={{ maxHeight: viewportHeight, overflowY: 'auto' }}>
         <div style={{ height: topPad }} />
         <div className="divide-y">
@@ -73,6 +78,7 @@ function ClassicClientList({
                 users={users}
                 actions={actions}
                 visibleColumns={visibleColumns}
+                gridTemplate={rowGridTemplate}
                 selected={selectedSet.has(c.id)}
                 onToggleSelect={(withShift: boolean) => onToggleSelect(realIndex, c.id, withShift)}
                 onTogglePin={(event?: React.MouseEvent) => onTogglePin(realIndex, c.id, event)}
@@ -236,6 +242,23 @@ function Board() {
     return () => window.removeEventListener('keydown', handler);
   }, [actions, allIds]);
 
+  // Generate header grid template (same as rows)
+  const headerGridTemplate = useMemo(() => {
+    const baseColumns = ['64px']; // Selection + Pin column
+
+    visibleColumns.forEach(col => {
+      const width = col.minWidth ? `${col.minWidth}px` : '120px';
+      baseColumns.push(width);
+    });
+
+    return baseColumns.join(' ');
+  }, [visibleColumns]);
+
+  const minHeaderWidthValue = useMemo(() => {
+    const totalWidth = visibleColumns.reduce((sum, col) => sum + (col.minWidth || 120), 64);
+    return `${totalWidth}px`;
+  }, [visibleColumns]);
+
   // Derived values
   const selectedRowsProvider = () => clients.filter((c: any) => selectedSet.has(c.id));
 
@@ -273,8 +296,8 @@ function Board() {
       )}
 
       {/* Sticky Header */}
-      <div className="border rounded-t-lg bg-gray-50 border-b px-3 py-2">
-        <div className="grid grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px] gap-2 items-center">
+      <div className="border rounded-t-lg bg-gray-50 border-b px-3 py-2" style={{ minWidth: minHeaderWidthValue }}>
+        <div className="grid gap-2 items-center" style={{ gridTemplateColumns: headerGridTemplate }}>
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -300,18 +323,17 @@ function Board() {
               className="mr-2"
             />
           </div>
-          <ColumnHeader columnKey="name" label="Kunde" sortable isActive={view?.sort?.key === 'name'} direction={view?.sort?.key === 'name' ? view?.sort?.direction : undefined} onToggle={() => handleHeaderToggle('name')} />
-          <ColumnHeader columnKey="offer" label="Angebot" sortable isActive={view?.sort?.key === 'offer'} direction={view?.sort?.key === 'offer' ? view?.sort?.direction : undefined} onToggle={() => handleHeaderToggle('offer')} />
-          <ColumnHeader columnKey="status" label="Status" sortable isActive={view?.sort?.key === 'status'} direction={view?.sort?.key === 'status' ? view?.sort?.direction : undefined} onToggle={() => handleHeaderToggle('status')} />
-          <ColumnHeader columnKey="result" label="Ergebnis" sortable isActive={view?.sort?.key === 'result'} direction={view?.sort?.key === 'result' ? view?.sort?.direction : undefined} onToggle={() => handleHeaderToggle('result')} />
-          <ColumnHeader columnKey="followUp" label="Follow-up" sortable isActive={view?.sort?.key === 'followUp'} direction={view?.sort?.key === 'followUp' ? view?.sort?.direction : undefined} onToggle={() => handleHeaderToggle('followUp')} />
-          <ColumnHeader columnKey="assignedTo" label="Zuständigkeit" sortable isActive={view?.sort?.key === 'assignedTo'} direction={view?.sort?.key === 'assignedTo' ? view?.sort?.direction : undefined} onToggle={() => handleHeaderToggle('assignedTo')} />
-          <ColumnHeader columnKey="contacts" label="Kontakt" sortable isActive={view?.sort?.key === 'contacts'} direction={view?.sort?.key === 'contacts' ? view?.sort?.direction : undefined} onToggle={() => handleHeaderToggle('contacts')} />
-          <ColumnHeader columnKey="notes" label="Anmerkung" sortable isActive={view?.sort?.key === 'notes'} direction={view?.sort?.key === 'notes' ? view?.sort?.direction : undefined} onToggle={() => handleHeaderToggle('notes')} />
-          <ColumnHeader columnKey="booking" label="Zubuchung" sortable isActive={view?.sort?.key === 'booking'} direction={view?.sort?.key === 'booking' ? view?.sort?.direction : undefined} onToggle={() => handleHeaderToggle('booking')} />
-          <ColumnHeader columnKey="priority" label="Priorität" sortable isActive={view?.sort?.key === 'priority'} direction={view?.sort?.key === 'priority' ? view?.sort?.direction : undefined} onToggle={() => handleHeaderToggle('priority')} />
-          <ColumnHeader columnKey="activity" label="Aktivität" sortable isActive={view?.sort?.key === 'activity'} direction={view?.sort?.key === 'activity' ? view?.sort?.direction : undefined} onToggle={() => handleHeaderToggle('activity')} />
-          <ColumnHeader columnKey="actions" label="Aktionen" sortable={false} isActive={false} direction={undefined} onToggle={() => {}} />
+          {visibleColumns.map((col) => (
+            <ColumnHeader
+              key={col.key}
+              columnKey={col.key}
+              label={col.label}
+              sortable={col.sortable}
+              isActive={view?.sort?.key === col.key}
+              direction={view?.sort?.key === col.key ? view?.sort?.direction : undefined}
+              onToggle={() => col.sortable && handleHeaderToggle(col.key)}
+            />
+          ))}
         </div>
       </div>
 

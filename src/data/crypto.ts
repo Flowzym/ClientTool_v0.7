@@ -25,24 +25,6 @@ class CryptoManager {
   private cryptoKey: CryptoKey | null = null;
   private salt: Uint8Array | null = null;
 
-  /**
-   * Generiere oder lade persistenten Salt
-   */
-  private async getOrCreateSalt(): Promise<Uint8Array> {
-    if (this.salt) return this.salt;
-
-    // Salt aus IndexedDB laden (wird in db.ts implementiert)
-    const storedSalt = await this.loadSaltFromStorage();
-    if (storedSalt) {
-      this.salt = storedSalt;
-      return this.salt;
-    }
-
-    // Neuen Salt generieren
-    this.salt = crypto.getRandomValues(new Uint8Array(ARGON2_CONFIG.saltLength));
-    await this.saveSaltToStorage(this.salt);
-    return this.salt;
-  }
 
   /**
    * Envelope v1 verschlüsseln

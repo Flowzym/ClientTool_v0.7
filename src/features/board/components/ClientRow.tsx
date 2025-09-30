@@ -33,13 +33,14 @@ type Actions = {
 };
 
 export function ClientRow({
-  client, users, actions, visibleColumns, selected, onToggleSelect,
+  client, users, actions, visibleColumns, gridTemplate, selected, onToggleSelect,
   onTogglePin
 }: {
   client: any;
   users: any[];
   actions: Actions;
   visibleColumns?: any[];
+  gridTemplate?: string;
   selected?: boolean;
   onToggleSelect?: (withShift: boolean) => void;
   onTogglePin?: (event?: React.MouseEvent) => void;
@@ -66,8 +67,14 @@ export function ClientRow({
     window.dispatchEvent(new CustomEvent('board:open-client-info', { detail: { id: cid } }));
   };
   
+  //Fallback to hardcoded layout if grid Template is not provided
+  const defaultGridTemplate = 'grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px]';
+
   return (
-    <div className="grid grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px] gap-2 items-center px-3 py-2 hover:bg-gray-50">
+    <div
+      className={`grid gap-2 items-center px-3 py-2 hover:bg-gray-50 ${!gridTemplate ? defaultGridTemplate : ''}`}
+      style={gridTemplate ? { gridTemplateColumns: gridTemplate } : undefined}
+    >
       {/* Auswahl + Pin */}
       <div className="flex items-center gap-1">
         <input
@@ -92,44 +99,180 @@ export function ClientRow({
         </button>
       </div>
 
-      {/* Fixed column layout */}
-      <NameCell
-        client={{
-          id,
-          firstName: client.firstName,
-          lastName: client.lastName,
-          title: client.title,
-          notes: client.notes,
-          contactLog: client.contactLog,
-          note: client.note,
-        }}
-        onOpenNotes={onOpenNotes}
-        onOpenClient={onOpenClient}
-      />
-      <OfferCell id={id} value={client.angebot} />
-      <StatusCell id={id} value={client.status} onChange={(s?: string) => actions.setStatus?.(id, s)} />
-      <ResultCell id={id} value={client.result} onChange={(r?: string) => actions.setResult?.(id, r)} />
-      <FollowupCell id={id} followUp={client.followUp} onChange={(d?: string) => {
-          const changes = { 
-            followUp: d ?? null,
-            status: d ? 'terminVereinbart' : 'offen'
-          };
-          actions.update(id, changes);
-        }} />
-      <AssignCell id={id} value={client.assignedTo} users={users} onChange={(u?: string) => actions.setAssignedTo?.(id, u)} />
-      <ContactAttemptsCell
-        id={id}
-        phone={phone}
-        sms={sms}
-        email={email}
-        proxy={proxy}
-        onAdd={(ch, counts) => actions.addContactAttempt?.(id, ch, counts)}
-      />
-      <NoteTextCell id={id} text={client.note} />
-      <BookingDateCell id={id} value={client.amsBookingDate} />
-      <PriorityCell id={id} value={client.priority} onCycle={() => actions.cyclePriority?.(id, client.priority)} />
-      <ActivityCell value={client.lastActivity} />
-      <ArchiveCell id={id} isArchived={!!client.isArchived} onArchive={() => actions.archive?.(id)} onUnarchive={() => actions.unarchive?.(id)} />
+      {/* Dynamic column layout */}
+      {visibleColumns && visibleColumns.length > 0 ? (
+        // Render only visible columns
+        visibleColumns.map((col) => {
+          const key = col.key;
+
+          switch (key) {
+            case 'name':
+              return (
+                <NameCell
+                  key={key}
+                  client={{
+                    id,
+                    firstName: client.firstName,
+                    lastName: client.lastName,
+                    title: client.title,
+                    notes: client.notes,
+                    contactLog: client.contactLog,
+                    note: client.note,
+                  }}
+                  onOpenNotes={onOpenNotes}
+                  onOpenClient={onOpenClient}
+                />
+              );
+            case 'offer':
+              return <OfferCell key={key} id={id} value={client.angebot} />;
+            case 'status':
+              return <StatusCell key={key} id={id} value={client.status} onChange={(s?: string) => actions.setStatus?.(id, s)} />;
+            case 'result':
+              return <ResultCell key={key} id={id} value={client.result} onChange={(r?: string) => actions.setResult?.(id, r)} />;
+            case 'followUp':
+              return (
+                <FollowupCell
+                  key={key}
+                  id={id}
+                  followUp={client.followUp}
+                  onChange={(d?: string) => {
+                    const changes = {
+                      followUp: d ?? null,
+                      status: d ? 'terminVereinbart' : 'offen'
+                    };
+                    actions.update(id, changes);
+                  }}
+                />
+              );
+            case 'assignedTo':
+              return <AssignCell key={key} id={id} value={client.assignedTo} users={users} onChange={(u?: string) => actions.setAssignedTo?.(id, u)} />;
+            case 'contacts':
+              return (
+                <ContactAttemptsCell
+                  key={key}
+                  id={id}
+                  phone={phone}
+                  sms={sms}
+                  email={email}
+                  proxy={proxy}
+                  onAdd={(ch, counts) => actions.addContactAttempt?.(id, ch, counts)}
+                />
+              );
+            case 'notes':
+              return <NoteTextCell key={key} id={id} text={client.note} />;
+            case 'booking':
+              return <BookingDateCell key={key} id={id} value={client.amsBookingDate} />;
+            case 'priority':
+              return <PriorityCell key={key} id={id} value={client.priority} onCycle={() => actions.cyclePriority?.(id, client.priority)} />;
+            case 'activity':
+              return <ActivityCell key={key} value={client.lastActivity} />;
+            case 'actions':
+              return <ArchiveCell key={key} id={id} isArchived={!!client.isArchived} onArchive={() => actions.archive?.(id)} onUnarchive={() => actions.unarchive?.(id)} />;
+
+            // Neue Felder (ohne eigene Cell-Komponenten)
+            case 'title':
+              return <div key={key} className="text-sm text-gray-700">{client.title || '—'}</div>;
+            case 'firstName':
+              return <div key={key} className="text-sm text-gray-700">{client.firstName || '—'}</div>;
+            case 'lastName':
+              return <div key={key} className="text-sm text-gray-700">{client.lastName || '—'}</div>;
+            case 'gender':
+              return <div key={key} className="text-sm text-gray-700">{client.gender || '—'}</div>;
+            case 'svNumber':
+              return <div key={key} className="text-sm text-gray-700">{client.svNumber || '—'}</div>;
+            case 'birthDate':
+              return <div key={key} className="text-sm text-gray-700">{client.birthDate || '—'}</div>;
+            case 'postalCode':
+              return <div key={key} className="text-sm text-gray-700">{client.postalCode || '—'}</div>;
+            case 'city':
+              return <div key={key} className="text-sm text-gray-700">{client.city || '—'}</div>;
+            case 'street':
+              return <div key={key} className="text-sm text-gray-700">{client.street || '—'}</div>;
+            case 'phone':
+              return <div key={key} className="text-sm text-gray-700">{client.phone || '—'}</div>;
+            case 'email':
+              return <div key={key} className="text-sm text-gray-700">{client.email || '—'}</div>;
+            case 'bookingStatus':
+              return <div key={key} className="text-sm text-gray-700">{client.bookingStatus || '—'}</div>;
+            case 'planned':
+              return <div key={key} className="text-sm text-gray-700">{client.planned || '—'}</div>;
+            case 'entryDate':
+              return <div key={key} className="text-sm text-gray-700">{client.entryDate || '—'}</div>;
+            case 'exitDate':
+              return <div key={key} className="text-sm text-gray-700">{client.exitDate || '—'}</div>;
+            case 'rgs':
+              return <div key={key} className="text-sm text-gray-700">{client.rgs || '—'}</div>;
+            case 'advisorTitle':
+              return <div key={key} className="text-sm text-gray-700">{client.amsAgentTitle || '—'}</div>;
+            case 'advisorFirstName':
+              return <div key={key} className="text-sm text-gray-700">{client.amsAgentFirstName || '—'}</div>;
+            case 'advisorLastName':
+              return <div key={key} className="text-sm text-gray-700">{client.amsAgentLastName || '—'}</div>;
+            case 'measureNumber':
+              return <div key={key} className="text-sm text-gray-700">{client.measureNumber || '—'}</div>;
+            case 'eventNumber':
+              return <div key={key} className="text-sm text-gray-700">{client.eventNumber || '—'}</div>;
+
+            // Computed columns
+            case 'advisorFull':
+              if (col.computed && typeof col.computed === 'function') {
+                const value = col.computed(client);
+                return <div key={key} className="text-sm text-gray-700">{value || '—'}</div>;
+              }
+              return <div key={key} className="text-sm text-gray-700">—</div>;
+            case 'phoneCombined':
+              if (col.computed && typeof col.computed === 'function') {
+                const value = col.computed(client);
+                return <div key={key} className="text-sm text-gray-700">{value || '—'}</div>;
+              }
+              return <div key={key} className="text-sm text-gray-700">—</div>;
+
+            default:
+              return <div key={key} className="text-sm text-gray-500">—</div>;
+          }
+        })
+      ) : (
+        // Fallback: Render all default columns if visibleColumns is not provided
+        <>
+          <NameCell
+            client={{
+              id,
+              firstName: client.firstName,
+              lastName: client.lastName,
+              title: client.title,
+              notes: client.notes,
+              contactLog: client.contactLog,
+              note: client.note,
+            }}
+            onOpenNotes={onOpenNotes}
+            onOpenClient={onOpenClient}
+          />
+          <OfferCell id={id} value={client.angebot} />
+          <StatusCell id={id} value={client.status} onChange={(s?: string) => actions.setStatus?.(id, s)} />
+          <ResultCell id={id} value={client.result} onChange={(r?: string) => actions.setResult?.(id, r)} />
+          <FollowupCell id={id} followUp={client.followUp} onChange={(d?: string) => {
+              const changes = {
+                followUp: d ?? null,
+                status: d ? 'terminVereinbart' : 'offen'
+              };
+              actions.update(id, changes);
+            }} />
+          <AssignCell id={id} value={client.assignedTo} users={users} onChange={(u?: string) => actions.setAssignedTo?.(id, u)} />
+          <ContactAttemptsCell
+            id={id}
+            phone={phone}
+            sms={sms}
+            email={email}
+            proxy={proxy}
+            onAdd={(ch, counts) => actions.addContactAttempt?.(id, ch, counts)}
+          />
+          <NoteTextCell id={id} text={client.note} />
+          <BookingDateCell id={id} value={client.amsBookingDate} />
+          <PriorityCell id={id} value={client.priority} onCycle={() => actions.cyclePriority?.(id, client.priority)} />
+          <ActivityCell value={client.lastActivity} />
+          <ArchiveCell id={id} isArchived={!!client.isArchived} onArchive={() => actions.archive?.(id)} onUnarchive={() => actions.unarchive?.(id)} />
+        </>
+      )}
     </div>
   );
 }
