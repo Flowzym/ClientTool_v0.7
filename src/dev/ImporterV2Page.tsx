@@ -53,8 +53,8 @@ export function ImporterV2Page() {
                   <div className="text-gray-500 mb-2">// In Browser-Konsole:</div>
                   <div className="text-blue-600">
                     import('{window.location.origin}/src/config/featureFlags.js')<br />
-                    .then(m => m.setFeatureFlag('IMPORTER_V2', true))<br />
-                    .then(() => location.reload())
+                    .then(m ={'>'} m.setFeatureFlag('IMPORTER_V2', true))<br />
+                    .then(() ={'>'} location.reload())
                   </div>
                 </div>
               </div>

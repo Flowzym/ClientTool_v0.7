@@ -143,165 +143,9 @@ function Board() {
 
   // ==== SORT BLOCK (canonical) ====
 
-  type SortState = { key: string | null; direction: 'asc' | 'desc' | null };
-
-  const [localSort, setLocalSort] = useState<SortState>({ key: null, direction: null });
-
-  const sortStateResolved: SortState =
-    (localSort && (localSort.key !== null || localSort.direction !== null))
-      ? localSort
-      : (view?.sort ?? { key: null, direction: null });
-
-  const _formatName = (c: any) => {
-    const last = c.lastName ?? '';
-    const first = c.firstName ?? '';
-    const title = c.title ? ` (${c.title})` : '';
-    const fallback = c.name ?? '';
-    return (last || first) ? `${last}, ${first}${title}` : fallback;
-  };
-
-  const _getPinned = (c: any) => Boolean(c.isPinned ?? c.pinned ?? false);
-  const _cmpStr  = (a: any, b: any) => String(a).localeCompare(String(b), 'de', { sensitivity: 'base' });
-  const _cmpNum  = (a: any, b: any) => Number(a) - Number(b);
-  const _cmpDate = (a?: string | null, b?: string | null) => {
-    if (!a && !b) return 0; if (!a) return 1; if (!b) return -1;
-    return a < b ? -1 : a > b ? 1 : 0;
-  };
-
-  const withPinnedFirst = (sortFn: (a: any, b: any) => number) => (a: any, b: any) => {
-    const pa = _getPinned(a), pb = _getPinned(b);
-    if (pa !== pb) return pa ? -1 : 1;
-    return sortFn(a, b);
-  };
-
-  const byFullName = () => (a: any, b: any) => {
-    const aName = _formatName(a);
-    const bName = _formatName(b);
-    return _cmpStr(aName, bName);
-  };
-
-  const byEnum = (key: string, order: string[]) => (a: any, b: any) => {
-    const ord = order.map(v => String(v).toLowerCase());
-    const unknown = ord.length;
-    const av = String(a?.[key] ?? '').toLowerCase();
-    const bv = String(b?.[key] ?? '').toLowerCase();
-    const ai = ord.indexOf(av); const bi = ord.indexOf(bv);
-    const aIndex = ai === -1 ? unknown : ai;
-    const bIndex = bi === -1 ? unknown : bi;
-    if (aIndex !== bIndex) return aIndex - bIndex;
-    // Secondary sort by name for stability
-    return byFullName()(a, b);
-  };
-
-  const byDateISO = (key: string) => (a: any, b: any) => {
-    const aDate = a?.[key] ? new Date(a[key]).getTime() : Number.POSITIVE_INFINITY;
-    const bDate = b?.[key] ? new Date(b[key]).getTime() : Number.POSITIVE_INFINITY;
-    return aDate - bDate;
-  };
-
-  const byNoteText = () => (a: any, b: any) => {
-    const aText = String(a?.note ?? '');
-    const bText = String(b?.note ?? '');
-    if (aText.length !== bText.length) return aText.length - bText.length;
-    return _cmpStr(aText, bText);
-  };
-
-  const visibleClients = useMemo(() => 
-    clients.filter((c: any) => !c.isArchived || view?.showArchived), 
-    [clients, view?.showArchived]
-  );
-
-  const sortedClients = useMemo(() => {
-    const sorted = [...visibleClients];
-    
-    if (sortStateResolved.key && sortStateResolved.direction) {
-      const direction = sortStateResolved.direction === 'desc' ? -1 : 1;
-      
-      switch (sortStateResolved.key) {
-        case 'name': {
-          sorted.sort(withPinnedFirst((a, b) => byFullName()(a, b) * direction));
-          break;
-        }
-        case 'status': {
-          const statusOrder = ['offen', 'terminVereinbart', 'inBearbeitung', 'wartetRueckmeldung', 'erledigt', 'nichtErreichbar', 'abgebrochen'];
-          sorted.sort(withPinnedFirst((a, b) => byEnum('status', statusOrder)(a, b) * direction));
-          break;
-        }
-        case 'priority': {
-          const priorityOrder = ['niedrig', 'normal', 'hoch', 'dringend'];
-          sorted.sort(withPinnedFirst((a, b) => byEnum('priority', priorityOrder)(a, b) * direction));
-          break;
-        }
-        case 'assignedTo': {
-          sorted.sort(withPinnedFirst((a, b) => {
-            const aUser = usersRef.current.find(u => u.id === a.assignedTo)?.name || '';
-            const bUser = usersRef.current.find(u => u.id === b.assignedTo)?.name || '';
-            return _cmpStr(aUser, bUser) * direction;
-          }));
-          break;
-        }
-        case 'activity': {
-          sorted.sort(withPinnedFirst((a, b) => byDateISO('lastActivity')(a, b) * direction));
-          break;
-        }
-        case 'followUp': {
-          sorted.sort(withPinnedFirst((a, b) => byDateISO('followUp')(a, b) * direction));
-          break;
-        }
-        case 'contacts': {
-          sorted.sort(withPinnedFirst((a, b) => _cmpNum(a.contactCount ?? 0, b.contactCount ?? 0) * direction));
-          break;
-        }
-        case 'notes': {
-          sorted.sort(withPinnedFirst((a, b) => byNoteText()(a, b) * direction));
-          break;
-        }
-        case 'booking': {
-          sorted.sort(withPinnedFirst((a, b) => byDateISO('amsBookingDate')(a, b) * direction));
-          break;
-        }
-        case 'offer': {
-          const angebotOrder = ['BAM', 'LL/B+', 'BwB', 'NB'];
-          sorted.sort(withPinnedFirst((a, b) => byEnum('angebot', angebotOrder)(a, b) * direction));
-          break;
-        }
-        case 'result': {
-          const resultOrder = ['bam', 'lebenslauf', 'bewerbungsbuero', 'gesundheitlicheMassnahme', 'mailaustausch', 'keineReaktion'];
-          sorted.sort(withPinnedFirst((a, b) => byEnum('result', resultOrder)(a, b) * direction));
-          break;
-        }
-      }
-    } else {
-      // Default sorting by urgency when no specific sort is applied
-      sorted.sort(withPinnedFirst((a, b) => {
-        // Priority: dringend > hoch > normal > niedrig
-        const priorityOrder = { dringend: 4, hoch: 3, normal: 2, niedrig: 1 };
-        const aPrio = priorityOrder[a.priority] || 0;
-        const bPrio = priorityOrder[b.priority] || 0;
-        
-        if (aPrio !== bPrio) return bPrio - aPrio;
-        
-        // Follow-up: frühere Termine zuerst
-        if (a.followUp && b.followUp) {
-          return new Date(a.followUp).getTime() - new Date(b.followUp).getTime();
-        }
-        if (a.followUp && !b.followUp) return -1;
-        if (!a.followUp && b.followUp) return 1;
-        
-        // Last activity: ältere zuerst
-        if (a.lastActivity && b.lastActivity) {
-          return new Date(a.lastActivity).getTime() - new Date(b.lastActivity).getTime();
-        }
-        
-        return 0;
-      }));
-    }
-    
-    return sorted;
-  }, [visibleClients, sortStateResolved]);
 
   // Selektion/IDs NACH sortedClients ableiten
-  const allIds = useMemo(() => sortedClients.map((c: any) => c.id as string), [sortedClients]);
+  const allIds = useMemo(() => clients.map((c: any) => c.id as string), [clients]);
 
   // ==== SORT BLOCK (canonical) END ====
 
@@ -385,7 +229,7 @@ function Board() {
   }, [actions, allIds]);
 
   // Derived values
-  const selectedRowsProvider = () => sortedClients.filter((c: any) => selectedSet.has(c.id));
+  const selectedRowsProvider = () => clients.filter((c: any) => selectedSet.has(c.id));
 
   // Early return AFTER all hooks
   if (isLoading) return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;
@@ -451,78 +295,78 @@ function Board() {
           <ColumnHeader
             columnKey="name"
             label="Kunde"
-            isActive={sortStateResolved.key==='name'}
-            direction={sortStateResolved.key==='name' ? sortStateResolved.direction : undefined}
+            isActive={view?.sort?.key==='name'}
+            direction={view?.sort?.key==='name' ? view?.sort?.direction : undefined}
             onToggle={()=>handleHeaderToggle('name')}
           />
           <ColumnHeader
             columnKey="offer"
             label="Angebot"
-            isActive={sortStateResolved.key==='offer'}
-            direction={sortStateResolved.key==='offer' ? sortStateResolved.direction : undefined}
+            isActive={view?.sort?.key==='offer'}
+            direction={view?.sort?.key==='offer' ? view?.sort?.direction : undefined}
             onToggle={()=>handleHeaderToggle('offer')}
           />
           <ColumnHeader
             columnKey="status"
             label="Status"
-            isActive={sortStateResolved.key==='status'}
-            direction={sortStateResolved.key==='status' ? sortStateResolved.direction : undefined}
+            isActive={view?.sort?.key==='status'}
+            direction={view?.sort?.key==='status' ? view?.sort?.direction : undefined}
             onToggle={()=>handleHeaderToggle('status')}
           />
           <ColumnHeader
             columnKey="result"
             label="Ergebnis"
-            isActive={sortStateResolved.key==='result'}
-            direction={sortStateResolved.key==='result' ? sortStateResolved.direction : undefined}
+            isActive={view?.sort?.key==='result'}
+            direction={view?.sort?.key==='result' ? view?.sort?.direction : undefined}
             onToggle={()=>handleHeaderToggle('result')}
           />
           <ColumnHeader
             columnKey="followUp"
             label="Follow-up"
-            isActive={sortStateResolved.key==='followUp'}
-            direction={sortStateResolved.key==='followUp' ? sortStateResolved.direction : undefined}
+            isActive={view?.sort?.key==='followUp'}
+            direction={view?.sort?.key==='followUp' ? view?.sort?.direction : undefined}
             onToggle={()=>handleHeaderToggle('followUp')}
           />
           <ColumnHeader
             columnKey="assignedTo"
             label="Zuständigkeit"
-            isActive={sortStateResolved.key==='assignedTo'}
-            direction={sortStateResolved.key==='assignedTo' ? sortStateResolved.direction : undefined}
+            isActive={view?.sort?.key==='assignedTo'}
+            direction={view?.sort?.key==='assignedTo' ? view?.sort?.direction : undefined}
             onToggle={()=>handleHeaderToggle('assignedTo')}
           />
           <ColumnHeader
             columnKey="contacts"
             label="Kontakt"
-            isActive={sortStateResolved.key==='contacts'}
-            direction={sortStateResolved.key==='contacts' ? sortStateResolved.direction : undefined}
+            isActive={view?.sort?.key==='contacts'}
+            direction={view?.sort?.key==='contacts' ? view?.sort?.direction : undefined}
             onToggle={()=>handleHeaderToggle('contacts')}
           />
           <ColumnHeader
             columnKey="notes"
             label="Anmerkung"
-            isActive={sortStateResolved.key==='notes'}
-            direction={sortStateResolved.key==='notes' ? sortStateResolved.direction : undefined}
+            isActive={view?.sort?.key==='notes'}
+            direction={view?.sort?.key==='notes' ? view?.sort?.direction : undefined}
             onToggle={()=>handleHeaderToggle('notes')}
           />
           <ColumnHeader
             columnKey="booking"
             label="Zubuchung"
-            isActive={sortStateResolved.key==='booking'}
-            direction={sortStateResolved.key==='booking' ? sortStateResolved.direction : undefined}
+            isActive={view?.sort?.key==='booking'}
+            direction={view?.sort?.key==='booking' ? view?.sort?.direction : undefined}
             onToggle={()=>handleHeaderToggle('booking')}
           />
           <ColumnHeader
             columnKey="priority"
             label="Priorität"
-            isActive={sortStateResolved.key==='priority'}
-            direction={sortStateResolved.key==='priority' ? sortStateResolved.direction : undefined}
+            isActive={view?.sort?.key==='priority'}
+            direction={view?.sort?.key==='priority' ? view?.sort?.direction : undefined}
             onToggle={()=>handleHeaderToggle('priority')}
           />
           <ColumnHeader
             columnKey="activity"
             label="Aktivität"
-            isActive={sortStateResolved.key==='activity'}
-            direction={sortStateResolved.key==='activity' ? sortStateResolved.direction : undefined}
+            isActive={view?.sort?.key==='activity'}
+            direction={view?.sort?.key==='activity' ? view?.sort?.direction : undefined}
             onToggle={()=>handleHeaderToggle('activity')}
           />
           <div className="text-xs font-medium text-gray-600">Aktionen</div>
@@ -532,7 +376,7 @@ function Board() {
       {/* Client List (virtualized or classic) */}
       {virtualRowsEnabled ? (
         <VirtualClientList
-          clients={sortedClients}
+          clients={clients}
           users={users}
           actions={actions}
           selectedSet={selectedSet}
@@ -541,7 +385,7 @@ function Board() {
         />
       ) : (
         <ClassicClientList
-          clients={sortedClients}
+          clients={clients}
           users={users}
           actions={actions}
           selectedSet={selectedSet}
@@ -562,7 +406,7 @@ function Board() {
             />
             <span>Virtualized Rows (Performance)</span>
             <span className="text-xs text-gray-500">
-              ({virtualRowsEnabled ? 'ON' : 'OFF'}) - {sortedClients.length} clients
+              ({virtualRowsEnabled ? 'ON' : 'OFF'}) - {clients.length} clients
             </span>
           </label>
         </div>
@@ -572,7 +416,7 @@ function Board() {
       <ClientInfoDialog
         isOpen={!!clientInfoDialogId}
         onClose={() => setClientInfoDialogId(null)}
-        client={clientInfoDialogId ? sortedClients.find((c: any) => c.id === clientInfoDialogId) || null : null}
+        client={clientInfoDialogId ? clients.find((c: any) => c.id === clientInfoDialogId) || null : null}
       />
     </div>
   );

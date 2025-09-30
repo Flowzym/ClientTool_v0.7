@@ -79,3 +79,32 @@ export async function saveViewToStorage(view: BoardView): Promise<void> {
     // ignore (Quota / private mode)
   }
 }
+
+// Sorting helper functions
+export const byEnum = (key: string, order: string[]) => (a: any, b: any) => {
+  const ord = order.map(v => String(v).toLowerCase());
+  const unknown = ord.length;
+  const av = String(a?.[key] ?? '').toLowerCase();
+  const bv = String(b?.[key] ?? '').toLowerCase();
+  const ai = ord.indexOf(av); const bi = ord.indexOf(bv);
+  const aIndex = ai === -1 ? unknown : ai;
+  const bIndex = bi === -1 ? unknown : bi;
+  return aIndex - bIndex;
+};
+
+export const byDateISO = (key: string) => (a: any, b: any) => {
+  const aDate = a?.[key] ? new Date(a[key]).getTime() : Number.POSITIVE_INFINITY;
+  const bDate = b?.[key] ? new Date(b[key]).getTime() : Number.POSITIVE_INFINITY;
+  return aDate - bDate;
+};
+
+export const byNumber = (key: string) => (a: any, b: any) => {
+  return Number(a?.[key] ?? 0) - Number(b?.[key] ?? 0);
+};
+
+export const withPinnedFirst = (sortFn: (a: any, b: any) => number) => (a: any, b: any) => {
+  const aPinned = Boolean(a.isPinned ?? a.pinned ?? false);
+  const bPinned = Boolean(b.isPinned ?? b.pinned ?? false);
+  if (aPinned !== bPinned) return aPinned ? -1 : 1;
+  return sortFn(a, b);
+};
