@@ -84,9 +84,9 @@ export function SidebarFilters() {
             <button
               key={key}
               onClick={() => handleFilterToggle(key)}
-              className={`px-2 py-1 text-xs rounded border transition-colors ${
+              className={`px-2 py-1 text-xs rounded border transition-colors flex items-center gap-1 relative ${
                 activeChips.includes(key)
-                  ? 'bg-blue-500 border-blue-500 text-white font-medium'
+                  ? 'bg-blue-500 border-blue-500 text-white font-medium shadow-sm'
                   : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
               }`}
             >
@@ -141,7 +141,7 @@ export function SidebarFilters() {
               </button>
             </div>
             
-            <div className="space-y-2">
+            <div className\="space-y-1">
               {users.map((user) => (
                 <label
                   key={user.id}
