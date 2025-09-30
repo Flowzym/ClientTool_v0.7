@@ -49,9 +49,6 @@ export function ClientRow({
   // Track row mounts for performance analysis
   React.useEffect(() => {
     rowMountCounter.inc();
-    return () => {
-      // Could track unmounts if needed
-    };
   }, []);
 
   const phone = client.contactPhone || 0;
@@ -69,92 +66,8 @@ export function ClientRow({
     window.dispatchEvent(new CustomEvent('board:open-client-info', { detail: { id: cid } }));
   };
   
-  // Generate dynamic grid template for this row
-  const rowGridTemplate = React.useMemo(() => {
-    if (!visibleColumns) {
-      // Fallback to original fixed layout
-      return 'grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px]';
-    }
-    
-    const baseColumns = ['64px']; // Selection + Pin column
-    
-    visibleColumns.forEach(col => {
-      const width = col.minWidth ? `${col.minWidth}px` : '120px';
-      baseColumns.push(width);
-    });
-    
-    return `grid-cols-[${baseColumns.join('_')}]`;
-  }, [visibleColumns]);
-  
-  // Cell mapping based on column key
-  const renderCell = (column: any) => {
-    switch (column.key) {
-      case 'name':
-        return (
-          <NameCell
-            client={{
-              id,
-              firstName: client.firstName,
-              lastName: client.lastName,
-              title: client.title,
-              notes: client.notes,
-              contactLog: client.contactLog,
-              note: client.note,
-            }}
-            onOpenNotes={onOpenNotes}
-            onOpenClient={onOpenClient}
-          />
-        );
-      case 'offer':
-        return <OfferCell id={id} value={client.angebot} />;
-      case 'status':
-        return <StatusCell id={id} value={client.status} onChange={(s?: string) => actions.setStatus?.(id, s)} />;
-      case 'result':
-        return <ResultCell id={id} value={client.result} onChange={(r?: string) => actions.setResult?.(id, r)} />;
-      case 'followUp':
-        return (
-          <FollowupCell 
-            id={id} 
-            followUp={client.followUp} 
-            onChange={(d?: string) => {
-              const changes = { 
-                followUp: d ?? null,
-                status: d ? 'terminVereinbart' : 'offen'
-              };
-              actions.update(id, changes);
-            }} 
-          />
-        );
-      case 'assignedTo':
-        return <AssignCell id={id} value={client.assignedTo} users={users} onChange={(u?: string) => actions.setAssignedTo?.(id, u)} />;
-      case 'contacts':
-        return (
-          <ContactAttemptsCell
-            id={id}
-            phone={phone}
-            sms={sms}
-            email={email}
-            proxy={proxy}
-            onAdd={(ch, counts) => actions.addContactAttempt?.(id, ch, counts)}
-          />
-        );
-      case 'notes':
-        return <NoteTextCell id={id} text={client.note} />;
-      case 'booking':
-        return <BookingDateCell id={id} value={client.amsBookingDate} />;
-      case 'priority':
-        return <PriorityCell id={id} value={client.priority} onCycle={() => actions.cyclePriority?.(id, client.priority)} />;
-      case 'activity':
-        return <ActivityCell value={client.lastActivity} />;
-      case 'actions':
-        return <ArchiveCell id={id} isArchived={!!client.isArchived} onArchive={() => actions.archive?.(id)} onUnarchive={() => actions.unarchive?.(id)} />;
-      default:
-        return <div className="text-sm text-gray-500">—</div>;
-    }
-  };
-  
   return (
-    <div className={`grid gap-2 items-center px-3 py-2 hover:bg-gray-50 ${rowGridTemplate}`}>
+    <div className="grid grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px] gap-2 items-center px-3 py-2 hover:bg-gray-50">
       {/* Auswahl + Pin */}
       <div className="flex items-center gap-1">
         <input
@@ -179,53 +92,44 @@ export function ClientRow({
         </button>
       </div>
 
-      {/* Render only visible columns */}
-      {visibleColumns ? visibleColumns.map(column => (
-        <div key={column.key}>
-          {renderCell(column)}
-        </div>
-      )) : (
-        // Fallback: render all columns if visibleColumns not provided
-        <>
-          <NameCell
-            client={{
-              id,
-              firstName: client.firstName,
-              lastName: client.lastName,
-              title: client.title,
-              notes: client.notes,
-              contactLog: client.contactLog,
-              note: client.note,
-            }}
-            onOpenNotes={onOpenNotes}
-            onOpenClient={onOpenClient}
-          />
-          <OfferCell id={id} value={client.angebot} />
-          <StatusCell id={id} value={client.status} onChange={(s?: string) => actions.setStatus?.(id, s)} />
-          <ResultCell id={id} value={client.result} onChange={(r?: string) => actions.setResult?.(id, r)} />
-          <FollowupCell id={id} followUp={client.followUp} onChange={(d?: string) => {
-              const changes = { 
-                followUp: d ?? null,
-                status: d ? 'terminVereinbart' : 'offen'
-              };
-              actions.update(id, changes);
-            }} />
-          <AssignCell id={id} value={client.assignedTo} users={users} onChange={(u?: string) => actions.setAssignedTo?.(id, u)} />
-          <ContactAttemptsCell
-            id={id}
-            phone={phone}
-            sms={sms}
-            email={email}
-            proxy={proxy}
-            onAdd={(ch, counts) => actions.addContactAttempt?.(id, ch, counts)}
-          />
-          <NoteTextCell id={id} text={client.note} />
-          <BookingDateCell id={id} value={client.amsBookingDate} />
-          <PriorityCell id={id} value={client.priority} onCycle={() => actions.cyclePriority?.(id, client.priority)} />
-          <ActivityCell value={client.lastActivity} />
-          <ArchiveCell id={id} isArchived={!!client.isArchived} onArchive={() => actions.archive?.(id)} onUnarchive={() => actions.unarchive?.(id)} />
-        </>
-      )}
+      {/* Fixed column layout */}
+      <NameCell
+        client={{
+          id,
+          firstName: client.firstName,
+          lastName: client.lastName,
+          title: client.title,
+          notes: client.notes,
+          contactLog: client.contactLog,
+          note: client.note,
+        }}
+        onOpenNotes={onOpenNotes}
+        onOpenClient={onOpenClient}
+      />
+      <OfferCell id={id} value={client.angebot} />
+      <StatusCell id={id} value={client.status} onChange={(s?: string) => actions.setStatus?.(id, s)} />
+      <ResultCell id={id} value={client.result} onChange={(r?: string) => actions.setResult?.(id, r)} />
+      <FollowupCell id={id} followUp={client.followUp} onChange={(d?: string) => {
+          const changes = { 
+            followUp: d ?? null,
+            status: d ? 'terminVereinbart' : 'offen'
+          };
+          actions.update(id, changes);
+        }} />
+      <AssignCell id={id} value={client.assignedTo} users={users} onChange={(u?: string) => actions.setAssignedTo?.(id, u)} />
+      <ContactAttemptsCell
+        id={id}
+        phone={phone}
+        sms={sms}
+        email={email}
+        proxy={proxy}
+        onAdd={(ch, counts) => actions.addContactAttempt?.(id, ch, counts)}
+      />
+      <NoteTextCell id={id} text={client.note} />
+      <BookingDateCell id={id} value={client.amsBookingDate} />
+      <PriorityCell id={id} value={client.priority} onCycle={() => actions.cyclePriority?.(id, client.priority)} />
+      <ActivityCell value={client.lastActivity} />
+      <ArchiveCell id={id} isArchived={!!client.isArchived} onArchive={() => actions.archive?.(id)} onUnarchive={() => actions.unarchive?.(id)} />
     </div>
   );
 }
