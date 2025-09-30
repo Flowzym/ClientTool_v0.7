@@ -19,6 +19,7 @@ function ClassicClientList({
   users, 
   actions, 
   selectedSet, 
+  visibleColumns,
   onToggleSelect,
   onTogglePin
 }: {
@@ -26,6 +27,7 @@ function ClassicClientList({
   users: any[];
   actions: any;
   selectedSet: Set<string>;
+  visibleColumns: any[];
   onToggleSelect: (index: number, id: string, withShift: boolean) => void;
   onTogglePin: (index: number, id: string, event?: React.MouseEvent) => void;
 }) {
@@ -44,8 +46,20 @@ function ClassicClientList({
   const topPad = startIndex * ROW_HEIGHT;
   const bottomPad = Math.max(0, (clients.length - endIndex) * ROW_HEIGHT);
 
+  // Generate dynamic grid template for rows
+  const rowGridTemplate = useMemo(() => {
+    const baseColumns = ['64px']; // Selection + Pin column
+    
+    visibleColumns.forEach(col => {
+      const width = col.minWidth ? `${col.minWidth}px` : '120px';
+      baseColumns.push(width);
+    });
+    
+    return baseColumns.join(' ');
+  }, [visibleColumns]);
+
   return (
-    <div className="min-w-[1480px] border rounded-lg overflow-hidden">
+    <div className="border rounded-lg overflow-hidden" style={{ minWidth: `${64 + visibleColumns.length * 120}px` }}>
       <div ref={containerRef} onScroll={onScroll} style={{ maxHeight: viewportHeight, overflowY: 'auto' }}>
         <div style={{ height: topPad }} />
         <div className="divide-y">
@@ -58,6 +72,7 @@ function ClassicClientList({
                 index={realIndex}
                 users={users}
                 actions={actions}
+                visibleColumns={visibleColumns}
                 selected={selectedSet.has(c.id)}
                 onToggleSelect={(withShift: boolean) => onToggleSelect(realIndex, c.id, withShift)}
                 onTogglePin={(event?: React.MouseEvent) => onTogglePin(realIndex, c.id, event)}
@@ -81,6 +96,7 @@ function VirtualClientList({
   users, 
   actions, 
   selectedSet, 
+  visibleColumns,
   onToggleSelect,
   onTogglePin
 }: {
@@ -88,6 +104,7 @@ function VirtualClientList({
   users: any[];
   actions: any;
   selectedSet: Set<string>;
+  visibleColumns: any[];
   onToggleSelect: (index: number, id: string, withShift: boolean) => void;
   onTogglePin: (index: number, id: string, event?: React.MouseEvent) => void;
 }) {
@@ -100,11 +117,12 @@ function VirtualClientList({
         clients={clients}
         users={users}
         actions={actions}
+        visibleColumns={visibleColumns}
         selectedIds={selectedSet}
         onToggleSelect={onToggleSelect}
         onTogglePin={onTogglePin}
         rowHeight={44}
-        className="min-w-[1480px] border rounded-lg overflow-hidden"
+        className="border rounded-lg overflow-hidden"
       />
     </React.Suspense>
   );
@@ -122,8 +140,20 @@ function Board() {
 
   // Column visibility management
   const allColumns = useMemo(() => getAllColumns(), []);
-  const { visible, toggle, reset, getVisibleColumns } = useColumnVisibility(allColumns, 'board-main');
-  const activeColumns = useMemo(() => getVisibleColumns(), [getVisibleColumns]);
+  const { visible: visibleColumnKeys, toggle, reset, getVisibleColumns } = useColumnVisibility(allColumns, 'board-main');
+  const visibleColumns = useMemo(() => getVisibleColumns(), [getVisibleColumns]);
+  
+  // Generate dynamic grid template based on visible columns
+  const gridTemplate = useMemo(() => {
+    const baseColumns = ['64px']; // Selection + Pin column
+    
+    visibleColumns.forEach(col => {
+      const width = col.minWidth ? `${col.minWidth}px` : '120px';
+      baseColumns.push(width);
+    });
+    
+    return `grid-cols-[${baseColumns.join('_')}]`;
+  }, [visibleColumns]);
 
   // All hooks must be called before any early returns
   const { clients, users, isLoading, view, toggleSort } = useBoardData();
@@ -232,7 +262,7 @@ function Board() {
         onPinSelected={() => actions.bulkPin?.(selectedIds)}
         onUnpinSelected={() => actions.bulkUnpin?.(selectedIds)}
         allColumns={allColumns}
-        visibleColumns={visible}
+        visibleColumns={visibleColumnKeys}
         onToggleColumn={toggle}
         onResetColumns={reset}
       />
@@ -255,8 +285,8 @@ function Board() {
       )}
 
       {/* Sticky Header */}
-      <div className="min-w-[1480px] border rounded-t-lg bg-gray-50 border-b px-3 py-2">
-        <div className="grid grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px] gap-2">
+      <div className="border rounded-t-lg bg-gray-50 border-b px-3 py-2" style={{ minWidth: `${64 + visibleColumns.length * 120}px` }}>
+        <div className={`grid gap-2 ${gridTemplate}`}>
           <div className="flex items-center">
             <input
               type="checkbox"
@@ -282,84 +312,17 @@ function Board() {
               className="mr-2"
             />
           </div>
-          <ColumnHeader
-            columnKey="name"
-            label="Kunde"
-            isActive={view?.sort?.key==='name'}
-            direction={view?.sort?.key==='name' ? view?.sort?.direction : undefined}
-            onToggle={()=>handleHeaderToggle('name')}
-          />
-          <ColumnHeader
-            columnKey="offer"
-            label="Angebot"
-            isActive={view?.sort?.key==='offer'}
-            direction={view?.sort?.key==='offer' ? view?.sort?.direction : undefined}
-            onToggle={()=>handleHeaderToggle('offer')}
-          />
-          <ColumnHeader
-            columnKey="status"
-            label="Status"
-            isActive={view?.sort?.key==='status'}
-            direction={view?.sort?.key==='status' ? view?.sort?.direction : undefined}
-            onToggle={()=>handleHeaderToggle('status')}
-          />
-          <ColumnHeader
-            columnKey="result"
-            label="Ergebnis"
-            isActive={view?.sort?.key==='result'}
-            direction={view?.sort?.key==='result' ? view?.sort?.direction : undefined}
-            onToggle={()=>handleHeaderToggle('result')}
-          />
-          <ColumnHeader
-            columnKey="followUp"
-            label="Follow-up"
-            isActive={view?.sort?.key==='followUp'}
-            direction={view?.sort?.key==='followUp' ? view?.sort?.direction : undefined}
-            onToggle={()=>handleHeaderToggle('followUp')}
-          />
-          <ColumnHeader
-            columnKey="assignedTo"
-            label="Zuständigkeit"
-            isActive={view?.sort?.key==='assignedTo'}
-            direction={view?.sort?.key==='assignedTo' ? view?.sort?.direction : undefined}
-            onToggle={()=>handleHeaderToggle('assignedTo')}
-          />
-          <ColumnHeader
-            columnKey="contacts"
-            label="Kontakt"
-            isActive={view?.sort?.key==='contacts'}
-            direction={view?.sort?.key==='contacts' ? view?.sort?.direction : undefined}
-            onToggle={()=>handleHeaderToggle('contacts')}
-          />
-          <ColumnHeader
-            columnKey="notes"
-            label="Anmerkung"
-            isActive={view?.sort?.key==='notes'}
-            direction={view?.sort?.key==='notes' ? view?.sort?.direction : undefined}
-            onToggle={()=>handleHeaderToggle('notes')}
-          />
-          <ColumnHeader
-            columnKey="booking"
-            label="Zubuchung"
-            isActive={view?.sort?.key==='booking'}
-            direction={view?.sort?.key==='booking' ? view?.sort?.direction : undefined}
-            onToggle={()=>handleHeaderToggle('booking')}
-          />
-          <ColumnHeader
-            columnKey="priority"
-            label="Priorität"
-            isActive={view?.sort?.key==='priority'}
-            direction={view?.sort?.key==='priority' ? view?.sort?.direction : undefined}
-            onToggle={()=>handleHeaderToggle('priority')}
-          />
-          <ColumnHeader
-            columnKey="activity"
-            label="Aktivität"
-            isActive={view?.sort?.key==='activity'}
-            direction={view?.sort?.key==='activity' ? view?.sort?.direction : undefined}
-            onToggle={()=>handleHeaderToggle('activity')}
-          />
-          <div className="text-xs font-medium text-gray-600">Aktionen</div>
+          {visibleColumns.map(column => (
+            <ColumnHeader
+              key={column.key}
+              columnKey={column.key}
+              label={column.label}
+              sortable={column.sortable}
+              isActive={view?.sort?.key === column.key}
+              direction={view?.sort?.key === column.key ? view?.sort?.direction : undefined}
+              onToggle={() => column.sortable && handleHeaderToggle(column.key)}
+            />
+          ))}
         </div>
       </div>
 
@@ -370,6 +333,7 @@ function Board() {
           users={users}
           actions={actions}
           selectedSet={selectedSet}
+          visibleColumns={visibleColumns}
           onToggleSelect={toggleAtIndex}
           onTogglePin={togglePinAtIndex}
         />
@@ -379,6 +343,7 @@ function Board() {
           users={users}
           actions={actions}
           selectedSet={selectedSet}
+          visibleColumns={visibleColumns}
           onToggleSelect={toggleAtIndex}
           onTogglePin={togglePinAtIndex}
         />
