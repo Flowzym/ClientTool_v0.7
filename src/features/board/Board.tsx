@@ -13,15 +13,6 @@ import { featureManager } from '../../config/features';
 import { getAllColumns } from './columns/registry';
 import { useColumnVisibility } from './hooks/useColumnVisibility';
 
-// Stable refs for exhaustive-deps compliance
-function useStableRefs(users: any[]) {
-  const usersRef = useRef(users);
-  useEffect(() => { 
-    usersRef.current = users; 
-  }, [users]);
-  return { usersRef };
-}
-
 // Extracted components for stable hook order
 function ClassicClientList({ 
   clients, 
@@ -128,7 +119,6 @@ function Board() {
   const [virtualRowsEnabled, setVirtualRowsEnabled] = useState(featureManager.isEnabled('virtualRows'));
 
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-  const { usersRef } = useStableRefs(users);
 
   // Column visibility management
   const allColumns = useMemo(() => getAllColumns(), []);
