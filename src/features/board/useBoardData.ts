@@ -72,12 +72,23 @@ export function useBoardData() {
         // Detailliertes Logging für Daten-Analyse
         if (import.meta.env.DEV && clientsData.length > 0) {
           const sampleClient = clientsData[0];
-          const fieldCount = Object.keys(sampleClient).filter(k => sampleClient[k] != null).length;
+          const allFields = Object.keys(sampleClient);
+          const populatedFields = allFields.filter(k => sampleClient[k] != null && sampleClient[k] !== '');
+          const importFields = allFields.filter(k =>
+            ['zip', 'address', 'internalCode', 'amsAgentTitle', 'amsAgentFirstName',
+             'amsAgentLastName', 'countryCode', 'areaCode', 'phoneNumber', 'measureNumber',
+             'eventNumber', 'gender', 'svNumber', 'birthDate', 'email', 'phone'].includes(k)
+          );
+
           console.log('📊 Board data loaded:', {
             clientCount: clientsData.length,
             userCount: usersData.length,
-            sampleFieldCount: fieldCount,
-            sampleFields: Object.keys(sampleClient).slice(0, 10).join(', ')
+            totalFields: allFields.length,
+            populatedFields: populatedFields.length,
+            importFieldsPresent: importFields.filter(f => sampleClient[f] != null).length,
+            sampleId: sampleClient.id,
+            sampleName: `${sampleClient.firstName} ${sampleClient.lastName}`.trim(),
+            importFieldsSample: importFields.slice(0, 5).map(f => `${f}: ${sampleClient[f] || '(leer)'}`).join(', ')
           });
         }
 

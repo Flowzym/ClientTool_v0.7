@@ -183,11 +183,13 @@ export function ClientRow({
             case 'birthDate':
               return <div key={key} className="text-sm text-gray-700">{client.birthDate || '—'}</div>;
             case 'postalCode':
-              return <div key={key} className="text-sm text-gray-700">{client.postalCode || '—'}</div>;
+              // Support both import field name (zip) and board field name (postalCode)
+              return <div key={key} className="text-sm text-gray-700">{client.zip || client.postalCode || '—'}</div>;
             case 'city':
               return <div key={key} className="text-sm text-gray-700">{client.city || '—'}</div>;
             case 'street':
-              return <div key={key} className="text-sm text-gray-700">{client.street || '—'}</div>;
+              // Support both import field name (address) and board field name (street)
+              return <div key={key} className="text-sm text-gray-700">{client.address || client.street || '—'}</div>;
             case 'phone':
               return <div key={key} className="text-sm text-gray-700">{client.phone || '—'}</div>;
             case 'email':
@@ -201,7 +203,8 @@ export function ClientRow({
             case 'exitDate':
               return <div key={key} className="text-sm text-gray-700">{client.exitDate || '—'}</div>;
             case 'rgs':
-              return <div key={key} className="text-sm text-gray-700">{client.rgs || '—'}</div>;
+              // Support both import field name (internalCode) and board field name (rgs)
+              return <div key={key} className="text-sm text-gray-700">{client.internalCode || client.rgs || '—'}</div>;
             case 'advisorTitle':
               return <div key={key} className="text-sm text-gray-700">{client.amsAgentTitle || '—'}</div>;
             case 'advisorFirstName':
@@ -212,6 +215,12 @@ export function ClientRow({
               return <div key={key} className="text-sm text-gray-700">{client.measureNumber || '—'}</div>;
             case 'eventNumber':
               return <div key={key} className="text-sm text-gray-700">{client.eventNumber || '—'}</div>;
+
+            // Additional Import fields
+            case 'countryDial':
+              return <div key={key} className="text-sm text-gray-700">{client.countryCode || '—'}</div>;
+            case 'areaDial':
+              return <div key={key} className="text-sm text-gray-700">{client.areaCode || '—'}</div>;
 
             // Computed columns
             case 'advisorFull':
