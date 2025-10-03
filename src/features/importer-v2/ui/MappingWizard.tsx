@@ -350,21 +350,48 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
                           className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
                         >
                           <option value="">Ignorieren</option>
-                          <option value="amsId">AMS-ID</option>
-                          <option value="firstName">Vorname</option>
-                          <option value="lastName">Nachname</option>
-                          <option value="title">Titel</option>
-                          <option value="gender">Geschlecht</option>
-                          <option value="birthDate">Geburtsdatum</option>
-                          <option value="phone">Telefon</option>
-                          <option value="email">E-Mail</option>
-                          <option value="address">Adresse</option>
-                          <option value="zip">PLZ</option>
-                          <option value="city">Ort</option>
-                          <option value="status">Status</option>
-                          <option value="priority">Priorität</option>
-                          <option value="angebot">Angebot</option>
-                          <option value="note">Notiz</option>
+                          <optgroup label="Stammdaten">
+                            <option value="amsId">AMS-ID</option>
+                            <option value="firstName">Vorname</option>
+                            <option value="lastName">Nachname</option>
+                            <option value="title">Titel</option>
+                            <option value="gender">Geschlecht</option>
+                            <option value="birthDate">Geburtsdatum</option>
+                            <option value="svNumber">SV-Nummer</option>
+                          </optgroup>
+                          <optgroup label="Kontaktdaten">
+                            <option value="phone">Telefon (komplett)</option>
+                            <option value="countryCode">Landesvorwahl</option>
+                            <option value="areaCode">Ortsvorwahl</option>
+                            <option value="phoneNumber">Telefonnummer</option>
+                            <option value="email">E-Mail</option>
+                            <option value="address">Adresse</option>
+                            <option value="zip">PLZ</option>
+                            <option value="city">Ort</option>
+                          </optgroup>
+                          <optgroup label="AMS-Daten">
+                            <option value="amsBookingDate">AMS-Zubuchungsdatum</option>
+                            <option value="entryDate">Eintrittsdatum</option>
+                            <option value="exitDate">Austrittsdatum</option>
+                            <option value="amsAdvisor">AMS-Berater</option>
+                            <option value="amsAgentFirstName">AMS-Betreuer Vorname</option>
+                            <option value="amsAgentLastName">AMS-Betreuer Nachname</option>
+                          </optgroup>
+                          <optgroup label="Workflow">
+                            <option value="status">Status</option>
+                            <option value="priority">Priorität</option>
+                            <option value="result">Ergebnis</option>
+                            <option value="angebot">Angebot</option>
+                            <option value="assignedTo">Zugewiesen an</option>
+                          </optgroup>
+                          <optgroup label="Termine & Notizen">
+                            <option value="followUp">Follow-up/Wiedervorlage</option>
+                            <option value="lastActivity">Letzte Aktivität</option>
+                            <option value="note">Notiz</option>
+                          </optgroup>
+                          <optgroup label="Sonstiges">
+                            <option value="internalCode">Interner Code</option>
+                          </optgroup>
                         </select>
                         <div className="w-24 text-xs text-gray-500">
                           {state.preview.length > 1 && state.preview[1][index] && (
@@ -641,61 +668,62 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
   };
 
   return (
-    <div className="mapping-wizard">
-      {/* TODO: Implement wizard UI */}
-      <div className="wizard-header">
-        <h2>Import Mapping Wizard</h2>
-        <p>Configure column mappings for your import file</p>
-      </div>
-      
-      <div className="wizard-content">
-        {/* TODO: Step indicators */}
-        {/* TODO: File upload step */}
-        {/* TODO: Template selection step */}
-        {/* TODO: Column mapping step */}
-        {/* TODO: Validation step */}
-        {/* TODO: Preview step */}
-        
-        <div className="placeholder-content">
-          <p>Mapping wizard implementation pending...</p>
-          <p>Features to implement:</p>
-          <ul>
-            <li>File upload and parsing</li>
-            <li>Template auto-detection</li>
-            <li>Interactive column mapping</li>
-            <li>Real-time validation</li>
-            <li>Data preview</li>
-            <li>Template saving</li>
-          </ul>
+    <div className="space-y-6">
+      {/* Step indicators */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-semibold text-gray-900">Importer V2 - Mapping Wizard</h2>
+        <div className="flex items-center gap-2">
+          {[1, 2, 3, 4].map((stepNum) => (
+            <div
+              key={stepNum}
+              className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+                stepNum === state.currentStep
+                  ? 'bg-blue-600 text-white'
+                  : stepNum < state.currentStep
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-200 text-gray-600'
+              }`}
+            >
+              {stepNum}
+            </div>
+          ))}
         </div>
-
-        {renderStep()}
       </div>
-      
-      <div className="wizard-actions">
-        {/* TODO: Navigation buttons */}
-        <button onClick={onCancel}>Cancel</button>
-        {state.currentStep > 1 && (
-          <button
-            onClick={() => setState(prev => ({ ...prev, currentStep: prev.currentStep - 1 }))}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            Zurück
-          </button>
-        )}
-        {state.currentStep < 4 && (
-          <button
-            onClick={() => setState(prev => ({ ...prev, currentStep: prev.currentStep + 1 }))}
-            disabled={
-              (state.currentStep === 1 && !state.file) ||
-              (state.currentStep === 2 && state.mapping.size === 0) ||
-              (state.currentStep === 4 && state.importing)
-            }
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {state.currentStep === 3 ? 'Transformieren' : 'Weiter'}
-          </button>
-        )}
+
+      {/* Main content */}
+      {renderStep()}
+
+      {/* Navigation actions */}
+      <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+        <button
+          onClick={onCancel}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+        >
+          Abbrechen
+        </button>
+
+        <div className="flex gap-3">
+          {state.currentStep > 1 && state.currentStep < 4 && (
+            <button
+              onClick={() => setState(prev => ({ ...prev, currentStep: prev.currentStep - 1 }))}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            >
+              Zurück
+            </button>
+          )}
+          {state.currentStep < 3 && (
+            <button
+              onClick={() => setState(prev => ({ ...prev, currentStep: prev.currentStep + 1 }))}
+              disabled={
+                (state.currentStep === 1 && !state.file) ||
+                (state.currentStep === 2 && state.mapping.size === 0)
+              }
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Weiter
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

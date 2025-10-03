@@ -345,7 +345,7 @@ export function applyMapping(
   });
 
   // Handle custom fields
-  _options.customFields.forEach(customField => {
+  options.customFields.forEach(customField => {
     const headerIndex = headers.findIndex(h => h === customField.name);
     if (headerIndex >= 0 && row[headerIndex] !== undefined) {
       const value = row[headerIndex];
