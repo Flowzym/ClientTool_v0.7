@@ -2,28 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Badge } from '../../components/Badge';
-import { 
-  Users, 
-  Shield, 
-  Database, 
-  Cloud, 
-  HardDrive, 
-  Building, 
-  Globe,
-  Plus,
-  Edit,
-  Trash2,
-  Save,
-  X,
-  Settings,
-  Key,
-  UserCheck,
-  AlertCircle,
-  CheckCircle,
-  Upload,
-  Image,
-  BarChart3
-} from 'lucide-react';
+import { Users, Shield, Database, Cloud, HardDrive, Building, Globe, Plus, CreditCard as Edit, Trash2, Save, X, Settings, Key, UserCheck, AlertCircle, CheckCircle, Upload, Image, BarChart3 } from 'lucide-react';
 import { db } from '../../data/db';
 import { useAuth } from '../../app/auth/AuthProvider';
 import { configManager, type FeatureConfig } from '../../data/config';
