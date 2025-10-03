@@ -21,36 +21,69 @@ function isEnvelope(v: any): v is EnvelopeV1 {
 /** Envelope dekodieren und Meta-Daten mergen */
 async function decodeEnvelope<T = any>(stored: any): Promise<T> {
   if (!isEnvelope(stored)) return stored as T;
-  
+
   const plain = await codec.decode(stored);
-  
-  // Meta-Daten vom Envelope übernehmen
-  return {
+
+  // Meta-Daten vom Envelope übernehmen (Plain hat Vorrang, dann Envelope)
+  const decoded = {
     ...(plain as any),
     id: stored.id ?? (plain as any)?.id,
     amsId: stored.amsId ?? (plain as any)?.amsId,
     rowKey: stored.rowKey ?? (plain as any)?.rowKey,
   } as T;
+
+  // Development-Logging: Prüfe auf fehlende kritische Felder
+  if (import.meta.env.DEV && (decoded as any).id) {
+    const plainKeys = Object.keys(plain || {}).length;
+    const decodedKeys = Object.keys(decoded).length;
+    if (plainKeys > decodedKeys + 3) {
+      console.warn('⚠️ Envelope decode: Possible field loss', {
+        id: (decoded as any).id,
+        plainKeys,
+        decodedKeys
+      });
+    }
+  }
+
+  return decoded;
 }
 
-/** Normalisierung mit robusten Defaults */
+/** Normalisierung mit robusten Defaults - WICHTIG: Nur fehlende Werte setzen */
 function normalizeClientStored(c: any) {
   if (!c || typeof c !== 'object') return c;
-  
-  return {
-    // zuerst Original …
-    ...c,
-    // … dann robuste Defaults (nur wenn fehlend/ungültig)
-    contactCount: typeof c.contactCount === 'number' ? c.contactCount : 0,
-    contactLog: Array.isArray(c.contactLog) ? c.contactLog : [],
-    priority: c.priority ?? 'normal',
-    status: c.status ?? 'offen',
-    isArchived: !!c.isArchived,
-    firstName: c.firstName ?? '',
-    lastName: c.lastName ?? '',
-    // falls id fehlt, aber amsId da ist: weise id lesbar zu (PK bleibt in IndexedDB wie er ist)
-    id: typeof c.id !== 'undefined' ? c.id : (c.amsId ?? c.id),
-  };
+
+  // Basis-Objekt mit allen Original-Werten
+  const normalized = { ...c };
+
+  // Nur kritische Felder mit Defaults füllen, wenn sie fehlen oder ungültig sind
+  if (typeof normalized.contactCount !== 'number') {
+    normalized.contactCount = 0;
+  }
+  if (!Array.isArray(normalized.contactLog)) {
+    normalized.contactLog = [];
+  }
+  if (!normalized.priority) {
+    normalized.priority = 'normal';
+  }
+  if (!normalized.status) {
+    normalized.status = 'offen';
+  }
+  if (typeof normalized.isArchived !== 'boolean') {
+    normalized.isArchived = false;
+  }
+  // Pflicht-Felder für Anzeige - nur wenn komplett fehlend
+  if (normalized.firstName === undefined) {
+    normalized.firstName = '';
+  }
+  if (normalized.lastName === undefined) {
+    normalized.lastName = '';
+  }
+  // ID-Fallback: falls id fehlt, aber amsId da ist
+  if (typeof normalized.id === 'undefined' && normalized.amsId) {
+    normalized.id = normalized.amsId;
+  }
+
+  return normalized;
 }
 
 function normalizeUserStored(u: any) {

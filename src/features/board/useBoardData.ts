@@ -66,8 +66,21 @@ export function useBoardData() {
           Promise.all((await Promise.all((await db.clients.toArray()) as any)) as any),
           Promise.all((await Promise.all((await db.users.toArray()) as any)) as any)
         ]);
-        
+
         if (cancelled) return;
+
+        // Detailliertes Logging für Daten-Analyse
+        if (import.meta.env.DEV && clientsData.length > 0) {
+          const sampleClient = clientsData[0];
+          const fieldCount = Object.keys(sampleClient).filter(k => sampleClient[k] != null).length;
+          console.log('📊 Board data loaded:', {
+            clientCount: clientsData.length,
+            userCount: usersData.length,
+            sampleFieldCount: fieldCount,
+            sampleFields: Object.keys(sampleClient).slice(0, 10).join(', ')
+          });
+        }
+
         setClients(clientsData);
         setUsers(usersData);
       } catch (error) {

@@ -68,46 +68,7 @@ export function ImportExcel() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto-Mapping für deutsche Spaltennamen
-  const autoMapping: Record<string, string> = {
-    'nachname': 'lastName',
-    'vorname': 'firstName',
-    'titel': 'title',
-    'anrede': 'title',
-    'geburtsdatum': 'birthDate',
-    'telefon': 'phone',
-    'tel': 'phone',
-    'email': 'email',
-    'mail': 'email',
-    'adresse': 'address',
-    'status': 'status',
-    'priorität': 'priority',
-    'prio': 'priority',
-    'angebot': 'angebot',
-    'offer': 'angebot',
-    'maßnahme': 'angebot',
-    'ams': 'amsId',
-    'ams-id': 'amsId',
-    'kundennummer': 'amsId',
-    'id': 'amsId',
-    'termin': 'followUp',
-    'datum': 'followUp',
-    'wiedervorlage': 'followUp',
-    'zubuchung': 'amsBookingDate',
-    'zubuchungsdatum': 'amsBookingDate',
-    'eintritt': 'entryDate',
-    'austritt': 'exitDate',
-    'notiz': 'note',
-    'notes': 'note',
-    'note': 'note',
-    'bemerkung': 'note',
-    'anmerkung': 'note',
-    'ams berater': 'amsAdvisor',
-    'ams_berater': 'amsAdvisor',
-    'berater': 'amsAdvisor',
-    'advisor': 'amsAdvisor',
-    'betreuer': 'amsAdvisor'
-  };
+  // Removed: Legacy autoMapping dictionary - now using autoMapHeaders from presets.ts
 
   // Datei-Upload-Handler
   const handleFileUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -173,16 +134,27 @@ export function ImportExcel() {
       const headers = rawData[0] as string[];
       const rows = rawData.slice(1);
 
-      // Auto-Mapping anwenden
-      const detectedMapping: Record<string, string> = {};
-      headers.forEach((header, index) => {
-        if (!header) return;
-        const normalized = header.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
-        const targetField = autoMapping[normalized];
-        if (targetField) {
-          detectedMapping[index.toString()] = targetField;
-        }
-      });
+      // Auto-Mapping mit robuster Preset-Engine anwenden
+      const { mapping: detectedMapping, suggestions } = autoMapHeaders(
+        headers,
+        PRESET_AMS_DEFAULT,
+        0.5 // Confidence threshold
+      );
+
+      // Log mapping details für Debugging
+      console.log(`🤖 Auto-mapping applied: ${Object.keys(detectedMapping).length} columns mapped`);
+      if (import.meta.env.DEV) {
+        suggestions.forEach(s => {
+          if (s.repairs.length > 0) {
+            console.log(`🔧 Mojibake repaired: ${s.repairs.join(', ')}`);
+          }
+          if (s.field && s.confidence >= 0.5) {
+            console.log(`✅ ${s.header} → ${s.field} (${Math.round(s.confidence * 100)}%: ${s.reason})`);
+          } else if (s.confidence > 0 && s.confidence < 0.5) {
+            console.log(`⚠️ ${s.header}: Low confidence match (${Math.round(s.confidence * 100)}%)`);
+          }
+        });
+      }
 
       // Zeilen zu Objekten mappen
       const mappedRows: ImportMappedRow[] = rows.map(row => {
@@ -216,7 +188,7 @@ export function ImportExcel() {
       setStep('mapping');
       
       console.log(`✅ File processed: ${mappedRows.length} rows, ${Object.keys(detectedMapping).length} auto-mapped columns`);
-      
+
     } catch (error) {
       console.error('❌ File processing failed:', error);
       setUploadError(error instanceof Error ? error.message : 'Unbekannter Fehler beim Verarbeiten der Datei');
@@ -224,7 +196,7 @@ export function ImportExcel() {
       setIsProcessing(false);
       event.target.value = '';
     }
-  }, [autoMapping]);
+  }, []);
 
   // System File Picker
   const handleSystemPicker = useCallback(async () => {
@@ -400,23 +372,37 @@ export function ImportExcel() {
       const stats = { created: 0, updated: 0, archived: 0, deleted: 0 };
       
       if (mode === 'append') {
-        const clients: Client[] = importData.mappedRows.map(row => ({
-          ...row,
-          id: crypto.randomUUID(),
-          rowKey: buildRowKey(row),
-          sourceRowHash: hashRow(row),
-          sourceId,
-          contactCount: 0,
-          contactLog: [],
-          isArchived: false,
-          lastImportedAt: nowISO(),
-          lastSeenInSourceAt: nowISO(),
-          source: {
-            fileName: importData.fileName,
-            importedAt: nowISO()
+        const clients: Client[] = importData.mappedRows.map((row, idx) => {
+          const client = {
+            ...row,
+            id: crypto.randomUUID(),
+            rowKey: buildRowKey(row),
+            sourceRowHash: hashRow(row),
+            sourceId,
+            contactCount: 0,
+            contactLog: [],
+            isArchived: false,
+            lastImportedAt: nowISO(),
+            lastSeenInSourceAt: nowISO(),
+            source: {
+              fileName: importData.fileName,
+              importedAt: nowISO()
+            }
+          };
+
+          // Log für erste 3 Clients (Debugging)
+          if (import.meta.env.DEV && idx < 3) {
+            const fieldCount = Object.keys(client).filter(k => client[k] != null).length;
+            console.log(`📝 Client ${idx + 1} prepared:`, {
+              id: client.id,
+              fieldCount,
+              sampleFields: Object.keys(client).slice(0, 8).join(', ')
+            });
           }
-        }));
-        
+
+          return client;
+        });
+
         stats.created = await db.bulkCreate(clients);
         
       } else if (syncPreview) {
@@ -462,17 +448,34 @@ export function ImportExcel() {
       };
       
       await db.putImportSession(session);
-      
+
+      // Detailliertes Log für Import-Erfolg
+      console.log('✅ Import erfolgreich abgeschlossen:', {
+        sourceId,
+        mode,
+        stats,
+        fileName: importData.fileName,
+        totalRows: importData.mappedRows.length,
+        mappedFields: Object.keys(mapping).length
+      });
+
       setResult({
         success: true,
         stats,
         session
       });
-      
+
       setStep('result');
-      
+
     } catch (error) {
-      console.error('Import error:', error);
+      console.error('❌ Import error:', error);
+      console.error('Import context:', {
+        sourceId,
+        mode,
+        fileName: importData?.fileName,
+        rowCount: importData?.mappedRows.length,
+        mappingCount: Object.keys(mapping).length
+      });
       setResult({
         success: false,
         error: error instanceof Error ? error.message : 'Unbekannter Fehler'
@@ -501,18 +504,18 @@ export function ImportExcel() {
   // Auto-Suggest Mapping basierend auf Header-Namen
   const autoSuggestMappings = useCallback(() => {
     if (!importData) return;
-    
+
     const { mapping: detectedMapping, suggestions } = autoMapHeaders(
       importData.headers,
       PRESET_AMS_DEFAULT,
       0.5 // Confidence threshold
     );
-    
+
     setMapping(detectedMapping);
-    
+
     // Log suggestions für Debugging
+    console.log(`🤖 Manual re-mapping: ${Object.keys(detectedMapping).length} columns mapped`);
     if (import.meta.env.DEV) {
-      console.log(`🤖 Auto-mapping applied: ${Object.keys(detectedMapping).length} columns mapped`);
       suggestions.forEach(s => {
         if (s.repairs.length > 0) {
           console.log(`🔧 Mojibake repaired: ${s.repairs.join(', ')}`);
@@ -522,7 +525,7 @@ export function ImportExcel() {
         }
       });
     }
-  }, [importData, autoMapping]);
+  }, [importData]);
 
   // Render-Funktionen
   const renderFileStep = () => (
