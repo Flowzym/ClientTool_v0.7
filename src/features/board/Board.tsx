@@ -150,10 +150,15 @@ function Board() {
   const visibleColumns = useMemo(() => getVisibleColumns(), [getVisibleColumns]);
   
   // All hooks must be called before any early returns
-  const { clients, users, isLoading, view, toggleSort } = useBoardData();
+  const { clients, users, isLoading, view, toggleSort, refresh } = useBoardData();
   const actions = useBoardActions();
 
   function handleHeaderToggle(key: string){ try { toggleSort?.(key as any); } catch {} }
+
+  // Refresh handler
+  const handleRefresh = () => {
+    refresh?.();
+  };
 
   // ==== SORT BLOCK (canonical) ====
 
@@ -272,6 +277,7 @@ function Board() {
         getSelectedRows={selectedRowsProvider}
         onPinSelected={() => actions.bulkPin?.(selectedIds)}
         onUnpinSelected={() => actions.bulkUnpin?.(selectedIds)}
+        onRefresh={handleRefresh}
         allColumns={allColumns}
         visibleColumns={visibleColumnKeys}
         onToggleColumn={toggle}

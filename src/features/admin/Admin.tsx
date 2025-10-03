@@ -475,9 +475,24 @@ export function Admin() {
                   <Settings className="w-4 h-4 mr-2" />
                   Datenbank-Einstellungen
                 </Button>
-                <Button variant="ghost" size="sm" className="w-full justify-start text-error-500">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full justify-start text-error-500"
+                  onClick={async () => {
+                    if (!confirm('⚠️ WARNUNG: Alle Client-Daten im Board werden gelöscht! Sind Sie sicher?')) return;
+                    if (!confirm('Letzte Warnung: Dieser Vorgang kann nicht rückgängig gemacht werden!')) return;
+                    try {
+                      await db.clients.clear();
+                      showMessage('success', 'Board wurde geleert');
+                    } catch (error) {
+                      console.error('Failed to clear board:', error);
+                      showMessage('error', 'Fehler beim Löschen des Boards');
+                    }
+                  }}
+                >
                   <Trash2 className="w-4 h-4 mr-2" />
-                  Datenbank zurücksetzen
+                  Board löschen
                 </Button>
               </div>
             </div>
@@ -616,6 +631,39 @@ export function Admin() {
               </div>
               
               <div className="space-y-2">
+                <h4 className="font-medium text-sm">Features</h4>
+                <div className="border border-gray-200 rounded p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Upload className="w-4 h-4 text-gray-500" />
+                      <span className="text-sm">Importer V2 (Experimentell)</span>
+                    </div>
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={featureConfig?.importerV2 || false}
+                        onChange={async (e) => {
+                          try {
+                            const enabled = e.target.checked;
+                            await configManager.setFeature('importerV2', enabled);
+                            await loadFeatureConfig();
+                            showMessage('success', `Importer V2 ${enabled ? 'aktiviert' : 'deaktiviert'}`);
+                          } catch (error) {
+                            console.error('Failed to toggle Importer V2:', error);
+                            showMessage('error', 'Fehler beim Ändern der Einstellung');
+                          }
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                    </label>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Erweiterte Import-Pipeline mit intelligentem Mapping
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <h4 className="font-medium text-sm">Wartung</h4>
                 <Button variant="ghost" size="sm" className="w-full justify-start">
                   <Database className="w-4 h-4 mr-2" />
@@ -626,9 +674,9 @@ export function Admin() {
                   Cache leeren
                 </Button>
                 {import.meta.env.DEV && (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="w-full justify-start"
                     onClick={() => window.open('/dev/perf', '_blank')}
                   >

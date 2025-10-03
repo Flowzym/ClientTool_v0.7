@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings } from 'lucide-react';
+import { Settings, RefreshCw } from 'lucide-react';
 import { Button } from '../../../components/Button';
 import ColumnPicker from './ColumnPicker';
 import { getAllColumns, getDefaultVisibleColumns } from '../columns/registry';
@@ -10,6 +10,7 @@ function BoardHeader({
   getSelectedRows,
   onPinSelected,
   onUnpinSelected,
+  onRefresh,
   allColumns,
   visibleColumns,
   onToggleColumn,
@@ -19,6 +20,7 @@ function BoardHeader({
   getSelectedRows: () => any[];
   onPinSelected: () => void;
   onUnpinSelected: () => void;
+  onRefresh?: () => void;
   allColumns: any[];
   visibleColumns: Set<string>;
   onToggleColumn: (key: string) => void;
@@ -40,8 +42,19 @@ function BoardHeader({
           <Settings className="w-4 h-4 mr-2" />
           Spalten
         </Button>
+        {onRefresh && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRefresh}
+            title="Board aktualisieren"
+          >
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Aktualisieren
+          </Button>
+        )}
       </div>
-      
+
       <div className="flex items-center gap-2">
         <button className="px-2 py-1 border rounded hover:bg-gray-50" onClick={() => setOpenCsv(true)}>
           CSV Export

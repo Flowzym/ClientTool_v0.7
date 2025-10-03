@@ -437,6 +437,7 @@ export function useBoardData() {
     setColumnVisibility,
     resetToDefaultView,
     refreshData,
+    refresh: refreshData, // Alias for convenience
     toggleSort,
     setAssignedToFilter
   };

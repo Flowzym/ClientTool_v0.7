@@ -21,6 +21,7 @@ export interface FeatureConfig {
     enabled: boolean;
     clientId?: string;
   };
+  importerV2?: boolean;
 }
 
 const DEFAULT_CONFIG: FeatureConfig = {
@@ -33,7 +34,8 @@ const DEFAULT_CONFIG: FeatureConfig = {
   },
   googledrive: {
     enabled: false
-  }
+  },
+  importerV2: false
 };
 
 class ConfigManager {
@@ -99,6 +101,14 @@ class ConfigManager {
       sharepoint: {
         enabled: false
       }
+    });
+  }
+
+  async setFeature(feature: string, enabled: boolean): Promise<void> {
+    const config = await this.getConfig();
+    await this.updateConfig({
+      ...config,
+      [feature]: enabled
     });
   }
 
