@@ -153,6 +153,9 @@ function Board() {
   const { clients, users, isLoading, view, toggleSort, refresh } = useBoardData();
   const actions = useBoardActions();
 
+  // Start performance measurement
+  perfMark('board:render:start');
+
   function handleHeaderToggle(key: string){ try { toggleSort?.(key as any); } catch {} }
 
   // Refresh handler

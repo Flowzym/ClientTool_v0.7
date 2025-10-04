@@ -16,8 +16,15 @@ export function perfMark(name: string): void {
 
 export function perfMeasure(name: string, start: string, end: string): { name: string; duration: number } | null {
   if (!isDev) return null;
-  
+
   try {
+    const startMarks = performance.getEntriesByName(start, 'mark');
+    const endMarks = performance.getEntriesByName(end, 'mark');
+
+    if (startMarks.length === 0 || endMarks.length === 0) {
+      return { name, duration: 0 };
+    }
+
     performance.measure(name, start, end);
     const measure = performance.getEntriesByName(name, 'measure')[0];
     return {
@@ -25,7 +32,6 @@ export function perfMeasure(name: string, start: string, end: string): { name: s
       duration: measure?.duration || 0
     };
   } catch (error) {
-    console.warn('perfMeasure failed:', error);
     return { name, duration: 0 };
   }
 }
