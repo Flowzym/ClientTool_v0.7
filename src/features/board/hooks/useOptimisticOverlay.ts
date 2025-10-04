@@ -119,13 +119,26 @@ export function useOptimisticOverlay<T extends { id: string | number }>(base: T[
       setVersion(v => v + 1);
     };
 
+    const onRollback = (e: Event) => {
+      const evt = e as CustomEvent<Detail>;
+      // Remove only the specified patches from overlay
+      for (const p of evt.detail.patches) {
+        const k = keyOf(p.id);
+        overlayRef.current.delete(k);
+        overlayCounter.inc('rollback');
+      }
+      setVersion(v => v + 1);
+    };
+
     window.addEventListener('board:optimistic-apply', onApply as EventListener);
     window.addEventListener('board:optimistic-commit', onCommit as EventListener);
     window.addEventListener('board:optimistic-clear', onClear as EventListener);
+    window.addEventListener('board:optimistic-rollback', onRollback as EventListener);
     return () => {
       window.removeEventListener('board:optimistic-apply', onApply as EventListener);
       window.removeEventListener('board:optimistic-commit', onCommit as EventListener);
       window.removeEventListener('board:optimistic-clear', onClear as EventListener);
+      window.removeEventListener('board:optimistic-rollback', onRollback as EventListener);
     };
   }, []);
 

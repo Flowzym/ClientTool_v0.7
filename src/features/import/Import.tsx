@@ -67,7 +67,7 @@ export function Import() {
         <Button variant="ghost" onClick={() => setMode('select')}>
           ← Zurück zur Auswahl
         </Button>
-        <SharePointImport />
+        <SharePointImport onSwitchToExcel={() => setMode('excel')} />
       </div>
     );
   }
@@ -178,7 +178,12 @@ export function Import() {
                     <div>⚠️ Externe Netzwerkverbindung</div>
                   </div>
                   
-                  <Button variant="primary" size="sm" className="w-full">
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setMode('sharepoint')}
+                  >
                     <Building className="w-4 h-4 mr-2" />
                     SharePoint öffnen
                   </Button>

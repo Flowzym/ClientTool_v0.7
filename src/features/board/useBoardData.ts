@@ -36,9 +36,18 @@ export function useBoardData() {
     (async () => {
       try {
         // Sicherstellen, dass Crypto-Key verfügbar ist
-        await cryptoManager.getActiveKey();
+        try {
+          await cryptoManager.getActiveKey();
+        } catch (cryptoError) {
+          console.error('❌ Crypto key initialization failed:', cryptoError);
+          // Set loading to false immediately to show error state
+          if (!cancelled) {
+            setIsLoading(false);
+          }
+          return;
+        }
         if (cancelled) return;
-        
+
         // View aus Storage laden
         const savedView = await loadViewFromStorage();
         if (cancelled) return;
@@ -61,10 +70,10 @@ export function useBoardData() {
           });
         }
         
-        // Daten laden
+        // Daten laden (simplified - removed redundant Promise.all)
         const [clientsData, usersData] = await Promise.all([
-          Promise.all((await Promise.all((await db.clients.toArray()) as any)) as any),
-          Promise.all((await Promise.all((await db.users.toArray()) as any)) as any)
+          db.clients.toArray(),
+          db.users.toArray()
         ]);
 
         if (cancelled) return;

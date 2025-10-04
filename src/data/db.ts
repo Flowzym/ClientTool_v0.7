@@ -22,30 +22,49 @@ function isEnvelope(v: any): v is EnvelopeV1 {
 async function decodeEnvelope<T = any>(stored: any): Promise<T> {
   if (!isEnvelope(stored)) return stored as T;
 
-  const plain = await codec.decode(stored);
+  try {
+    const plain = await codec.decode(stored);
 
-  // Meta-Daten vom Envelope übernehmen (Plain hat Vorrang, dann Envelope)
-  const decoded = {
-    ...(plain as any),
-    id: stored.id ?? (plain as any)?.id,
-    amsId: stored.amsId ?? (plain as any)?.amsId,
-    rowKey: stored.rowKey ?? (plain as any)?.rowKey,
-  } as T;
+    // Meta-Daten vom Envelope übernehmen (Plain hat Vorrang, dann Envelope)
+    const decoded = {
+      ...(plain as any),
+      id: stored.id ?? (plain as any)?.id,
+      amsId: stored.amsId ?? (plain as any)?.amsId,
+      rowKey: stored.rowKey ?? (plain as any)?.rowKey,
+    } as T;
 
-  // Development-Logging: Prüfe auf fehlende kritische Felder
-  if (import.meta.env.DEV && (decoded as any).id) {
-    const plainKeys = Object.keys(plain || {}).length;
-    const decodedKeys = Object.keys(decoded).length;
-    if (plainKeys > decodedKeys + 3) {
-      console.warn('⚠️ Envelope decode: Possible field loss', {
-        id: (decoded as any).id,
-        plainKeys,
-        decodedKeys
-      });
+    // Development-Logging: Prüfe auf fehlende kritische Felder
+    if (import.meta.env.DEV && (decoded as any).id) {
+      const plainKeys = Object.keys(plain || {}).length;
+      const decodedKeys = Object.keys(decoded).length;
+      if (plainKeys > decodedKeys + 3) {
+        console.warn('⚠️ Envelope decode: Possible field loss', {
+          id: (decoded as any).id,
+          plainKeys,
+          decodedKeys
+        });
+      }
     }
-  }
 
-  return decoded;
+    return decoded;
+
+  } catch (error) {
+    console.error('❌ Envelope decode failed:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      envelopeId: stored.id,
+      envelopeVersion: stored.envelopeVersion
+    });
+
+    // Fallback: Return meta-only object to prevent total failure
+    // This allows the app to continue functioning with partial data
+    return {
+      id: stored.id,
+      amsId: stored.amsId,
+      rowKey: stored.rowKey,
+      _decodeError: true,
+      _errorMessage: error instanceof Error ? error.message : 'Decode failed'
+    } as T;
+  }
 }
 
 /** Normalisierung mit robusten Defaults - WICHTIG: Nur fehlende Werte setzen */

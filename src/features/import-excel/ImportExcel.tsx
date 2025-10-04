@@ -372,7 +372,25 @@ export function ImportExcel() {
       const stats = { created: 0, updated: 0, archived: 0, deleted: 0 };
       
       if (mode === 'append') {
-        const clients: Client[] = importData.mappedRows.map((row, idx) => {
+        // Validate all rows before creating clients
+        const validClients: Client[] = [];
+        const validationWarnings: string[] = [];
+
+        for (let idx = 0; idx < importData.mappedRows.length; idx++) {
+          const row = importData.mappedRows[idx];
+
+          // Re-validate before persist (critical!)
+          const validation = validateRow(row);
+
+          if (!validation.ok) {
+            validationWarnings.push(`Row ${idx + 2}: ${validation.errors.join(', ')}`);
+            continue; // Skip invalid rows
+          }
+
+          if (validation.warnings.length > 0) {
+            validationWarnings.push(`Row ${idx + 2}: ${validation.warnings.join(', ')}`);
+          }
+
           const client = {
             ...row,
             id: crypto.randomUUID(),
@@ -400,10 +418,18 @@ export function ImportExcel() {
             });
           }
 
-          return client;
-        });
+          validClients.push(client);
+        }
 
-        stats.created = await db.bulkCreate(clients);
+        // Show validation warnings if any
+        if (validationWarnings.length > 0) {
+          console.warn('⚠️ Import validation warnings:', validationWarnings);
+          if (import.meta.env.DEV) {
+            alert(`${validationWarnings.length} validation warnings detected. Check console for details.`);
+          }
+        }
+
+        stats.created = await db.bulkCreate(validClients);
         
       } else if (syncPreview) {
         if (syncPreview.new.length > 0) {

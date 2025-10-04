@@ -27,7 +27,8 @@ export function useBoardActions() {
       await updateById<any>(id, changes);
       commitOptimistic(patches);
     } catch (e) {
-      emit('board:optimistic-clear', {});
+      // Granular rollback: only rollback these specific patches
+      emit('board:optimistic-rollback', { patches });
       throw e;
     }
   }, [applyOptimistic, commitOptimistic]);
@@ -38,7 +39,8 @@ export function useBoardActions() {
       await bulkApply(patches);
       commitOptimistic(patches);
     } catch (e) {
-      emit('board:optimistic-clear', {});
+      // Granular rollback: only rollback these specific patches
+      emit('board:optimistic-rollback', { patches });
       throw e;
     }
   }, [applyOptimistic, commitOptimistic]);

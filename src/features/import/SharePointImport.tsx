@@ -32,7 +32,11 @@ interface SharePointState {
   downloadedData?: ArrayBuffer;
 }
 
-export function SharePointImport() {
+interface SharePointImportProps {
+  onSwitchToExcel?: () => void;
+}
+
+export function SharePointImport({ onSwitchToExcel }: SharePointImportProps) {
   const [step, setStep] = useState<SharePointStep>('auth');
   const [state, setState] = useState<SharePointState>({
     isAuthenticated: false,
@@ -329,8 +333,9 @@ export function SharePointImport() {
           
           <div className="flex gap-3">
             <Button onClick={() => {
-              // TODO: Weiterleitung zum Excel-Import mit heruntergeladenen Daten
-              setMode('excel');
+              if (onSwitchToExcel) {
+                onSwitchToExcel();
+              }
             }}>
               <ArrowRight className="w-4 h-4 mr-2" />
               Weiter zum Import

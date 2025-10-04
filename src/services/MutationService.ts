@@ -59,23 +59,62 @@ class MutationService {
   }
 
   /**
-   * Bulk-Patches anwenden (sequentiell für Konsistenz)
+   * Bulk-Patches anwenden (transaktional für Atomicity)
    */
   async applyPatches<T>(patches: Patch<T>[]): Promise<MutationResult> {
-    let failed = 0;
-
-    for (const patch of patches) {
-      const result = await this.applyPatch(patch);
-      if (!result.success) {
-        failed++;
-        console.warn(`MutationService: Patch failed for ${patch.id}:`, result.error);
-      }
+    if (patches.length === 0) {
+      return { success: true };
     }
 
-    return {
-      success: failed === 0,
-      error: failed > 0 ? `${failed} of ${patches.length} patches failed` : undefined
-    };
+    // Collect all undo entries before transaction
+    const undoEntries: Array<{ id: any; changes: Partial<T> }> = [];
+
+    try {
+      // Wrap in Dexie transaction for atomicity
+      await db.transaction('rw', [db.clients], async () => {
+        for (const patch of patches) {
+          // Guard: leere changes
+          if (!patch.changes || Object.keys(patch.changes).length === 0) {
+            continue;
+          }
+
+          // 1. Aktuellen Datensatz lesen für inverse Patch
+          const current = await db.clients.get(patch.id);
+          if (!current) {
+            throw new Error(`Object with id ${patch.id} not found`);
+          }
+
+          // 2. Inverse Patch für Undo erzeugen
+          const inverseChanges: Partial<T> = {};
+          Object.keys(patch.changes).forEach(key => {
+            (inverseChanges as any)[key] = (current as any)[key];
+          });
+
+          undoEntries.push({
+            id: patch.id,
+            changes: inverseChanges
+          });
+
+          // 3. Vollständiges Objekt mit Änderungen erstellen und persistieren
+          const nextPlain = { ...current, ...patch.changes };
+          await db.clients.put(nextPlain);
+        }
+      });
+
+      // 4. Nach erfolgreicher Transaktion: Undo-Stack befüllen
+      undoEntries.forEach(entry => {
+        this.pushUndo(entry);
+      });
+
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ MutationService: Bulk patches failed (rolled back):', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Bulk patches failed'
+      };
+    }
   }
 
   /**

@@ -7,6 +7,9 @@ import * as XLSX from 'xlsx';
 import { parseToISO } from '../utils/date';
 import { validateClient } from '../domain/zod';
 import type { Client } from '../domain/models';
+import { db } from '../data/db';
+import { cryptoManager } from '../data/crypto';
+import { nowISO } from '../utils/date';
 
 export interface ImportResult {
   success: boolean;
@@ -103,6 +106,8 @@ class ImportService {
     };
 
     try {
+      // Sicherstellen, dass Crypto-Key verfügbar ist
+      await cryptoManager.getActiveKey();
       // Datei-Format erkennen und parsen
       const workbook = await this.parseFile(file);
       
@@ -126,20 +131,23 @@ class ImportService {
 
       // Header-Mapping anwenden
       const mappedHeaders = this.mapHeaders(headers);
-      
+
+      // Zeilen sammeln für Bulk-Insert
+      const validClients: Client[] = [];
+
       // Zeilen verarbeiten
       for (let i = 0; i < rows.length; i++) {
         try {
           const rawRow = rows[i];
           const mappedRow = this.mapRow(rawRow, headers, mappedHeaders);
-          
+
           if (this.isEmptyRow(mappedRow)) {
             result.skipped++;
             continue;
           }
 
           const normalizedRow = this.normalizeRow(mappedRow);
-          
+
           if (!options.skipValidation) {
             try {
               validateClient(normalizedRow);
@@ -150,13 +158,43 @@ class ImportService {
             }
           }
 
-          // TODO: Hier würde der eigentliche DB-Import stattfinden
-          // Für jetzt nur zählen
-          result.imported++;
-          
+          // Client-Objekt erstellen
+          const client: Client = {
+            ...normalizedRow,
+            id: crypto.randomUUID(),
+            sourceId: options.sourceId,
+            contactCount: normalizedRow.contactCount || 0,
+            contactLog: normalizedRow.contactLog || [],
+            isArchived: false,
+            lastImportedAt: nowISO(),
+            lastSeenInSourceAt: nowISO(),
+            source: {
+              fileName: file.name,
+              importedAt: nowISO()
+            }
+          };
+
+          validClients.push(client);
+
         } catch (rowError) {
           result.warnings.push(`Zeile ${i + 2}: ${rowError instanceof Error ? rowError.message : 'Unbekannter Fehler'}`);
           result.skipped++;
+        }
+      }
+
+      // Bulk-Insert in DB
+      if (validClients.length > 0) {
+        try {
+          if (options.mode === 'append') {
+            result.imported = await db.bulkCreate(validClients);
+          } else if (options.mode === 'sync') {
+            // Sync-Modus: Delta-Sync implementieren
+            const syncResult = await this.performSync(validClients, options.sourceId);
+            result.imported = syncResult.created + syncResult.updated;
+            result.warnings.push(...syncResult.warnings);
+          }
+        } catch (dbError) {
+          result.errors.push(`Datenbank-Fehler: ${dbError instanceof Error ? dbError.message : 'Unbekannter Fehler'}`);
         }
       }
 
@@ -358,6 +396,59 @@ class ImportService {
    */
   private isEmptyRow(row: any): boolean {
     return !row.firstName && !row.lastName && !row.amsId && !row.name;
+  }
+
+  /**
+   * Sync-Modus: Delta-Sync mit bestehenden Daten
+   */
+  private async performSync(newClients: Client[], sourceId: string): Promise<{
+    created: number;
+    updated: number;
+    warnings: string[];
+  }> {
+    const warnings: string[] = [];
+    let created = 0;
+    let updated = 0;
+
+    try {
+      // Bestehende Clients mit gleicher sourceId laden
+      const existingClients = await db.clients.where('sourceId').equals(sourceId).toArray();
+      const existingByRowKey = new Map(
+        existingClients.map(c => [c.rowKey, c]).filter(([key]) => key)
+      );
+
+      for (const newClient of newClients) {
+        const rowKey = newClient.rowKey || `${newClient.firstName}_${newClient.lastName}`;
+        const existing = existingByRowKey.get(rowKey);
+
+        if (!existing) {
+          // Neu: erstellen
+          await db.clients.add(newClient);
+          created++;
+        } else {
+          // Vorhanden: aktualisieren (nur nicht-protected Felder)
+          const updates: Partial<Client> = {
+            ...newClient,
+            id: existing.id, // Behalte Original-ID
+            assignedTo: existing.assignedTo, // Protected
+            priority: existing.priority, // Protected
+            status: existing.status, // Protected
+            result: existing.result, // Protected
+            contactLog: existing.contactLog, // Protected
+            contactCount: existing.contactCount, // Protected
+            followUp: existing.followUp, // Protected
+            lastSeenInSourceAt: nowISO()
+          };
+
+          await db.clients.update(existing.id, updates);
+          updated++;
+        }
+      }
+    } catch (error) {
+      warnings.push(`Sync-Fehler: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`);
+    }
+
+    return { created, updated, warnings };
   }
 }
 
