@@ -322,6 +322,71 @@ export function useBoardData() {
           sorted.sort(withPinnedFirst((a, b) => byEnum('result', resultOrder)(a, b) * direction));
           break;
         }
+        // String fields
+        case 'title':
+        case 'firstName':
+        case 'lastName':
+        case 'gender':
+        case 'street':
+        case 'city':
+        case 'email':
+        case 'phone':
+        case 'countryDial':
+        case 'areaDial':
+        case 'bookingStatus':
+        case 'rgs':
+        case 'advisorTitle':
+        case 'advisorFirstName':
+        case 'advisorLastName':
+        case 'measureNumber':
+        case 'eventNumber': {
+          sorted.sort(withPinnedFirst((a, b) => {
+            const aVal = (a[view.sort.key] ?? '').toString().trim();
+            const bVal = (b[view.sort.key] ?? '').toString().trim();
+            if (!aVal && !bVal) return 0;
+            if (!aVal) return 1;
+            if (!bVal) return -1;
+            return aVal.localeCompare(bVal, 'de', { sensitivity: 'base' }) * direction;
+          }));
+          break;
+        }
+        // Date fields
+        case 'birthDate':
+        case 'entryDate':
+        case 'exitDate':
+        case 'planned': {
+          sorted.sort(withPinnedFirst((a, b) => byDateISO(view.sort.key as string)(a, b) * direction));
+          break;
+        }
+        // Numeric fields
+        case 'postalCode':
+        case 'svNumber': {
+          sorted.sort(withPinnedFirst((a, b) => byNumber(view.sort.key as string)(a, b) * direction));
+          break;
+        }
+        // Computed fields
+        case 'advisorFull': {
+          sorted.sort(withPinnedFirst((a, b) => {
+            const aName = [a.amsAgentLastName, a.amsAgentFirstName, a.amsAgentTitle].filter(Boolean).join(' ').trim();
+            const bName = [b.amsAgentLastName, b.amsAgentFirstName, b.amsAgentTitle].filter(Boolean).join(' ').trim();
+            if (!aName && !bName) return 0;
+            if (!aName) return 1;
+            if (!bName) return -1;
+            return aName.localeCompare(bName, 'de', { sensitivity: 'base' }) * direction;
+          }));
+          break;
+        }
+        case 'phoneCombined': {
+          sorted.sort(withPinnedFirst((a, b) => {
+            const aPhone = [a.countryCode, a.areaCode, a.phoneNumber].filter(Boolean).join('').trim();
+            const bPhone = [b.countryCode, b.areaCode, b.phoneNumber].filter(Boolean).join('').trim();
+            if (!aPhone && !bPhone) return 0;
+            if (!aPhone) return 1;
+            if (!bPhone) return -1;
+            return aPhone.localeCompare(bPhone) * direction;
+          }));
+          break;
+        }
       }
     } else {
       // Default sorting by urgency when no specific sort is applied
