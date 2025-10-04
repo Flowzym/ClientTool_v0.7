@@ -9,7 +9,8 @@ console.log('🛡️ Local-Only Modus: Externe Netzwerkzugriffe werden blockiert
 
 // Crypto-Key früh initialisieren (garantiert verfügbaren Key)
 import { cryptoManager } from './data/crypto';
-import { registerSW } from 'virtual:pwa-register'
+import { registerSW } from 'virtual:pwa-register';
+
 cryptoManager.getActiveKey().catch(err => {
   console.warn('⚠️ Crypto: Key initialization failed:', err);
 });
@@ -20,26 +21,13 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>
 );
 
-registerSW({ immediate: true });
-
-
-// /* PWA: dynamic registration */
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
-  (async () => {
-    try {
-      const id = 'virtual:pwa-register';
-      // @ts-expect-error Vite dynamic import path transformation
-      const mod = await import(/* @vite-ignore */ id);
-      if (mod && typeof mod.registerSW === 'function') {
-        mod.registerSW({ immediate: true });
-      }
-    } catch {
-      // Fallback: try classic service worker under /sw.js if available
-      try {
-        await navigator.serviceWorker.register('/sw.js');
-      } catch {
-        /* noop */
-      }
-    }
-  })();
-}
+// PWA Service Worker Registration (vite-plugin-pwa)
+registerSW({
+  immediate: true,
+  onRegistered(registration) {
+    console.log('✅ Service Worker registered:', registration);
+  },
+  onRegisterError(error) {
+    console.warn('⚠️ Service Worker registration failed:', error);
+  }
+});

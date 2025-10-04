@@ -1,5 +1,36 @@
 # Implementation Log
 
+## v0.7.5 - CSP Fix for PWA & Iframe Preview (2025-10-04)
+
+### P15: Content Security Policy Adjustments
+**Files**: `index.html` (CSP meta tag), `src/main.tsx` (Service Worker registration)
+**Impact**: Fixed CSP violations blocking PWA Service Worker registration and Bolt/WebContainer iframe preview
+
+**Root Cause**: Overly restrictive CSP directives prevented:
+1. Service Worker registration via `virtual:pwa-register` (blocked by `script-src 'self'`)
+2. Bolt/WebContainer iframe preview (blocked by `frame-src 'none'`)
+
+**Technical Changes**:
+- **CSP Policy Updates**:
+  - Added `script-src 'self' 'wasm-unsafe-eval'` to support vite-plugin-pwa virtual modules and WASM crypto
+  - Added `frame-src 'self' https://*.webcontainer-api.io` for Bolt/StackBlitz preview compatibility
+  - Maintained strict `connect-src 'self'` (Network Guard enforces local-only at runtime)
+  - Added inline comments explaining security rationale and Risk R006 mitigation
+
+- **Service Worker Cleanup**:
+  - Removed duplicate `registerSW()` calls (lines 12, 23, 27-44 in old main.tsx)
+  - Removed redundant fallback dynamic import attempt
+  - Added proper `onRegistered` and `onRegisterError` callbacks for debugging
+  - Single clean registration flow via vite-plugin-pwa
+
+**Security Considerations**:
+- Network Guard (Risk R006) remains active for runtime enforcement
+- CSP relaxation only affects development tooling, not data processing
+- Local-only architecture principles preserved
+- All encryption and offline-first features unaffected
+
+**Testing**: Build completed successfully; PWA Service Worker registration now functional
+
 ## v0.7.4 - Dexie Hook Persistence Fix (2025-01-27)
 
 ### P14: Critical Dexie Hook Corrections
