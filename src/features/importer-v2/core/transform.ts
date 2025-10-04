@@ -4,6 +4,7 @@
  */
 
 import type { InternalField } from './types';
+import { mutationService } from '../../../services';
 
 /**
  * Phone number parsing result
@@ -534,39 +535,48 @@ export function createTransformSummary(result: BatchTransformResult): string {
 
 /**
  * Adapter function to import records via existing service layer
- * This is where we would integrate with MutationService/BoardService
+ * Integrates with MutationService for database persistence
  */
 export async function importRecordsViaService(
   records: InternalRecord[],
   onProgress?: (progress: { processed: number; total: number }) => void
 ): Promise<{ success: boolean; imported: number; errors: string[] }> {
-  // TODO: Integrate with existing service layer
-  // For now, simulate the import process
-  
   const errors: string[] = [];
   let imported = 0;
-  
-  for (let i = 0; i < records.length; i++) {
+
+  const BATCH_SIZE = 100;
+
+  for (let i = 0; i < records.length; i += BATCH_SIZE) {
+    const batch = records.slice(i, i + BATCH_SIZE);
+
     try {
-      // Simulate service call delay
-      await new Promise(resolve => setTimeout(resolve, 10));
-      
-      // TODO: Replace with actual service call
-      // await mutationService.applyPatch({
-      //   id: records[i].id || crypto.randomUUID(),
-      //   changes: records[i]
-      // });
-      
-      imported++;
-      
-      if (onProgress) {
-        onProgress({ processed: i + 1, total: records.length });
+      const result = await mutationService.createClients(batch);
+
+      if (result.success) {
+        imported += batch.length;
+      } else {
+        batch.forEach((record, batchIndex) => {
+          const recordIndex = i + batchIndex;
+          errors.push(`Record ${recordIndex + 1} (${record.firstName} ${record.lastName}): ${result.error || 'Import failed'}`);
+        });
       }
+
+      if (onProgress) {
+        onProgress({ processed: Math.min(i + BATCH_SIZE, records.length), total: records.length });
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 0));
+
     } catch (error) {
-      errors.push(`Record ${i + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      batch.forEach((record, batchIndex) => {
+        const recordIndex = i + batchIndex;
+        errors.push(`Record ${recordIndex + 1}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      });
     }
   }
-  
+
+  console.log(`✅ Import completed: ${imported}/${records.length} records successfully imported`);
+
   return {
     success: errors.length === 0,
     imported,

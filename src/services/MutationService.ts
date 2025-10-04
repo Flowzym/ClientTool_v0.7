@@ -246,6 +246,48 @@ class MutationService {
     this.undoStack.length = 0;
     this.redoStack.length = 0;
   }
+
+  /**
+   * Bulk-Create für neue Clients (z.B. bei Import)
+   * Kein Undo-Tracking, da Import typischerweise als atomare Operation behandelt wird
+   */
+  async createClients(clients: Partial<any>[]): Promise<MutationResult> {
+    if (clients.length === 0) {
+      return { success: true };
+    }
+
+    try {
+      const now = new Date().toISOString();
+
+      const normalizedClients = clients.map(client => {
+        const id = client.id || crypto.randomUUID();
+
+        return {
+          id,
+          firstName: client.firstName || '',
+          lastName: client.lastName || '',
+          priority: client.priority || 'normal',
+          status: client.status || 'offen',
+          contactCount: client.contactCount ?? 0,
+          contactLog: client.contactLog || [],
+          isArchived: client.isArchived ?? false,
+          lastActivity: client.lastActivity || now,
+          ...client
+        };
+      });
+
+      await db.clients.bulkAdd(normalizedClients);
+
+      return { success: true };
+
+    } catch (error) {
+      console.error('❌ MutationService: Bulk create failed:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Bulk create failed'
+      };
+    }
+  }
 }
 
 // Singleton-Instanz

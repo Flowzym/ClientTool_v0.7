@@ -644,8 +644,8 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
                 {stats.successful > 0 && (
                   <button
                     onClick={() => {
-                      // TODO: Navigate to imported data or show success page
-                      console.log('Navigate to imported data');
+                      window.dispatchEvent(new CustomEvent('board:refresh'));
+                      console.log(`✅ Import completed: ${stats.successful} records imported, navigating to board`);
                       onComplete?.(Object.fromEntries(state.mapping));
                     }}
                     className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"

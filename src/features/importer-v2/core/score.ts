@@ -3,7 +3,8 @@
  * Combines alias matching, token overlap, fuzzy matching, and content hints
  */
 
-import type { InternalField, ColumnGuess, ScoringWeights, DEFAULT_SCORING_WEIGHTS } from './types';
+import type { InternalField, ColumnGuess, ScoringWeights } from './types';
+import { DEFAULT_SCORING_WEIGHTS } from './types';
 import { getAliases } from './aliases';
 import { normalizeHeader, jaroWinklerSimilarity, tokenOverlapRatio } from './normalize';
 import { suggestFieldsFromContent } from './detect';

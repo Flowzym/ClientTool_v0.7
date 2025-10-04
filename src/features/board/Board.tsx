@@ -175,15 +175,25 @@ function Board() {
     perfMeasure('board:render', 'board:render:start', 'board:render:end');
   });
 
-  // Listen for ClientInfoDialog open events
+  // Listen for ClientInfoDialog open events and board refresh
   useEffect(() => {
     const handleOpenClientInfo = (event: CustomEvent) => {
       setClientInfoDialogId(event.detail.id);
     };
 
+    const handleBoardRefresh = () => {
+      console.log('🔄 Board refresh triggered');
+      refresh?.();
+    };
+
     window.addEventListener('board:open-client-info', handleOpenClientInfo as EventListener);
-    return () => window.removeEventListener('board:open-client-info', handleOpenClientInfo as EventListener);
-  }, []);
+    window.addEventListener('board:refresh', handleBoardRefresh);
+
+    return () => {
+      window.removeEventListener('board:open-client-info', handleOpenClientInfo as EventListener);
+      window.removeEventListener('board:refresh', handleBoardRefresh);
+    };
+  }, [refresh]);
 
   // Event handlers - no hooks inside
   const clearSelection = () => setSelectedIds([]);
