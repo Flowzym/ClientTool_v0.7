@@ -102,6 +102,20 @@ function normalizeClientStored(c: any) {
     normalized.id = normalized.amsId;
   }
 
+  // Telefonnummer-Normalisierung: phone aus Einzelteilen kombinieren falls nicht vorhanden
+  if (!normalized.phone && (normalized.countryCode || normalized.areaCode || normalized.phoneNumber)) {
+    const parts: string[] = [];
+    if (normalized.countryCode) {
+      const cc = String(normalized.countryCode).trim();
+      parts.push(cc.startsWith('+') ? cc : `+${cc}`);
+    }
+    if (normalized.areaCode) parts.push(String(normalized.areaCode).trim());
+    if (normalized.phoneNumber) parts.push(String(normalized.phoneNumber).trim());
+    if (parts.length > 0) {
+      normalized.phone = parts.join(' ');
+    }
+  }
+
   return normalized;
 }
 

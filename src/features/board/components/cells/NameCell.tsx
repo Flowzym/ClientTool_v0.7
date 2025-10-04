@@ -19,19 +19,36 @@ function countNotes(client: any): number {
   return 0;
 }
 
-export default function NameCell({ 
-  client, 
+export default function NameCell({
+  client,
   onOpenNotes,
-  onOpenClient 
-}: { 
-  client: any; 
+  onOpenClient
+}: {
+  client: any;
   onOpenNotes: (id: string) => void;
   onOpenClient: (id: string) => void;
 }) {
   const lastName = client?.lastName || '';
   const firstName = client?.firstName || '';
   const title = client?.title ? ` (${client.title})` : '';
-  const phone = client?.phone ?? client?.phoneNumber ?? '—';
+
+  // Telefonnummer: phone oder phoneNumber oder kombiniert aus Einzelteilen
+  const phone = (() => {
+    if (client?.phone) return client.phone;
+    if (client?.phoneNumber) {
+      // Legacy: nur phoneNumber ohne Vorwahlen
+      return client.phoneNumber;
+    }
+    // Kombiniere aus Einzelteilen
+    const parts: string[] = [];
+    if (client?.countryCode) {
+      const cc = String(client.countryCode).trim();
+      parts.push(cc.startsWith('+') ? cc : '+' + cc);
+    }
+    if (client?.areaCode) parts.push(String(client.areaCode).trim());
+    if (client?.phoneNumber) parts.push(String(client.phoneNumber).trim());
+    return parts.length > 0 ? parts.join(' ') : '—';
+  })();
   
   // Format: "Nachname, Vorname (Titel)"
   const nameDisplay = lastName && firstName 

@@ -5,8 +5,13 @@ import { createZip } from '../utils/zip';
 type Props = { open: boolean; onClose: () => void; rows: any[]; };
 
 const DEFAULT_FIELDS = [
-  'id','firstName','lastName','title','email','phone','status','result','angebot','followUp',
-  'assignedTo','amsBookingDate','priority','lastActivity','note','isPinned','isArchived'
+  'id','firstName','lastName','title','gender','svNumber','birthDate',
+  'email','phone','address','zip','city',
+  'status','result','angebot','followUp','assignedTo',
+  'amsBookingDate','entryDate','exitDate',
+  'priority','lastActivity','note',
+  'amsAgentFirstName','amsAgentLastName',
+  'isPinned','isArchived'
 ];
 
 const STORAGE_KEY = 'board.csv.preset.v2';

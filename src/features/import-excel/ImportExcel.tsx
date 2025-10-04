@@ -138,7 +138,7 @@ export function ImportExcel() {
       const { mapping: detectedMapping, suggestions } = autoMapHeaders(
         headers,
         PRESET_AMS_DEFAULT,
-        0.5 // Confidence threshold
+        0.3 // Confidence threshold (gesenkt für bessere Auto-Zuordnung)
       );
 
       // Log mapping details für Debugging
@@ -148,9 +148,9 @@ export function ImportExcel() {
           if (s.repairs.length > 0) {
             console.log(`🔧 Mojibake repaired: ${s.repairs.join(', ')}`);
           }
-          if (s.field && s.confidence >= 0.5) {
+          if (s.field && s.confidence >= 0.3) {
             console.log(`✅ ${s.header} → ${s.field} (${Math.round(s.confidence * 100)}%: ${s.reason})`);
-          } else if (s.confidence > 0 && s.confidence < 0.5) {
+          } else if (s.confidence > 0 && s.confidence < 0.3) {
             console.log(`⚠️ ${s.header}: Low confidence match (${Math.round(s.confidence * 100)}%)`);
           }
         });
@@ -166,6 +166,19 @@ export function ImportExcel() {
             (mapped as any)[targetField] = value;
           }
         });
+
+        // Telefonnummer-Fallback: Wenn countryCode/areaCode/phoneNumber vorhanden, kombiniere zu 'phone'
+        if (!mapped.phone && (mapped.countryCode || mapped.areaCode || mapped.phoneNumber)) {
+          const parts: string[] = [];
+          if (mapped.countryCode) {
+            const cc = String(mapped.countryCode).trim();
+            parts.push(cc.startsWith('+') ? cc : `+${cc}`);
+          }
+          if (mapped.areaCode) parts.push(String(mapped.areaCode).trim());
+          if (mapped.phoneNumber) parts.push(String(mapped.phoneNumber).trim());
+          mapped.phone = parts.join(' ');
+        }
+
         return mapped;
       });
 
@@ -534,7 +547,7 @@ export function ImportExcel() {
     const { mapping: detectedMapping, suggestions } = autoMapHeaders(
       importData.headers,
       PRESET_AMS_DEFAULT,
-      0.5 // Confidence threshold
+      0.3 // Confidence threshold (gesenkt für bessere Auto-Zuordnung)
     );
 
     setMapping(detectedMapping);
@@ -756,7 +769,37 @@ export function ImportExcel() {
                 ))}
               </div>
             </div>
-            
+
+            {/* Warnung bei fehlenden wichtigen Feldern */}
+            {(() => {
+              const mappedFields = new Set(Object.values(mapping));
+              const missingImportant: string[] = [];
+
+              // Prüfe wichtige Felder
+              if (!mappedFields.has('firstName') && !mappedFields.has('lastName')) {
+                missingImportant.push('Vor-/Nachname');
+              }
+              if (!mappedFields.has('phone') && !mappedFields.has('phoneNumber')) {
+                missingImportant.push('Telefonnummer');
+              }
+
+              if (missingImportant.length > 0) {
+                return (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <div className="flex items-center gap-2 text-orange-800 mb-2">
+                      <AlertCircle className="w-4 h-4" />
+                      <span className="font-medium">Wichtige Felder nicht zugeordnet</span>
+                    </div>
+                    <div className="text-sm text-orange-700">
+                      Folgende wichtige Felder wurden nicht zugeordnet: {missingImportant.join(', ')}.
+                      Bitte prüfen Sie das Mapping vor dem Import.
+                    </div>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
             {importData?.duplicates && importData.duplicates.length > 0 && (
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-yellow-800 mb-2">

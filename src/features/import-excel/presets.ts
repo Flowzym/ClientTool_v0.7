@@ -60,12 +60,12 @@ export const PRESET_AMS_DEFAULT: MappingPreset = {
     "address": ["adresse", "stra�e", "straße", "strasse", "str"],
     "measureNumber": ["ma�nahmennummer", "maßnahmennummer", "massnahmennummer", "maßnahme nr"],
     "email": ["email", "e-mail", "e_mail", "mail", "emial", "e-mailadresse"],
-    "phoneNumber": ["telefonnummer", "telefon-nr", "telefon nr", "tel nr", "tel-nr"],
+    "phoneNumber": ["telefonnummer", "telefon-nr", "telefon nr", "tel nr", "tel-nr", "tel", "phone", "fon", "rufnummer"],
     "lastName": ["nachname", "nach-name", "familienname", "familien-nachname"],
     "firstName": ["vorname", "vor-name", "rufname"],
     "birthDate": ["geburtsdatum", "geburts-datum", "geb datum", "geboren"],
-    "gender": ["geschlecht", "geschl", "sex"],
-    "svNumber": ["sv-nummer", "sv nummer", "svnummer", "sozialversicherungsnummer"],
+    "gender": ["geschlecht", "geschl", "sex", "m/w/d", "mwd", "gender"],
+    "svNumber": ["sv-nummer", "sv nummer", "svnummer", "sozialversicherungsnummer", "sv nr", "svnr", "versicherungsnummer"],
     "zip": ["plz", "postleitzahl", "post-leitzahl"],
     "city": ["ort", "stadt", "wohnort"],
     "countryCode": ["landesvorwahl", "landes-vorwahl", "country code"],
@@ -157,7 +157,7 @@ export function findBestMapping(
 export function autoMapHeaders(
   headers: string[],
   preset: MappingPreset = PRESET_AMS_DEFAULT,
-  confidenceThreshold: number = 0.5
+  confidenceThreshold: number = 0.3
 ): {
   mapping: Record<string, string>;
   suggestions: Array<{

@@ -69,6 +69,19 @@ export default function ClientInfoDialog({ isOpen, onClose, client }: Props) {
     [client.zip, client.city].filter(Boolean).join(' ')
   ].filter(Boolean).join(', ');
 
+  // Telefonnummer: phone oder kombiniert aus Einzelteilen
+  const phoneDisplay = (() => {
+    if (client.phone) return client.phone;
+    const parts: string[] = [];
+    if (client.countryCode) {
+      const cc = String(client.countryCode).trim();
+      parts.push(`(${cc.startsWith('+') ? cc : '+' + cc})`);
+    }
+    if (client.areaCode) parts.push(String(client.areaCode).trim());
+    if (client.phoneNumber) parts.push(String(client.phoneNumber).trim());
+    return parts.length > 0 ? parts.join(' ') : '—';
+  })();
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
@@ -137,10 +150,10 @@ export default function ClientInfoDialog({ isOpen, onClose, client }: Props) {
 
           {/* Kontaktdaten */}
           <div className="space-y-3 text-sm">
-            <FieldRow value={fmt(client.phone)} label="Telefonnummer">
+            <FieldRow value={phoneDisplay} label="Telefonnummer">
               <div className="flex items-center gap-2">
                 <Phone className="w-4 h-4 text-gray-400" />
-                <div>{fmt(client.phone)}</div>
+                <div>{phoneDisplay}</div>
               </div>
             </FieldRow>
             
