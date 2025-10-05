@@ -10,7 +10,11 @@ export default function AssignCell({ value, users, onChange }: { value?: string;
       onChange={(e) => onChange?.(e.target.value || undefined)}
     >
       <option value="">—</option>
-      {users.map(u => <option key={u.id} value={u.id}>{u.name ?? u.id}</option>)}
+      {users.filter(u => u.id).map(u => (
+        <option key={u.id} value={u.id}>
+          {u.name ?? u.id}
+        </option>
+      ))}
     </select>
   );
 }
