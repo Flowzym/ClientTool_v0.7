@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { X, RotateCcw, Eye, EyeOff } from 'lucide-react';
+import { X, RotateCcw, Eye, EyeOff, ArrowUp, ArrowDown } from 'lucide-react';
 import type { ColumnDef, ColumnKey } from '../columns/types';
 
 interface ColumnPickerProps {
@@ -9,15 +9,21 @@ interface ColumnPickerProps {
   onReset: () => void;
   isOpen: boolean;
   onClose: () => void;
+  onMoveUp?: (key: ColumnKey) => void;
+  onMoveDown?: (key: ColumnKey) => void;
+  onResetOrder?: () => void;
 }
 
-export default function ColumnPicker({ 
-  columns, 
-  visibleKeys, 
-  onToggle, 
-  onReset, 
-  isOpen, 
-  onClose 
+export default function ColumnPicker({
+  columns,
+  visibleKeys,
+  onToggle,
+  onReset,
+  isOpen,
+  onClose,
+  onMoveUp,
+  onMoveDown,
+  onResetOrder
 }: ColumnPickerProps) {
   const [filter, setFilter] = useState('');
 
@@ -121,27 +127,49 @@ export default function ColumnPicker({
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {cols.map(col => (
-                    <label 
-                      key={col.key} 
-                      className="flex items-center gap-2 text-sm cursor-pointer hover:bg-gray-50 p-1 rounded"
+                <div className="space-y-1">
+                  {cols.map((col, idx) => (
+                    <div
+                      key={col.key}
+                      className="flex items-center gap-2 text-sm hover:bg-gray-50 p-1 rounded"
                     >
-                      <input
-                        type="checkbox"
-                        checked={visibleKeys.has(col.key)}
-                        onChange={() => onToggle(col.key)}
-                        className="rounded border-gray-300"
-                      />
-                      <span className={col.visibleDefault ? 'font-medium' : ''}>
-                        {col.label}
-                      </span>
-                      {col.computed && (
-                        <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded">
-                          berechnet
-                        </span>
+                      {onMoveUp && onMoveDown && (
+                        <div className="flex flex-col">
+                          <button
+                            onClick={() => onMoveUp(col.key)}
+                            disabled={idx === 0}
+                            className="p-0.5 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Nach oben"
+                          >
+                            <ArrowUp className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => onMoveDown(col.key)}
+                            disabled={idx === cols.length - 1}
+                            className="p-0.5 hover:bg-gray-200 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Nach unten"
+                          >
+                            <ArrowDown className="w-3 h-3" />
+                          </button>
+                        </div>
                       )}
-                    </label>
+                      <label className="flex items-center gap-2 cursor-pointer flex-1">
+                        <input
+                          type="checkbox"
+                          checked={visibleKeys.has(col.key)}
+                          onChange={() => onToggle(col.key)}
+                          className="rounded border-gray-300"
+                        />
+                        <span className={col.visibleDefault ? 'font-medium' : ''}>
+                          {col.label}
+                        </span>
+                        {col.computed && (
+                          <span className="text-xs text-blue-600 bg-blue-50 px-1 rounded">
+                            berechnet
+                          </span>
+                        )}
+                      </label>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -150,13 +178,24 @@ export default function ColumnPicker({
         </div>
         
         <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-200">
-          <button
-            onClick={onReset}
-            className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Standard wiederherstellen
-          </button>
+          <div className="flex gap-3">
+            <button
+              onClick={onReset}
+              className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Sichtbarkeit zurücksetzen
+            </button>
+            {onResetOrder && (
+              <button
+                onClick={onResetOrder}
+                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Anordnung zurücksetzen
+              </button>
+            )}
+          </div>
           
           <button
             onClick={onClose}

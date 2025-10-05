@@ -68,6 +68,7 @@ export function useBoardData() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [assignedToFilter, setAssignedToFilter] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Crypto-Check und View-Loading
   useEffect(() => {
@@ -160,7 +161,26 @@ export function useBoardData() {
   // Gefilterte und sortierte Clients
   const filteredClients = useMemo(() => {
     let filtered = overlayedClients;
-    
+
+    // Suchfilter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(c => {
+        const searchFields = [
+          c.firstName,
+          c.lastName,
+          c.email,
+          c.phone,
+          c.amsId,
+          c.notes?.text,
+          `${c.firstName} ${c.lastName}`,
+          `${c.countryCode} ${c.areaCode} ${c.phoneNumber}`
+        ].filter(Boolean).map(f => String(f).toLowerCase());
+
+        return searchFields.some(field => field.includes(query));
+      });
+    }
+
     // Archiv-Filter
     if (!view.filters.showArchived) {
       filtered = filtered.filter(c => !c.isArchived);
@@ -250,9 +270,9 @@ export function useBoardData() {
           break;
       }
     });
-    
+
     return filtered;
-  }, [overlayedClients, users, view, assignedToFilter]);
+  }, [overlayedClients, users, view, assignedToFilter, searchQuery]);
 
   // Sortierte Clients
   const sortedClients = useMemo(() => {
@@ -518,6 +538,8 @@ export function useBoardData() {
     setColumnVisibility,
     resetToDefaultView,
     toggleSort,
-    setAssignedToFilter
+    setAssignedToFilter,
+    searchQuery,
+    setSearchQuery
   };
 }

@@ -320,22 +320,22 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
               {/* Mapping interface */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <h4 className="font-medium mb-3">Spalten-Zuordnung</h4>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                   {state.headersRaw.map((header, index) => {
                     const normalizedHeader = normalizeHeader(header);
                     const mappedField = state.mapping.get(header);
                     
                     return (
-                      <div key={index} className="flex items-center gap-3 p-2 border border-gray-200 rounded">
-                        <div className="w-32 text-sm">
-                          <div className="font-medium truncate" title={header}>{header}</div>
+                      <div key={index} className="flex flex-col gap-2 p-3 border border-gray-200 rounded bg-white">
+                        <div className="text-sm">
+                          <div className="font-medium truncate mb-1" title={header}>{header}</div>
                           {normalizedHeader.repairs.length > 0 && (
                             <div className="text-xs text-green-600">
                               ✓ {normalizedHeader.repairs.length} Encoding-Fix(es)
                             </div>
                           )}
                         </div>
-                        <div className="text-gray-400">→</div>
+                        <div className="text-xs text-gray-400">→</div>
                         <select
                           value={mappedField || ''}
                           onChange={(e) => {
@@ -347,7 +347,7 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
                             }
                             setState(prev => ({ ...prev, mapping: newMapping }));
                           }}
-                          className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+                          className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                         >
                           <option value="">Ignorieren</option>
                           <optgroup label="Stammdaten">
@@ -393,13 +393,13 @@ export const MappingWizard: React.FC<MappingWizardProps> = ({
                             <option value="internalCode">Interner Code</option>
                           </optgroup>
                         </select>
-                        <div className="w-24 text-xs text-gray-500">
-                          {state.preview.length > 1 && state.preview[1][index] && (
+                        {state.preview.length > 1 && state.preview[1][index] && (
+                          <div className="text-xs text-gray-500 pt-1 border-t">
                             <div className="truncate" title={state.preview[1][index]}>
-                              {state.preview[1][index]}
+                              Beispiel: {state.preview[1][index]}
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}

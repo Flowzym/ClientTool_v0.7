@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Settings, RefreshCw } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Settings, RefreshCw, ArrowUpDown, Search, X } from 'lucide-react';
 import { Button } from '../../../components/Button';
 import ColumnPicker from './ColumnPicker';
 import { getAllColumns, getDefaultVisibleColumns } from '../columns/registry';
@@ -14,7 +14,12 @@ function BoardHeader({
   allColumns,
   visibleColumns,
   onToggleColumn,
-  onResetColumns
+  onResetColumns,
+  hasSorting,
+  onResetSort,
+  onMoveColumnUp,
+  onMoveColumnDown,
+  onResetColumnOrder
 }: {
   selectedCount: number;
   getSelectedRows: () => any[];
@@ -25,12 +30,53 @@ function BoardHeader({
   visibleColumns: Set<string>;
   onToggleColumn: (key: string) => void;
   onResetColumns: () => void;
+  hasSorting?: boolean;
+  onResetSort?: () => void;
+  onMoveColumnUp?: (key: string) => void;
+  onMoveColumnDown?: (key: string) => void;
+  onResetColumnOrder?: () => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
 }) {
   const [openCsv, setOpenCsv] = useState(false);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery || '');
+
+  const handleSearchChange = useCallback((value: string) => {
+    setDebouncedSearch(value);
+    const timeoutId = setTimeout(() => {
+      onSearchChange?.(value);
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [onSearchChange]);
 
   return (
-    <div className="mb-3 flex items-center justify-between">
+    <div className="mb-3 space-y-3">
+      {/* Search bar */}
+      {onSearchChange && (
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+            <Search className="w-4 h-4 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            value={debouncedSearch}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Suchen nach Name, Email, Telefon, AMS-ID, Notizen..."
+            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          />
+          {debouncedSearch && (
+            <button
+              onClick={() => handleSearchChange('')}
+              className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="flex items-center justify-between">
       <div className="flex items-center gap-2">
         <h2 className="text-base font-semibold">Board</h2>
         <Button
@@ -42,6 +88,17 @@ function BoardHeader({
           <Settings className="w-4 h-4 mr-2" />
           Spalten
         </Button>
+        {hasSorting && onResetSort && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onResetSort}
+            title="Sortierung zurücksetzen"
+          >
+            <ArrowUpDown className="w-4 h-4 mr-2" />
+            Sortierung zurücksetzen
+          </Button>
+        )}
         {onRefresh && (
           <Button
             variant="ghost"
@@ -77,6 +134,7 @@ function BoardHeader({
           Entpinnen
         </button>
       </div>
+      </div>
 
       <ExportCsvDialog open={openCsv} onClose={() => setOpenCsv(false)} rows={getSelectedRows()} />
       
@@ -87,6 +145,9 @@ function BoardHeader({
         onReset={onResetColumns}
         isOpen={showColumnPicker}
         onClose={() => setShowColumnPicker(false)}
+        onMoveUp={onMoveColumnUp}
+        onMoveDown={onMoveColumnDown}
+        onResetOrder={onResetColumnOrder}
       />
     </div>
   );

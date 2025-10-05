@@ -4,6 +4,7 @@ import { perfMark, perfMeasure } from '../../lib/perf/timer';
 import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
 import { useBoardActions } from './hooks/useBoardActions';
+import { useColumnOrder } from './hooks/useColumnOrder';
 import ColumnHeader from './components/ColumnHeader';
 import { ClientInfoDialog } from './components';
 import { ClientRow } from './components/ClientRow';
@@ -148,10 +149,20 @@ function Board() {
   // Column visibility management
   const allColumns = useMemo(() => getAllColumns(), []);
   const { visible: visibleColumnKeys, toggle, reset, getVisibleColumns } = useColumnVisibility(allColumns, 'board-main');
-  const visibleColumns = useMemo(() => getVisibleColumns(), [getVisibleColumns]);
+
+  // Import column order hook
+  const { reorderColumns, moveUp, moveDown, reset: resetOrder } = useColumnOrder(
+    allColumns.map(col => col.key),
+    'board-main'
+  );
+
+  const visibleColumns = useMemo(() => {
+    const visible = getVisibleColumns();
+    return reorderColumns(visible);
+  }, [getVisibleColumns, reorderColumns]);
   
   // All hooks must be called before any early returns
-  const { clients, users, isLoading, view, toggleSort } = useBoardData();
+  const { clients, users, isLoading, view, toggleSort, searchQuery, setSearchQuery } = useBoardData();
   const actions = useBoardActions();
 
   // Start performance measurement
@@ -314,29 +325,30 @@ function Board() {
   if (isLoading) return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;
 
   return (
-    <div className="p-4 overflow-auto">
-      {/* Error-Banner für Decode-Fehler */}
-      {decodeErrors.length > 0 && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <span className="text-red-600 font-semibold">⚠️ Entschlüsselungsfehler</span>
-            <span className="text-sm text-red-700">
-              {decodeErrors.length} Datensatz{decodeErrors.length > 1 ? 'e' : ''} konnte{decodeErrors.length > 1 ? 'n' : ''} nicht entschlüsselt werden
-            </span>
+    <div className="flex flex-col h-screen">
+      <div className="p-4 flex-shrink-0">
+        {/* Error-Banner für Decode-Fehler */}
+        {decodeErrors.length > 0 && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center gap-2">
+              <span className="text-red-600 font-semibold">⚠️ Entschlüsselungsfehler</span>
+              <span className="text-sm text-red-700">
+                {decodeErrors.length} Datensatz{decodeErrors.length > 1 ? 'e' : ''} konnte{decodeErrors.length > 1 ? 'n' : ''} nicht entschlüsselt werden
+              </span>
+            </div>
+            <button
+              className="mt-2 text-sm text-red-600 underline hover:text-red-800"
+              onClick={() => {
+                console.log('Re-encrypt requested for:', decodeErrors.map(c => c.id));
+                alert('Admin-Funktion für Re-Encryption noch nicht implementiert. IDs wurden in Konsole geloggt.');
+              }}
+            >
+              Problem beheben (Admin)
+            </button>
           </div>
-          <button
-            className="mt-2 text-sm text-red-600 underline hover:text-red-800"
-            onClick={() => {
-              console.log('Re-encrypt requested for:', decodeErrors.map(c => c.id));
-              alert('Admin-Funktion für Re-Encryption noch nicht implementiert. IDs wurden in Konsole geloggt.');
-            }}
-          >
-            Problem beheben (Admin)
-          </button>
-        </div>
-      )}
+        )}
 
-      <BoardHeader
+        <BoardHeader
         selectedCount={selectedIds.length}
         getSelectedRows={selectedRowsProvider}
         onPinSelected={() => actions.bulkPin?.(selectedIds)}
@@ -346,10 +358,17 @@ function Board() {
         visibleColumns={visibleColumnKeys}
         onToggleColumn={toggle}
         onResetColumns={reset}
+        hasSorting={view?.sort?.key !== null}
+        onResetSort={() => toggleSort?.(view?.sort?.key as any)}
+        onMoveColumnUp={moveUp}
+        onMoveColumnDown={moveDown}
+        onResetColumnOrder={resetOrder}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
 
-      {selectedIds.length > 0 && (
-        <BatchActionsBar
+        {selectedIds.length > 0 && (
+          <BatchActionsBar
           selectedCount={selectedIds.length}
           users={users}
           onClear={clearSelection}
@@ -362,11 +381,14 @@ function Board() {
           onPin={() => actions.bulkPin?.(selectedIds)}
           onUnpin={() => actions.bulkUnpin?.(selectedIds)}
           selectedRowsProvider={selectedRowsProvider}
-        />
-      )}
+          />
+        )}
+      </div>
 
-      {/* Sticky Header */}
-      <div className="border rounded-t-lg bg-gray-50 border-b px-3 py-2" style={{ minWidth: minHeaderWidthValue }}>
+      {/* Scrollable Board Area */}
+      <div className="flex-1 overflow-auto px-4">
+        {/* Sticky Header */}
+        <div className="border rounded-t-lg bg-gray-50 border-b px-3 py-2" style={{ minWidth: minHeaderWidthValue }}>
         <div className="grid gap-2 items-center" style={{ gridTemplateColumns: headerGridTemplate }}>
           <div className="flex items-center">
             <input
@@ -479,6 +501,7 @@ function Board() {
           </label>
         </div>
       )}
+      </div>
 
       {/* Client Info Dialog */}
       <ClientInfoDialog
