@@ -4,14 +4,14 @@
   "version": "0.7.1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "dev:perf": "vite --open /dev/perf",
+    "dev": "npx vite",
+    "dev:perf": "npx vite --open /dev/perf",
     "perf:play": "npm run dev:perf",
-    "build": "vite build",
+    "build": "npx vite build",
     "lint": "npx eslint .",
-    "preview": "vite preview",
-    "test": "vitest",
-    "test:ui": "vitest --ui",
+    "preview": "npx vite preview",
+    "test": "npx vitest",
+    "test:ui": "npx vitest --ui",
     "status": "node scripts/status-gate.mjs"
   },
   "dependencies": {
