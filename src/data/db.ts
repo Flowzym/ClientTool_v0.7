@@ -34,7 +34,18 @@ async function decodeEnvelope<T = any>(stored: any): Promise<T> {
     } as T;
 
     // Development-Logging: Prüfe auf fehlende kritische Felder
-    if (import.meta.env.DEV && (decoded as any).id) {
+    if (import.meta.env.DEV) {
+      if (!(decoded as any).id) {
+        console.error('❌ Envelope decode: Missing ID after decode', {
+          storedId: stored.id,
+          plainId: (plain as any)?.id,
+          decodedId: (decoded as any).id,
+          storedKeys: Object.keys(stored || {}),
+          plainKeys: Object.keys(plain || {}),
+          decodedKeys: Object.keys(decoded)
+        });
+      }
+
       const plainKeys = Object.keys(plain || {}).length;
       const decodedKeys = Object.keys(decoded).length;
       if (plainKeys > decodedKeys + 3) {
