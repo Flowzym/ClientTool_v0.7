@@ -19,7 +19,9 @@ function BoardHeader({
   onResetSort,
   onMoveColumnUp,
   onMoveColumnDown,
-  onResetColumnOrder
+  onResetColumnOrder,
+  searchQuery,
+  onSearchChange
 }: {
   selectedCount: number;
   getSelectedRows: () => any[];
