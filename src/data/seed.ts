@@ -1,7 +1,6 @@
 import { db } from './db';
 import type { Client, User } from '../domain/models';
 import type { Role } from '../domain/auth';
-import { nowISO } from '../utils/date';
 
 /**
  * DEV-Helfer (bestehendes Verhalten beibehalten):
@@ -42,7 +41,7 @@ export function buildDemoUsers(): User[] {
  * OPTIONALER Platzhalter – bleibt erhalten, damit existierende Aufrufer nicht brechen.
  * Passe bei Bedarf an deinen Client-Seed an.
  */
-export async function ensureDemoClients(mode: 'skip' | 'replace' | 'newIds' = 'skip'): Promise<number> {
+export async function ensureDemoClients(_mode: 'skip' | 'replace' | 'newIds' = 'skip'): Promise<number> {
   return 0;
 }
 
@@ -64,10 +63,10 @@ export async function seedTestData(mode: SeedMode = 'skip'): Promise<{ clients: 
     if (existing > 0) return { clients: 0, users: usersCreated };
   }
 
-  const statuses = [
-    'offen','inBearbeitung','terminVereinbart','wartetRueckmeldung','dokumenteOffen',
-    'foerderAbklaerung','zugewiesenExtern','ruht','erledigt','nichtErreichbar','abgebrochen'
-  ] as const;
+  // const statuses = [
+  //   'offen','inBearbeitung','terminVereinbart','wartetRueckmeldung','dokumenteOffen',
+  //   'foerderAbklaerung','zugewiesenExtern','ruht','erledigt','nichtErreichbar','abgebrochen'
+  // ] as const;
   const priorities = ['niedrig','normal','hoch','dringend'] as const;
 
   const firstNames = ['Anna','Bernd','Clara','David','Eva','Felix','Greta','Hans','Ida','Jakob','Klara','Lukas','Mara','Noah','Olga','Paul'];

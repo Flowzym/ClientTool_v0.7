@@ -147,7 +147,7 @@ class ClientWorkDB extends Dexie {
 
     try {
       await this.kv.delete('seeded.v1');
-    } catch (error) {
+    } catch {
       // Ignore
     }
 

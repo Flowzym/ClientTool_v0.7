@@ -9,8 +9,8 @@ import tseslint from 'typescript-eslint';
 const compat = new FlatCompat({ baseDirectory: path.resolve() });
 
 export default [
-  // Ignore build output & vendor
-  { ignores: ['dist', 'build', 'node_modules', 'public'] },
+  // Ignore build output & vendor & scripts
+  { ignores: ['dist', 'build', 'node_modules', 'public', 'scripts/**/*.cjs', 'scripts/**/*.mjs'] },
 
   // Base JS recommendations
   js.configs.recommended,
@@ -57,14 +57,13 @@ export default [
       'react/react-in-jsx-scope': 'off',
       'react/prop-types': 'off',
       'react/no-unescaped-entities': 'warn',
-      'react-hooks/exhaustive-deps': 'warn',
-      
-      // Import/Export rules (no new plugins needed)
-      'no-duplicate-imports': 'error',
-      
+
       // React Hooks rules (hardened)
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn',
+
+      // Import/Export rules (no new plugins needed)
+      'no-duplicate-imports': 'error',
       
       // Export/Import conventions
       'no-restricted-syntax': [

@@ -15,7 +15,32 @@ if (process.env.NODE_ENV === 'production' && process.env.VITE_ENCRYPTION_MODE ==
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    VitePWA({ registerType: 'autoUpdate', workbox: { navigateFallback: '/index.html' } }),
+    VitePWA({
+      registerType: 'autoUpdate',
+      workbox: { navigateFallback: '/index.html' },
+      manifest: {
+        name: 'Klienten‑Listenapp',
+        short_name: 'Klienten',
+        description: 'Lokale Klient:innen-Listenapp – offline‑first, verschlüsselte Daten (AES‑GCM/Argon2id).',
+        theme_color: '#111827',
+        background_color: '#111827',
+        display: 'standalone',
+        icons: [
+          {
+            src: '/icons/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icons/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
+      }
+    }),
     react()
   ],
   optimizeDeps: {

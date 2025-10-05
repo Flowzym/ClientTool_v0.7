@@ -20,7 +20,7 @@ export function SyncStatusBadge() {
         setStatus(syncStatus.status);
         setLastSync(syncStatus.lastSync);
         setPendingUpdates(syncStatus.pendingUpdates);
-      } catch (error) {
+      } catch {
         setStatus('error');
       }
     };
@@ -42,8 +42,8 @@ export function SyncStatusBadge() {
     setIsRefreshing(true);
     try {
       await syncManager.pullUpdates();
-    } catch (error) {
-      console.error('Manual sync failed:', error);
+    } catch (err) {
+      console.error('Manual sync failed:', err);
     } finally {
       setIsRefreshing(false);
     }

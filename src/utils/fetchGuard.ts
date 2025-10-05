@@ -24,7 +24,7 @@ class NetworkGuard {
 
   private isDev(): boolean {
     // vite define replacement
-    // @ts-ignore
+    // @ts-expect-error - import.meta.env is replaced by Vite at build time
     return typeof import.meta !== 'undefined' && !!import.meta.env && !!import.meta.env.DEV;
   }
 

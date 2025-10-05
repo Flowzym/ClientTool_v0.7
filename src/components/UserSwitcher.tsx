@@ -6,9 +6,8 @@ import { ensureDemoUsersIfEmpty } from '../data/seed';
 import type { User as UserType } from '../domain/models';
 
 const FALLBACK_USERS: UserType[] = [
-  { id: 'admin@local',  name: 'Admin (Demo)',  role: 'admin',  active: true } as any,
-  { id: 'editor@local', name: 'Editor (Demo)', role: 'editor', active: true } as any,
-  { id: 'user@local',   name: 'User (Demo)',   role: 'user',   active: true } as any,
+  { id: 'admin@local', name: 'Admin (Demo)', role: 'admin', active: true, createdAt: Date.now(), updatedAt: Date.now() },
+  { id: 'sb@local', name: 'Sachbearbeiter (Demo)', role: 'sb', active: true, createdAt: Date.now(), updatedAt: Date.now() },
 ];
 
 export function UserSwitcher() {
@@ -26,7 +25,7 @@ export function UserSwitcher() {
           await ensureDemoUsersIfEmpty().catch(() => {});
         }
         const all = await db.users.toArray();
-        setUsers((all as any) || []);
+        setUsers(all || []);
       } catch (e) {
         console.warn('UserSwitcher: db.users load failed, falling back', e);
         setUsers([]);
@@ -35,12 +34,12 @@ export function UserSwitcher() {
   }, [isOpen]);
 
   const available = (users ?? [])
-    .filter(u => (u as any)?.active !== false) as UserType[];
+    .filter(u => u?.active !== false);
 
   // Merge available + FALLBACK without duplicates by id
   const byId = new Map<string, UserType>();
-  for (const u of available) byId.set((u as any).id, u);
-  for (const f of FALLBACK_USERS) if (!byId.has((f as any).id)) byId.set((f as any).id, f);
+  for (const u of available) byId.set(u.id, u);
+  for (const f of FALLBACK_USERS) if (!byId.has(f.id)) byId.set(f.id, f);
   const merged = Array.from(byId.values());
 
   return (
@@ -58,26 +57,24 @@ export function UserSwitcher() {
           <div className="max-h-72 overflow-auto py-1">
             {merged.map((user) => (
               <button
-                key={(user as any).id}
+                key={user.id}
                 className="w-full px-3 py-2 text-left hover:bg-gray-50"
                 onClick={async () => {
-                  // If user exists in DB → switch by id, else impersonate by role
-                  const id = (user as any).id as string;
                   try {
-                    const exists = await db.users.get(id);
+                    const exists = await db.users.get(user.id);
                     if (exists) {
-                      await switchUserById(id);
+                      await switchUserById(user.id);
                     } else {
-                      await impersonateRole((user as any).role as any);
+                      await impersonateRole(user.role);
                     }
                   } catch {
-                    await impersonateRole((user as any).role as any);
+                    await impersonateRole(user.role);
                   }
                   setIsOpen(false);
                 }}
               >
-                <div className="font-medium text-sm">{(user as any).name}</div>
-                <div className="text-xs text-gray-500">{(user as any).role}</div>
+                <div className="font-medium text-sm">{user.name}</div>
+                <div className="text-xs text-gray-500">{user.role}</div>
               </button>
             ))}
             {merged.length === 0 && (
@@ -90,14 +87,14 @@ export function UserSwitcher() {
                       try { await ensureDemoUsersIfEmpty(); } catch {}
                       try {
                         const all = await db.users.toArray();
-                        setUsers((all as any) || []);
+                        setUsers(all || []);
                       } catch {}
                     }}
                   >Demo-User anlegen</button>
                   <button
                     className="px-2 py-1 border rounded text-xs flex items-center gap-1 hover:bg-gray-50"
                     onClick={async () => {
-                      await impersonateRole('admin' as any);
+                      await impersonateRole('admin');
                       setIsOpen(false);
                     }}
                     title="Notausstieg: Sofort als Admin anmelden"
