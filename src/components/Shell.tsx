@@ -80,7 +80,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <aside className="border-r bg-white/50 backdrop-blur-[0.5px]">
         <nav className="flex flex-col gap-2 p-3 text-sm">
-          <NavItem to="/dashboard" icon={Home} title="Dashboard" desc="Übersicht und Aktivitäten" />
+          <NavItem to="/" icon={Home} title="Dashboard" desc="Übersicht und Aktivitäten" />
 
           <NavItem to="/import" icon={FileSpreadsheet} title="Import" desc="Excel/CSV/PDF-Dateien importieren" />
 

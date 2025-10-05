@@ -2,15 +2,46 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card';
 import { Button } from '../../components/Button';
+import { LoadingState } from '../../components/LoadingState';
 import { computeKPIs } from './kpis';
 import { db } from '../../data/db';
 
 export function Dashboard() {
   const [clients, setClients] = React.useState<any[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    db.clients.toArray().then(setClients);
+    setIsLoading(true);
+    db.clients.toArray()
+      .then(setClients)
+      .catch(err => {
+        console.error('Failed to load clients:', err);
+        setError(err.message || 'Fehler beim Laden der Daten');
+      })
+      .finally(() => setIsLoading(false));
   }, []);
+
+  if (isLoading) {
+    return <LoadingState message="Dashboard wird geladen..." />;
+  }
+
+  if (error) {
+    return (
+      <div className="p-6 bg-red-50 border border-red-200 rounded-lg">
+        <h3 className="text-red-800 font-semibold mb-2">Fehler beim Laden</h3>
+        <p className="text-red-600 text-sm">{error}</p>
+        <Button
+          onClick={() => window.location.reload()}
+          variant="secondary"
+          size="sm"
+          className="mt-4"
+        >
+          Neu laden
+        </Button>
+      </div>
+    );
+  }
 
   const kpis = computeKPIs(clients as any);
 

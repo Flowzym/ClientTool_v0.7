@@ -16,3 +16,8 @@ export { default as SyncStatusBadge } from './SyncStatusBadge';
 
 // Auth components
 export * from './auth';
+
+// Error handling
+export { ErrorBoundary } from './ErrorBoundary';
+export { LoadingState } from './LoadingState';
+export { HealthCheckScreen } from './HealthCheckScreen';

@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './app/auth/AuthProvider';
 import { Shell } from './components/Shell';
+import { ErrorBoundary } from './components/ErrorBoundary';
+import { HealthCheckScreen } from './components/HealthCheckScreen';
 
 import Board from './features/board/Board';
 import { Dashboard } from './features/dashboard/Dashboard';
@@ -25,11 +27,22 @@ const ImporterV2Page = import.meta.env.DEV
   : null;
 
 export default function App() {
+  const [healthCheckPassed, setHealthCheckPassed] = React.useState(false);
+
+  if (!healthCheckPassed) {
+    return (
+      <ErrorBoundary>
+        <HealthCheckScreen onSuccess={() => setHealthCheckPassed(true)} />
+      </ErrorBoundary>
+    );
+  }
+
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Shell>
-          <Routes>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Shell>
+            <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/board" element={<Board />} />
             <Route path="/statistik" element={<Statistik />} />
@@ -70,8 +83,9 @@ export default function App() {
             
             <Route path="*" element={<div className="p-6 text-gray-600">Not found</div>} />
           </Routes>
-        </Shell>
-      </BrowserRouter>
-    </AuthProvider>
+          </Shell>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
