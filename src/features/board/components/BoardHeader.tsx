@@ -40,7 +40,11 @@ function BoardHeader({
 }) {
   const [openCsv, setOpenCsv] = useState(false);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
-  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery || '');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+
+  React.useEffect(() => {
+    setDebouncedSearch(searchQuery || '');
+  }, [searchQuery]);
 
   const handleSearchChange = useCallback((value: string) => {
     setDebouncedSearch(value);
