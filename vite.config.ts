@@ -15,7 +15,9 @@ if (process.env.NODE_ENV === 'production' && process.env.VITE_ENCRYPTION_MODE ==
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
-    VitePWA({ registerType: 'autoUpdate', workbox: { navigateFallback: '/index.html' } }),react()],
+    VitePWA({ registerType: 'autoUpdate', workbox: { navigateFallback: '/index.html' } }),
+    react()
+  ],
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
