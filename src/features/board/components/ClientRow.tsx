@@ -13,6 +13,7 @@ import BookingDateCell from './cells/BookingDateCell';
 import PriorityCell from './cells/PriorityCell';
 import ActivityCell from './cells/ActivityCell';
 import ArchiveCell from './cells/ArchiveCell';
+import { formatPhoneNumber } from '../utils/phone';
 
 // Performance counter for row mounts (Dev-only)
 const rowMountCounter = createCounter('rowMounts');
@@ -191,7 +192,7 @@ export function ClientRow({
               // Support both import field name (address) and board field name (street)
               return <div key={key} className="text-sm text-gray-700">{client.address || client.street || '—'}</div>;
             case 'phone':
-              return <div key={key} className="text-sm text-gray-700">{client.phone || '—'}</div>;
+              return <div key={key} className="text-sm text-gray-700">{formatPhoneNumber(client)}</div>;
             case 'email':
               return <div key={key} className="text-sm text-gray-700">{client.email || '—'}</div>;
             case 'bookingStatus':

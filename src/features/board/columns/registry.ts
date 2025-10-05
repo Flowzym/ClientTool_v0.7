@@ -1,4 +1,5 @@
 import type { ColumnDef, ColumnKey } from './types';
+import { formatPhoneNumber } from '../utils/phone';
 
 /**
  * Zentrale Column-Registry für Board-Spalten
@@ -334,29 +335,8 @@ export const COLUMN_REGISTRY: ColumnDef[] = [
     sortable: true,
     category: 'computed',
     computed: (row: any) => {
-      const countryCode = row.countryCode?.toString().trim() || '';
-      const areaCode = row.areaCode?.toString().trim() || '';
-      const phoneNumber = row.phoneNumber?.toString().trim() || '';
-      
-      if (!countryCode && !areaCode && !phoneNumber) return null;
-      
-      const parts: string[] = [];
-      
-      if (countryCode) {
-        // Führendes + hinzufügen falls nicht vorhanden
-        const formatted = countryCode.startsWith('+') ? countryCode : `+${countryCode}`;
-        parts.push(`(${formatted})`);
-      }
-      
-      if (areaCode) {
-        parts.push(areaCode);
-      }
-      
-      if (phoneNumber) {
-        parts.push(phoneNumber);
-      }
-      
-      return parts.join(' ').trim();
+      const formatted = formatPhoneNumber(row);
+      return formatted === '—' ? null : formatted;
     }
   }
 ];

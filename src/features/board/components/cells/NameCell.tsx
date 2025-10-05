@@ -1,5 +1,6 @@
 import React from 'react';
 import { PencilLine } from 'lucide-react';
+import { formatPhoneNumber } from '../../utils/phone';
 
 function countNotes(client: any): number {
   // 1) notes array
@@ -32,28 +33,8 @@ export default function NameCell({
   const firstName = client?.firstName || '';
   const title = client?.title ? ` (${client.title})` : '';
 
-  // Telefonnummer: phone-Feld wird beim Import bereits kombiniert
-  // Fallback: Wenn Einzelkomponenten vorhanden, kombiniere diese
-  const phone = (() => {
-    // Primär: phone-Feld (wird beim Import aus countryCode/areaCode/phoneNumber kombiniert)
-    if (client?.phone) return client.phone;
-
-    // Fallback 1: Legacy phoneNumber-Feld
-    if (client?.phoneNumber && !client?.countryCode && !client?.areaCode) {
-      return client.phoneNumber;
-    }
-
-    // Fallback 2: Kombiniere aus Einzelteilen (falls phone nicht gesetzt wurde)
-    const parts: string[] = [];
-    if (client?.countryCode) {
-      const cc = String(client.countryCode).trim();
-      parts.push(cc.startsWith('+') ? `(${cc})` : `(+${cc})`);
-    }
-    if (client?.areaCode) parts.push(String(client.areaCode).trim());
-    if (client?.phoneNumber) parts.push(String(client.phoneNumber).trim());
-
-    return parts.length > 0 ? parts.join(' ') : '—';
-  })();
+  // Telefonnummer: Nutze zentrale Formatierungs-Funktion
+  const phone = formatPhoneNumber(client);
   
   // Format: "Nachname, Vorname (Titel)"
   const nameDisplay = lastName && firstName 
