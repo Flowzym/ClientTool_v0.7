@@ -283,6 +283,19 @@ function Board() {
     return clients.filter(c => (c as any)._decodeError === true);
   }, [clients]);
 
+  // Debug logging for empty state
+  useEffect(() => {
+    if (import.meta.env.DEV && !isLoading) {
+      console.log('🔍 Board Debug:', {
+        clientsLength: clients.length,
+        isLoading,
+        viewFilters: view?.filters,
+        hasUsers: users.length > 0,
+        userCount: users.length
+      });
+    }
+  }, [clients.length, isLoading, users.length, view?.filters]);
+
   // Early return AFTER all hooks
   if (isLoading) return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;
 
@@ -381,7 +394,39 @@ function Board() {
       </div>
 
       {/* Client List (virtualized or classic) */}
-      {virtualRowsEnabled ? (
+      {clients.length === 0 ? (
+        <div className="border rounded-lg p-12 text-center bg-gray-50">
+          <div className="text-gray-400 mb-4">
+            <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Keine Klient:innen gefunden</h3>
+          <p className="text-sm text-gray-600 mb-6">
+            {view?.filters?.chips?.length > 0 || view?.filters?.showArchived
+              ? 'Keine Einträge entsprechen den aktuellen Filterkriterien.'
+              : 'Die Datenbank ist leer. Importieren Sie Daten oder erstellen Sie Test-Daten.'}
+          </p>
+          {import.meta.env.DEV && (
+            <button
+              onClick={async () => {
+                try {
+                  const { seedTestData } = await import('../../data/seed');
+                  await seedTestData('replace');
+                  alert('Test-Daten wurden erstellt!');
+                  window.location.reload();
+                } catch (error) {
+                  console.error('Seed failed:', error);
+                  alert('Fehler beim Erstellen der Test-Daten: ' + (error as Error).message);
+                }
+              }}
+              className="px-4 py-2 bg-accent-600 text-white rounded-md hover:bg-accent-700 transition-colors"
+            >
+              Test-Daten erstellen (DEV)
+            </button>
+          )}
+        </div>
+      ) : virtualRowsEnabled ? (
         <VirtualClientList
           clients={clients}
           users={users}

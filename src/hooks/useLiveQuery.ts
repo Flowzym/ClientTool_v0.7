@@ -35,6 +35,11 @@ export function useLiveQuery<T>(
           isFirstValue = false;
           setData(value);
           setError(null);
+
+          // Debug logging für leere Arrays
+          if (import.meta.env.DEV && Array.isArray(value) && value.length === 0) {
+            console.log('📊 useLiveQuery: Erste Query lieferte leeres Array');
+          }
         } else {
           // Debounce Updates um zu häufige Re-Renders zu vermeiden
           if (timeoutId) clearTimeout(timeoutId);
@@ -47,7 +52,7 @@ export function useLiveQuery<T>(
         }
       },
       error: (err) => {
-        console.error('useLiveQuery error:', err);
+        console.error('❌ useLiveQuery error:', err);
         if (isSubscribed) {
           setError(err);
         }

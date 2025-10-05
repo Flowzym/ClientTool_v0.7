@@ -217,11 +217,12 @@ function VirtualizedBoardList({
       </div>
       
       {/* Debug info in development */}
-      {import.meta.env.DEV && (
-        <div className="absolute top-2 right-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded pointer-events-none">
-          <div>Virtual: {virtualItems.length}/{clients.length} rows</div>
+      {import.meta.env.DEV && clients.length > 0 && (
+        <div className="absolute top-2 right-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded pointer-events-none z-10">
+          <div>Rendered: {virtualItems.length}/{clients.length} rows</div>
           <div>Scroll: {Math.round(scrollTop)}px</div>
           <div>Range: {virtualItems[0]?.index ?? 0}-{virtualItems[virtualItems.length - 1]?.index ?? 0}</div>
+          <div className="text-green-400 mt-1">Total Clients: {clients.length}</div>
         </div>
       )}
     </div>
