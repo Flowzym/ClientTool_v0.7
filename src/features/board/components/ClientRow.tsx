@@ -119,6 +119,10 @@ export function ClientRow({
                     notes: client.notes,
                     contactLog: client.contactLog,
                     note: client.note,
+                    phone: client.phone,
+                    countryCode: client.countryCode,
+                    areaCode: client.areaCode,
+                    phoneNumber: client.phoneNumber,
                   }}
                   onOpenNotes={onOpenNotes}
                   onOpenClient={onOpenClient}

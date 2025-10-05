@@ -4,22 +4,7 @@
  */
 
 export function formatPhoneNumber(client: any): string {
-  if (!client) {
-    if (import.meta.env.DEV) console.log('📞 formatPhoneNumber: client is null/undefined');
-    return '—';
-  }
-
-  // Debug: Zeige verfügbare Telefon-Felder (nur erste 3 Clients um Log nicht zu überfluten)
-  if (import.meta.env.DEV && Math.random() < 0.05) {
-    console.log('📞 formatPhoneNumber:', {
-      id: client.id,
-      phone: client.phone,
-      countryCode: client.countryCode,
-      areaCode: client.areaCode,
-      phoneNumber: client.phoneNumber,
-      allKeys: Object.keys(client)
-    });
-  }
+  if (!client) return '—';
 
   // Strategy 1: Verwende phone-Feld wenn vorhanden und nicht leer
   if (client.phone && String(client.phone).trim()) {

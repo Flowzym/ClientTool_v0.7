@@ -103,16 +103,6 @@ function normalizeClientStored(c: any) {
   }
 
   // Telefonnummer-Normalisierung: phone aus Einzelteilen kombinieren falls nicht vorhanden
-  if (import.meta.env.DEV && Math.random() < 0.02) {
-    console.log('📞 DB normalizeClientStored:', {
-      id: normalized.id,
-      phone: normalized.phone,
-      countryCode: normalized.countryCode,
-      areaCode: normalized.areaCode,
-      phoneNumber: normalized.phoneNumber
-    });
-  }
-
   if (!normalized.phone && (normalized.countryCode || normalized.areaCode || normalized.phoneNumber)) {
     const parts: string[] = [];
     if (normalized.countryCode) {
@@ -123,9 +113,6 @@ function normalizeClientStored(c: any) {
     if (normalized.phoneNumber) parts.push(String(normalized.phoneNumber).trim());
     if (parts.length > 0) {
       normalized.phone = parts.join(' ');
-      if (import.meta.env.DEV) {
-        console.log('📞 DB: Combined phone from parts:', normalized.phone, 'for', normalized.id);
-      }
     }
   }
 
