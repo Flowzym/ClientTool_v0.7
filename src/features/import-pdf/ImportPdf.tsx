@@ -23,7 +23,6 @@ import { analyzeTextWithRegex, getBestMatches, splitFullName, parseAddress, fiel
 import { buildRowKey, hashRow } from '../import-excel/dedupe';
 import { nowISO, parseToISO } from '../../utils/date';
 import { db } from '../../data/db';
-import { cryptoManager } from '../../data/crypto';
 import { supportsFSAccess, isEmbedded, isBoltHost } from '../../utils/env';
 import type { Client, ImportSession } from '../../domain/models';
 
@@ -270,7 +269,6 @@ export function ImportPdf() {
     setIsProcessing(true);
     
     try {
-      await cryptoManager.getActiveKey();
       
       const existingClients = (await Promise.all((await db.clients.toArray()) as any));
       const existingByRowKey = new Map<string, Client>();
@@ -361,7 +359,6 @@ export function ImportPdf() {
     setIsProcessing(true);
     
     try {
-      await cryptoManager.getActiveKey();
       
       const stats = { created: 0, updated: 0, archived: 0, deleted: 0 };
       

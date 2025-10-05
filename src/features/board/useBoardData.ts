@@ -5,7 +5,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
 import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { db } from '../../data/db';
-import { cryptoManager } from '../../data/crypto';
 import type { FilterChip, SortKey, BoardView } from './useBoardData.helpers';
 import { defaultView, loadViewFromStorage, saveViewToStorage, byEnum, byDateISO, byNumber, withPinnedFirst } from './useBoardData.helpers';
 
@@ -75,7 +74,6 @@ export function useBoardData() {
     let cancelled = false;
     (async () => {
       try {
-        await cryptoManager.getActiveKey();
         if (cancelled) return;
 
         const savedView = await loadViewFromStorage();

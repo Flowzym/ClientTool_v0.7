@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setCurrentUserState(u);
     setCurrentUserId(u ? u.id : null);
     try {
-      await db.setKV('auth:currentUserId', u ? new TextEncoder().encode(u.id) : null);
+      await db.setKV('auth:currentUserId', u ? u.id : null);
       document.dispatchEvent(new CustomEvent('auth:user-changed'));
     } catch (e) {
       console.warn('AuthProvider: persist failed', e);

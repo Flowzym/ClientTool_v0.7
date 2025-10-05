@@ -2,11 +2,9 @@ import React from 'react';
 import { Empty } from '../../components/Empty';
 import { Button } from '../../components/Button';
 import { Download, FileDown } from 'lucide-react';
-import { getEncryptionMode } from '../../utils/env';
 
 export function Export() {
-  const encryptionMode = getEncryptionMode();
-  const isPlainMode = encryptionMode === 'plain';
+  const isPlainMode = false;
   
   return (
     <div className="space-y-6">

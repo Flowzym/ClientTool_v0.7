@@ -1,7 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../app/auth/AuthProvider';
-import { getEncryptionMode } from '../utils/env';
 import { SidebarFilters } from '../features/board/SidebarFilters';
 import { BarChart3, Download, FileSpreadsheet, Home, Settings, Shield, Trello, Users } from 'lucide-react';
 import { SyncStatusBadge } from './SyncStatusBadge';
@@ -61,16 +60,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const auth = useAuth();
 
-  const enc = (() => {
-  try {
-      const mode = getEncryptionMode?.() ?? 'plain';
-      if (mode === 'dev-enc') return 'DEV-ENC';
-      else if (mode === 'prod-enc') return 'PROD-ENC';
-      else return 'PLAIN';
-    } catch {
-      return 'PLAIN';
-    }
-  })();
+  const enc = 'LOCAL-ONLY';
 
   const role = (auth?.role ?? 'admin').toUpperCase();
   const userName = auth?.currentUser?.name ?? 'Admin (Demo)';

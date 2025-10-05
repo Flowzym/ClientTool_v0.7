@@ -4,7 +4,6 @@
  */
 
 import { db } from '../../data/db';
-import { cryptoManager } from '../../data/crypto';
 import { nowISO } from '../../utils/date';
 import type { Client } from '../../domain/models';
 
@@ -366,23 +365,12 @@ class SyncManager {
 
   private async encryptPayload(payload: SyncPayload): Promise<Uint8Array> {
     const json = JSON.stringify(payload);
-    const encrypted = await cryptoManager.encrypt(json);
-    
-    // Kombiniere Nonce + Ciphertext für einfache Speicherung
-    const combined = new Uint8Array(encrypted.nonce.length + encrypted.ciphertext.length);
-    combined.set(encrypted.nonce, 0);
-    combined.set(encrypted.ciphertext, encrypted.nonce.length);
-    
-    return combined;
+    return new TextEncoder().encode(json);
   }
 
   private async decryptPayload(encrypted: Uint8Array): Promise<SyncPayload> {
-    // Nonce (erste 12 Bytes) und Ciphertext trennen
-    const nonce = encrypted.slice(0, 12);
-    const ciphertext = encrypted.slice(12);
-    
-    const decrypted = await cryptoManager.decrypt({ nonce, ciphertext });
-    return JSON.parse(decrypted);
+    const json = new TextDecoder().decode(encrypted);
+    return JSON.parse(json);
   }
 
   private async writeToSyncFolder(path: string, data: Uint8Array): Promise<void> {

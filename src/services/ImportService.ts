@@ -8,7 +8,6 @@ import { parseToISO } from '../utils/date';
 import { validateClient } from '../domain/zod';
 import type { Client } from '../domain/models';
 import { db } from '../data/db';
-import { cryptoManager } from '../data/crypto';
 import { nowISO } from '../utils/date';
 
 export interface ImportResult {
@@ -106,9 +105,6 @@ class ImportService {
     };
 
     try {
-      // Sicherstellen, dass Crypto-Key verfügbar ist
-      await cryptoManager.getActiveKey();
-      // Datei-Format erkennen und parsen
       const workbook = await this.parseFile(file);
       
       // Erste Sheet verwenden

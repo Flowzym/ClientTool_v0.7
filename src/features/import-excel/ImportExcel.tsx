@@ -16,7 +16,6 @@ import { normalizeHeader } from './normalize';
 import { savePreset, loadPreset } from './mappingPresets';
 import { nowISO } from '../../utils/date';
 import { db } from '../../data/db';
-import { cryptoManager } from '../../data/crypto';
 import { supportsFSAccess, isEmbedded, isBoltHost } from '../../utils/env';
 import type { Client, ImportSession } from '../../domain/models';
 import type { ImportMappedRow } from './types';
@@ -288,7 +287,6 @@ export function ImportExcel() {
     if (!importData || mode !== 'sync') return;
     
     try {
-      await cryptoManager.getActiveKey();
       
       const existingClients = await Promise.all((await db.clients.toArray()) as any);
       const existingByRowKey = new Map<string, Client>();
@@ -380,7 +378,6 @@ export function ImportExcel() {
     setIsProcessing(true);
     
     try {
-      await cryptoManager.getActiveKey();
       
       const stats = { created: 0, updated: 0, archived: 0, deleted: 0 };
       

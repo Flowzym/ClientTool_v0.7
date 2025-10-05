@@ -2,14 +2,14 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { db } from '../../data/db';
-import { getEncryptionMode, supportsFSAccess } from '../../utils/env';
+import { supportsFSAccess } from '../../utils/env';
 import { exportService } from '../../services/ExportService';
 
 type BackupPayload = {
   meta: {
     version: 1;
     exportedAt: string;
-    encryptionMode: string;
+    storageMode: string;
   };
   tables: {
     clients: any[];

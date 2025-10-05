@@ -4,7 +4,6 @@
 
 import * as XLSX from 'xlsx';
 import { db } from '../data/db';
-import { getEncryptionMode } from '../utils/env';
 import type { Client } from '../domain/models';
 
 export interface ExportOptions {
@@ -136,7 +135,7 @@ class ExportService {
         meta: {
           version: '1.0',
           exportedAt: new Date().toISOString(),
-          encryptionMode: getEncryptionMode()
+          storageMode: 'local-only'
         },
         tables: {
           clients,
