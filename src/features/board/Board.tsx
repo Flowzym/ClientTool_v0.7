@@ -12,6 +12,7 @@ import { BoardHeader } from './components';
 import { featureManager } from '../../config/features';
 import { getAllColumns } from './columns/registry';
 import { useColumnVisibility } from './hooks/useColumnVisibility';
+import { db } from '../../data/db';
 
 // Lazy-load VirtualizedBoardList außerhalb Component für Code-Splitting
 const VirtualizedBoardList = React.lazy(() => import('./components/VirtualizedBoardList'));
