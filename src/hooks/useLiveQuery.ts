@@ -22,6 +22,7 @@ export function useLiveQuery<T>(
   useEffect(() => {
     let timeoutId: number | null = null;
     let isSubscribed = true;
+    let isFirstValue = true;
 
     const observable: Observable<T> = liveQuery(querier);
 
@@ -30,7 +31,8 @@ export function useLiveQuery<T>(
         if (!isSubscribed) return;
 
         // Erste Daten sofort setzen, danach debounced
-        if (data === defaultValue) {
+        if (isFirstValue) {
+          isFirstValue = false;
           setData(value);
           setError(null);
         } else {
