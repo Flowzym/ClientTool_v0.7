@@ -24,13 +24,42 @@ const byNoteText = (a: any, b: any) => {
 
 export function useBoardData() {
   const clients = useLiveQuery(
-    () => db.clients.toArray(),
+    async () => {
+      try {
+        const result = await db.clients.toArray();
+        if (import.meta.env.DEV) {
+          console.log(`📊 useBoardData: Loaded ${result.length} clients from DB`);
+          if (result.length > 0) {
+            console.log('📋 First client sample:', {
+              id: result[0].id,
+              name: `${result[0].firstName} ${result[0].lastName}`,
+              hasDecodeError: (result[0] as any)._decodeError
+            });
+          }
+        }
+        return result;
+      } catch (error) {
+        console.error('❌ useBoardData: Failed to load clients:', error);
+        return [];
+      }
+    },
     [],
     []
   ) ?? [];
 
   const users = useLiveQuery(
-    () => db.users.toArray(),
+    async () => {
+      try {
+        const result = await db.users.toArray();
+        if (import.meta.env.DEV) {
+          console.log(`👥 useBoardData: Loaded ${result.length} users from DB`);
+        }
+        return result;
+      } catch (error) {
+        console.error('❌ useBoardData: Failed to load users:', error);
+        return [];
+      }
+    },
     [],
     []
   ) ?? [];

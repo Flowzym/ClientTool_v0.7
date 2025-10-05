@@ -291,10 +291,23 @@ function Board() {
         isLoading,
         viewFilters: view?.filters,
         hasUsers: users.length > 0,
-        userCount: users.length
+        userCount: users.length,
+        decodeErrors: decodeErrors.length
       });
+
+      // Zusätzliche DB-Prüfung wenn Board leer ist
+      if (clients.length === 0) {
+        db.clients.count().then(rawCount => {
+          console.log(`🔍 Raw DB count: ${rawCount} clients`);
+          if (rawCount > 0) {
+            console.warn('⚠️ DB hat Daten, aber Board zeigt keine - möglicherweise Crypto-Problem');
+          } else {
+            console.log('💡 DB ist wirklich leer - bitte Test-Daten erstellen');
+          }
+        });
+      }
     }
-  }, [clients.length, isLoading, users.length, view?.filters]);
+  }, [clients.length, isLoading, users.length, view?.filters, decodeErrors.length]);
 
   // Early return AFTER all hooks
   if (isLoading) return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;

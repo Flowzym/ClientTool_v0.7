@@ -117,14 +117,31 @@ export async function seedTestData(mode: SeedMode = 'skip'): Promise<{ clients: 
 
   let inserted = 0;
   try {
+    console.log(`📦 Versuche ${rows.length} Clients per bulkPut einzufügen...`);
     await db.clients.bulkPut(rows as any);
     inserted = rows.length;
+    console.log(`✅ bulkPut erfolgreich: ${inserted} Clients eingefügt`);
   } catch (e) {
-    console.warn('seedTestData: bulkPut failed; fallback to put loop', e);
+    console.warn('⚠️ seedTestData: bulkPut failed; fallback to put loop', e);
+    console.error('bulkPut Error-Details:', e instanceof Error ? e.message : e);
+
     for (const c of rows) {
-      try { await db.clients.put(c as any); inserted++; } catch {}
+      try {
+        await db.clients.put(c as any);
+        inserted++;
+        if (inserted % 5 === 0) {
+          console.log(`📝 ${inserted}/${rows.length} Clients eingefügt...`);
+        }
+      } catch (putError) {
+        console.error(`❌ Fehler beim Einfügen von Client ${c.id}:`, putError);
+      }
     }
+    console.log(`✅ Fallback-Insert abgeschlossen: ${inserted}/${rows.length} Clients eingefügt`);
   }
+
+  // Verifikation
+  const finalCount = await db.clients.count();
+  console.log(`🔍 Verifikation: ${finalCount} Clients in DB nach Seed`);
 
   try {
     await db.setKV('seeded.v1', new TextEncoder().encode(new Date().toISOString()));

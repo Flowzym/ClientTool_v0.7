@@ -19,9 +19,23 @@ cryptoManager.getActiveKey().catch(err => {
 
 // Auto-seed in DEV-Modus wenn DB leer ist
 if (import.meta.env.DEV) {
-  cryptoManager.getActiveKey().then(async () => {
+  // Warte kurz damit Crypto-Manager initialisieren kann
+  setTimeout(async () => {
     try {
-      // Ensure demo users exist
+      console.log('🔑 Crypto-Key wird initialisiert...');
+
+      // Versuche Crypto-Key zu laden
+      let keyAvailable = false;
+      try {
+        await cryptoManager.getActiveKey();
+        keyAvailable = true;
+        console.log('✅ Crypto-Key erfolgreich geladen');
+      } catch (error) {
+        console.warn('⚠️ Crypto-Key nicht verfügbar:', error);
+        console.log('💡 Versuche mit dev-enc Fallback...');
+      }
+
+      // Ensure demo users exist (funktioniert auch ohne Crypto in dev-enc mode)
       const usersCreated = await ensureDemoUsersIfEmpty();
       if (usersCreated > 0) {
         console.log(`✅ ${usersCreated} Demo-User erstellt`);
@@ -29,19 +43,34 @@ if (import.meta.env.DEV) {
 
       // Check if clients exist
       const clientCount = await db.clients.count();
+      console.log(`📊 Aktuelle Client-Anzahl: ${clientCount}`);
+
       if (clientCount === 0) {
         console.log('📦 Datenbank ist leer - erstelle Test-Daten...');
-        const result = await seedTestData('newIds');
-        console.log(`✅ ${result.clients} Test-Clients erstellt`);
+        try {
+          const result = await seedTestData('newIds');
+          console.log(`✅ ${result.clients} Test-Clients erstellt`);
+          console.log(`✅ ${result.users} Demo-Users erstellt`);
+
+          // Verifikation
+          const verifyCount = await db.clients.count();
+          console.log(`🔍 Verifikation: ${verifyCount} Clients in DB`);
+        } catch (seedError) {
+          console.error('❌ Seed-Fehler:', seedError);
+          console.error('Fehler-Details:', seedError instanceof Error ? seedError.message : seedError);
+        }
       } else {
-        console.log(`📊 ${clientCount} Clients in Datenbank gefunden`);
+        console.log(`✅ ${clientCount} Clients in Datenbank gefunden`);
+
+        // Zeige erste 3 Client-IDs zur Verifikation
+        const sampleClients = await db.clients.limit(3).toArray();
+        console.log('📋 Sample Clients:', sampleClients.map(c => ({ id: c.id, name: `${c.firstName} ${c.lastName}` })));
       }
     } catch (error) {
-      console.warn('⚠️ Auto-seed fehlgeschlagen:', error);
+      console.error('❌ Auto-seed komplett fehlgeschlagen:', error);
+      console.error('Stack:', error instanceof Error ? error.stack : 'Keine Stack-Trace');
     }
-  }).catch(() => {
-    console.log('⏭️ Auto-seed übersprungen (kein Crypto-Key verfügbar)');
-  });
+  }, 500); // 500ms delay für Crypto-Init
 }
 
 createRoot(document.getElementById('root')!).render(
