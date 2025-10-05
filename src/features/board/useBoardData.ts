@@ -27,24 +27,17 @@ export function useBoardData() {
     async () => {
       try {
         const result = await db.clients.toArray();
-        const validClients = result.filter(c => c && c.id);
-
         if (import.meta.env.DEV) {
-          console.log(`📊 useBoardData: Loaded ${validClients.length} clients from DB (${result.length - validClients.length} invalid filtered)`);
-          if (validClients.length > 0) {
-            const firstClient = validClients[0];
+          console.log(`📊 useBoardData: Loaded ${result.length} clients from DB`);
+          if (result.length > 0) {
             console.log('📋 First client sample:', {
-              id: firstClient.id,
-              name: `${firstClient.firstName ?? 'N/A'} ${firstClient.lastName ?? 'N/A'}`,
-              hasDecodeError: (firstClient as any)._decodeError
+              id: result[0].id,
+              name: `${result[0].firstName ?? 'N/A'} ${result[0].lastName ?? 'N/A'}`,
+              hasDecodeError: (result[0] as any)._decodeError
             });
           }
-
-          if (result.length !== validClients.length) {
-            console.warn(`⚠️ ${result.length - validClients.length} clients filtered due to missing ID`);
-          }
         }
-        return validClients;
+        return result;
       } catch (error) {
         console.error('❌ useBoardData: Failed to load clients:', error);
         return [];
