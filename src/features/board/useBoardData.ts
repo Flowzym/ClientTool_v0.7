@@ -3,6 +3,7 @@
  */
 import { useState, useEffect, useMemo } from 'react';
 import { useOptimisticOverlay } from './hooks/useOptimisticOverlay';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { db } from '../../data/db';
 import { cryptoManager } from '../../data/crypto';
 import type { FilterChip, SortKey, BoardView } from './useBoardData.helpers';
@@ -22,33 +23,32 @@ const byNoteText = (a: any, b: any) => {
 };
 
 export function useBoardData() {
-  const [clients, setClients] = useState<Client[]>([]);
+  const clients = useLiveQuery(
+    () => db.clients.toArray(),
+    [],
+    []
+  ) ?? [];
+
+  const users = useLiveQuery(
+    () => db.users.toArray(),
+    [],
+    []
+  ) ?? [];
+
   const overlayedClients = useOptimisticOverlay(clients);
-  const [users, setUsers] = useState<User[]>([]);
   const [view, setView] = useState<BoardView>(defaultView);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [assignedToFilter, setAssignedToFilter] = useState<string[]>([]);
 
-  // Daten laden
+  // Crypto-Check und View-Loading
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        // Sicherstellen, dass Crypto-Key verfügbar ist
-        try {
-          await cryptoManager.getActiveKey();
-        } catch (cryptoError) {
-          console.error('❌ Crypto key initialization failed:', cryptoError);
-          // Set loading to false immediately to show error state
-          if (!cancelled) {
-            setIsLoading(false);
-          }
-          return;
-        }
+        await cryptoManager.getActiveKey();
         if (cancelled) return;
 
-        // View aus Storage laden
         const savedView = await loadViewFromStorage();
         if (cancelled) return;
         if (savedView) {
@@ -69,42 +69,8 @@ export function useBoardData() {
             }
           });
         }
-        
-        // Daten laden (simplified - removed redundant Promise.all)
-        const [clientsData, usersData] = await Promise.all([
-          db.clients.toArray(),
-          db.users.toArray()
-        ]);
-
-        if (cancelled) return;
-
-        // Detailliertes Logging für Daten-Analyse
-        if (import.meta.env.DEV && clientsData.length > 0) {
-          const sampleClient = clientsData[0];
-          const allFields = Object.keys(sampleClient);
-          const populatedFields = allFields.filter(k => sampleClient[k] != null && sampleClient[k] !== '');
-          const importFields = allFields.filter(k =>
-            ['zip', 'address', 'internalCode', 'amsAgentTitle', 'amsAgentFirstName',
-             'amsAgentLastName', 'countryCode', 'areaCode', 'phoneNumber', 'measureNumber',
-             'eventNumber', 'gender', 'svNumber', 'birthDate', 'email', 'phone'].includes(k)
-          );
-
-          console.log('📊 Board data loaded:', {
-            clientCount: clientsData.length,
-            userCount: usersData.length,
-            totalFields: allFields.length,
-            populatedFields: populatedFields.length,
-            importFieldsPresent: importFields.filter(f => sampleClient[f] != null).length,
-            sampleId: sampleClient.id,
-            sampleName: `${sampleClient.firstName} ${sampleClient.lastName}`.trim(),
-            importFieldsSample: importFields.slice(0, 5).map(f => `${f}: ${sampleClient[f] || '(leer)'}`).join(', ')
-          });
-        }
-
-        setClients(clientsData);
-        setUsers(usersData);
       } catch (error) {
-        console.error('❌ Board data loading failed:', error);
+        console.error('❌ Board initialization failed:', error);
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -510,16 +476,6 @@ export function useBoardData() {
     });
   };
 
-  // Daten-Updates
-  const refreshData = async () => {
-    try {
-      const clientsData = (await Promise.all((await db.clients.toArray()) as any));
-      setClients(clientsData);
-    } catch (error) {
-      console.error('❌ Data refresh failed:', error);
-    }
-  };
-
   return {
     clients: sortedClients,
     users,
@@ -534,8 +490,6 @@ export function useBoardData() {
     setSortMode,
     setColumnVisibility,
     resetToDefaultView,
-    refreshData,
-    refresh: refreshData, // Alias for convenience
     toggleSort,
     setAssignedToFilter
   };

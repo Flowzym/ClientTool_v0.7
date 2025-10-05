@@ -53,6 +53,9 @@ export function ClientRow({
     rowMountCounter.inc();
   }, []);
 
+  // Error-State Detection
+  const hasDecodeError = client._decodeError === true;
+
   const phone = client.contactPhone || 0;
   const sms = client.contactSms || 0;
   const email = client.contactEmail || 0;
@@ -67,15 +70,21 @@ export function ClientRow({
     // Trigger ClientInfoDialog via CustomEvent
     window.dispatchEvent(new CustomEvent('board:open-client-info', { detail: { id: cid } }));
   };
-  
+
   //Fallback to hardcoded layout if grid Template is not provided
   const defaultGridTemplate = 'grid-cols-[64px_minmax(240px,1fr)_120px_140px_140px_160px_160px_160px_240px_120px_100px_120px_120px]';
 
   return (
     <div
-      className={`grid gap-2 items-center px-3 py-2 hover:bg-gray-50 ${!gridTemplate ? defaultGridTemplate : ''}`}
+      className={`grid gap-2 items-center px-3 py-2 hover:bg-gray-50 ${!gridTemplate ? defaultGridTemplate : ''} ${selected ? 'bg-blue-50' : ''} ${hasDecodeError ? 'bg-red-50 border-l-4 border-red-500' : ''}`}
       style={gridTemplate ? { gridTemplateColumns: gridTemplate } : undefined}
     >
+      {/* Error-Icon bei Decode-Fehler */}
+      {hasDecodeError && (
+        <div className="col-span-full text-xs text-red-600 px-2 py-1 bg-red-100 rounded">
+          ⚠️ Entschlüsselungsfehler: {client._errorMessage || 'Daten konnten nicht geladen werden'}
+        </div>
+      )}
       {/* Auswahl + Pin */}
       <div className="flex items-center gap-1">
         <input

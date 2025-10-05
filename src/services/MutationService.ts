@@ -40,12 +40,21 @@ class MutationService {
         changes: inverseChanges
       };
 
-      // 3. Vollständiges Objekt mit Änderungen erstellen und persistieren
-      const nextPlain = { ...current, ...patch.changes };
-      await db.clients.put(nextPlain);
+      // 3. Partial Update durchführen (triggert korrekten Dexie Hook)
+      const updateCount = await db.clients.update(patch.id, patch.changes);
+
+      if (updateCount === 0) {
+        console.warn(`MutationService: Update failed for ${patch.id}`);
+        return { success: false, error: 'Update failed - record not found or unchanged' };
+      }
 
       // 4. Undo-Stack befüllen (nach erfolgreichem Persist)
       this.pushUndo(undoEntry);
+
+      // 5. Trigger Event für Optimistic Overlay Reconciliation
+      window.dispatchEvent(new CustomEvent('mutation:committed', {
+        detail: { patches: [patch] }
+      }));
 
       return { success: true };
 
@@ -95,9 +104,12 @@ class MutationService {
             changes: inverseChanges
           });
 
-          // 3. Vollständiges Objekt mit Änderungen erstellen und persistieren
-          const nextPlain = { ...current, ...patch.changes };
-          await db.clients.put(nextPlain);
+          // 3. Partial Update durchführen
+          const updateCount = await db.clients.update(patch.id, patch.changes);
+
+          if (updateCount === 0) {
+            throw new Error(`Update failed for ${patch.id}`);
+          }
         }
       });
 
@@ -105,6 +117,11 @@ class MutationService {
       undoEntries.forEach(entry => {
         this.pushUndo(entry);
       });
+
+      // 5. Trigger Event für Optimistic Overlay Reconciliation
+      window.dispatchEvent(new CustomEvent('mutation:committed', {
+        detail: { patches }
+      }));
 
       return { success: true };
 
@@ -139,9 +156,8 @@ class MutationService {
         redoChanges[key] = (current as any)[key];
       });
 
-      // Vollständiges Objekt mit Undo-Änderungen erstellen und persistieren
-      const nextPlain = { ...current, ...undoEntry.changes };
-      await db.clients.put(nextPlain);
+      // Partial Update für Undo
+      await db.clients.update(undoEntry.id, undoEntry.changes);
 
       // Redo-Stack befüllen
       this.redoStack.push({
@@ -189,9 +205,8 @@ class MutationService {
         undoChanges[key] = (current as any)[key];
       });
 
-      // Vollständiges Objekt mit Redo-Änderungen erstellen und persistieren
-      const nextPlain = { ...current, ...redoEntry.changes };
-      await db.clients.put(nextPlain);
+      // Partial Update für Redo
+      await db.clients.update(redoEntry.id, redoEntry.changes);
 
       // Undo-Stack befüllen
       this.pushUndo({

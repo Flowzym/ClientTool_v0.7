@@ -13,6 +13,9 @@ import { featureManager } from '../../config/features';
 import { getAllColumns } from './columns/registry';
 import { useColumnVisibility } from './hooks/useColumnVisibility';
 
+// Lazy-load VirtualizedBoardList außerhalb Component für Code-Splitting
+const VirtualizedBoardList = React.lazy(() => import('./components/VirtualizedBoardList'));
+
 // Extracted components for stable hook order
 function ClassicClientList({ 
   clients, 
@@ -97,11 +100,11 @@ function ClassicClientList({
   );
 }
 
-function VirtualClientList({ 
-  clients, 
-  users, 
-  actions, 
-  selectedSet, 
+function VirtualClientList({
+  clients,
+  users,
+  actions,
+  selectedSet,
   visibleColumns,
   onToggleSelect,
   onTogglePin
@@ -114,9 +117,6 @@ function VirtualClientList({
   onToggleSelect: (index: number, id: string, withShift: boolean) => void;
   onTogglePin: (index: number, id: string, event?: React.MouseEvent) => void;
 }) {
-  // Import VirtualizedBoardList dynamically to avoid circular deps
-  const VirtualizedBoardList = React.lazy(() => import('./components/VirtualizedBoardList'));
-  
   return (
     <React.Suspense fallback={<div className="min-w-[1480px] border rounded-lg overflow-hidden h-[520px] bg-gray-50 animate-pulse" />}>
       <VirtualizedBoardList
@@ -150,7 +150,7 @@ function Board() {
   const visibleColumns = useMemo(() => getVisibleColumns(), [getVisibleColumns]);
   
   // All hooks must be called before any early returns
-  const { clients, users, isLoading, view, toggleSort, refresh } = useBoardData();
+  const { clients, users, isLoading, view, toggleSort } = useBoardData();
   const actions = useBoardActions();
 
   // Start performance measurement
@@ -158,20 +158,10 @@ function Board() {
 
   function handleHeaderToggle(key: string){ try { toggleSort?.(key as any); } catch {} }
 
-  // Refresh handler
-  const handleRefresh = () => {
-    refresh?.();
-  };
-
-  // ==== SORT BLOCK (canonical) ====
-
-
-  // Selektion/IDs NACH sortedClients ableiten
+  // Selektion/IDs ableiten
   const allIds = useMemo(() => clients.map((c: any) => c.id as string), [clients]);
 
-  // ==== SORT BLOCK (canonical) END ====
 
-  
   // Performance measurement after render
   useEffect(() => {
     perfMark('board:render:end');
@@ -186,17 +176,25 @@ function Board() {
 
     const handleBoardRefresh = () => {
       console.log('🔄 Board refresh triggered');
-      refresh?.();
+      // Nicht mehr nötig - liveQuery refresht automatisch
+    };
+
+    const handleSyncDataUpdated = (event: CustomEvent) => {
+      console.log('🔄 Sync data updated:', event.detail);
+      // liveQuery aktualisiert automatisch, nur Log für User-Feedback
+      // Optional: Toast-Notification anzeigen
     };
 
     window.addEventListener('board:open-client-info', handleOpenClientInfo as EventListener);
     window.addEventListener('board:refresh', handleBoardRefresh);
+    window.addEventListener('sync:dataUpdated', handleSyncDataUpdated as EventListener);
 
     return () => {
       window.removeEventListener('board:open-client-info', handleOpenClientInfo as EventListener);
       window.removeEventListener('board:refresh', handleBoardRefresh);
+      window.removeEventListener('sync:dataUpdated', handleSyncDataUpdated as EventListener);
     };
-  }, [refresh]);
+  }, []);
 
   // Event handlers - no hooks inside
   const clearSelection = () => setSelectedIds([]);
@@ -280,17 +278,43 @@ function Board() {
   // Derived values
   const selectedRowsProvider = () => clients.filter((c: any) => selectedSet.has(c.id));
 
+  // Decode-Errors Detection
+  const decodeErrors = useMemo(() => {
+    return clients.filter(c => (c as any)._decodeError === true);
+  }, [clients]);
+
   // Early return AFTER all hooks
   if (isLoading) return <div className="p-4 text-sm text-gray-600">Lade Board…</div>;
 
   return (
     <div className="p-4 overflow-auto">
+      {/* Error-Banner für Decode-Fehler */}
+      {decodeErrors.length > 0 && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="flex items-center gap-2">
+            <span className="text-red-600 font-semibold">⚠️ Entschlüsselungsfehler</span>
+            <span className="text-sm text-red-700">
+              {decodeErrors.length} Datensatz{decodeErrors.length > 1 ? 'e' : ''} konnte{decodeErrors.length > 1 ? 'n' : ''} nicht entschlüsselt werden
+            </span>
+          </div>
+          <button
+            className="mt-2 text-sm text-red-600 underline hover:text-red-800"
+            onClick={() => {
+              console.log('Re-encrypt requested for:', decodeErrors.map(c => c.id));
+              alert('Admin-Funktion für Re-Encryption noch nicht implementiert. IDs wurden in Konsole geloggt.');
+            }}
+          >
+            Problem beheben (Admin)
+          </button>
+        </div>
+      )}
+
       <BoardHeader
         selectedCount={selectedIds.length}
         getSelectedRows={selectedRowsProvider}
         onPinSelected={() => actions.bulkPin?.(selectedIds)}
         onUnpinSelected={() => actions.bulkUnpin?.(selectedIds)}
-        onRefresh={handleRefresh}
+        onRefresh={() => {}}
         allColumns={allColumns}
         visibleColumns={visibleColumnKeys}
         onToggleColumn={toggle}

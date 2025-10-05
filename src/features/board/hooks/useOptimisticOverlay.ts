@@ -111,6 +111,12 @@ export function useOptimisticOverlay<T extends { id: string | number }>(base: T[
     const onCommit = (_e: Event) => {
       // kein sofortiges Löschen mehr; Cleanup passiert unterhalb via Reconciliation
       setVersion(v => v + 1);
+
+      // Force Reconciliation Check nach kurzer Verzögerung
+      // (gibt liveQuery Zeit die neuen DB-Daten zu holen)
+      setTimeout(() => {
+        setVersion(v => v + 1);
+      }, 150);
     };
     
     const onClear = () => {
@@ -130,15 +136,23 @@ export function useOptimisticOverlay<T extends { id: string | number }>(base: T[
       setVersion(v => v + 1);
     };
 
+    // Listener für mutation:committed Event aus MutationService
+    const onMutationCommitted = () => {
+      // Force Reconciliation nach DB-Mutation
+      setVersion(v => v + 1);
+    };
+
     window.addEventListener('board:optimistic-apply', onApply as EventListener);
     window.addEventListener('board:optimistic-commit', onCommit as EventListener);
     window.addEventListener('board:optimistic-clear', onClear as EventListener);
     window.addEventListener('board:optimistic-rollback', onRollback as EventListener);
+    window.addEventListener('mutation:committed', onMutationCommitted);
     return () => {
       window.removeEventListener('board:optimistic-apply', onApply as EventListener);
       window.removeEventListener('board:optimistic-commit', onCommit as EventListener);
       window.removeEventListener('board:optimistic-clear', onClear as EventListener);
       window.removeEventListener('board:optimistic-rollback', onRollback as EventListener);
+      window.removeEventListener('mutation:committed', onMutationCommitted);
     };
   }, []);
 
