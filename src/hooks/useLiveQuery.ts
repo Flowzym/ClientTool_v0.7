@@ -21,28 +21,39 @@ export function useLiveQuery<T>(
 
   useEffect(() => {
     let timeoutId: number | null = null;
-    let lastValue: T | undefined = defaultValue;
+    let isSubscribed = true;
 
     const observable: Observable<T> = liveQuery(querier);
 
     const subscription = observable.subscribe({
       next: (value) => {
-        lastValue = value;
+        if (!isSubscribed) return;
 
-        // Debounce Updates um zu häufige Re-Renders zu vermeiden
-        if (timeoutId) clearTimeout(timeoutId);
-        timeoutId = window.setTimeout(() => {
+        // Erste Daten sofort setzen, danach debounced
+        if (data === defaultValue) {
           setData(value);
           setError(null);
-        }, debounceMs);
+        } else {
+          // Debounce Updates um zu häufige Re-Renders zu vermeiden
+          if (timeoutId) clearTimeout(timeoutId);
+          timeoutId = window.setTimeout(() => {
+            if (isSubscribed) {
+              setData(value);
+              setError(null);
+            }
+          }, debounceMs);
+        }
       },
       error: (err) => {
         console.error('useLiveQuery error:', err);
-        setError(err);
+        if (isSubscribed) {
+          setError(err);
+        }
       }
     });
 
     return () => {
+      isSubscribed = false;
       if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
