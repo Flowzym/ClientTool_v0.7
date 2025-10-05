@@ -38,8 +38,8 @@ function VirtualizedBoardList({
   selectedIds,
   onToggleSelect,
   onTogglePin,
-  rowHeight = 52,
-  overscan = 8,
+  rowHeight = 44,
+  overscan = 3,
   className = ''
 }: VirtualizedBoardListProps) {
   const scrollElementRef = useRef<HTMLDivElement>(null);
@@ -54,14 +54,13 @@ function VirtualizedBoardList({
     };
   }, []);
 
-  // Calculate visible range
+  // Calculate visible range with improved buffering
   const { virtualItems, totalSize } = useMemo(() => {
     const itemCount = clients.length;
-    const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
-    const endIndex = Math.min(
-      itemCount - 1,
-      Math.floor((scrollTop + containerHeight) / rowHeight) + overscan
-    );
+    const visibleStart = Math.floor(scrollTop / rowHeight);
+    const visibleEnd = Math.ceil((scrollTop + containerHeight) / rowHeight);
+    const startIndex = Math.max(0, visibleStart - overscan);
+    const endIndex = Math.min(itemCount - 1, visibleEnd + overscan);
 
     const items: VirtualItem[] = [];
     for (let i = startIndex; i <= endIndex; i++) {

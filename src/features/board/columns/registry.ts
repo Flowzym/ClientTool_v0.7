@@ -41,7 +41,7 @@ export const COLUMN_REGISTRY: ColumnDef[] = [
   },
   {
     key: 'followUp',
-    label: 'Follow-up',
+    label: 'Termin',
     visibleDefault: true,
     minWidth: 160,
     sortable: true,
@@ -293,7 +293,7 @@ export const COLUMN_REGISTRY: ColumnDef[] = [
   // Computed Columns (optional, standardmäßig aus)
   {
     key: 'advisorFull',
-    label: 'AMS Betreuerin',
+    label: 'AMS-Berater',
     visibleDefault: false,
     minWidth: 200,
     sortable: true,
@@ -302,28 +302,28 @@ export const COLUMN_REGISTRY: ColumnDef[] = [
       const last = row.amsAgentLastName?.trim() || '';
       const first = row.amsAgentFirstName?.trim() || '';
       const title = row.amsAgentTitle?.trim() || '';
-      
+
       if (!last && !first && !title) return null;
-      
-      const nameParts: string[] = [];
-      
+
+      const parts: string[] = [];
+
       if (last) {
-        nameParts.push(last);
+        parts.push(last);
       }
-      
+
       if (first) {
         if (last) {
-          nameParts.push(`, ${first}`);
+          parts.push(`, ${first}`);
         } else {
-          nameParts.push(first);
+          parts.push(first);
         }
       }
-      
+
       if (title) {
-        nameParts.push(` (${title})`);
+        parts.push(` (${title})`);
       }
-      
-      return nameParts.join('').trim();
+
+      return parts.join('').trim();
     }
   },
   {
