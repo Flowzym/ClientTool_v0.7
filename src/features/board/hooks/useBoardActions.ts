@@ -95,6 +95,7 @@ export function useBoardActions() {
   /**
    * Kontaktversuch inkrementieren.
    * Wenn currentCounts übergeben wird, wird (current+1) geschrieben und ist Undo-fähig.
+   * lastActivity wird NICHT aktualisiert, um Sortierung zu bewahren.
    */
   const addContactAttempt = useCallback(async (
     id: string,
@@ -107,7 +108,7 @@ export function useBoardActions() {
                : 'contactProxy';
     const prev = (currentCounts && (currentCounts as any)[channel]) ?? 0;
     const next = prev + 1;
-    await update(id, { [field]: next, lastActivity: new Date().toISOString() });
+    await update(id, { [field]: next });
   }, [update]);
 
   const togglePin = useCallback(async (id: string | string[]) => {
