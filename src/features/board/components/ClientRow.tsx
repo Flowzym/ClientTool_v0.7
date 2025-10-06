@@ -33,7 +33,7 @@ type Actions = {
   togglePin?: (id: string) => Promise<void> | void;
 };
 
-export function ClientRow({
+function ClientRowComponent({
   client, users, actions, visibleColumns, gridTemplate, selected, onToggleSelect,
   onTogglePin
 }: {
@@ -299,4 +299,34 @@ export function ClientRow({
   );
 }
 
+// Memoize ClientRow to prevent unnecessary re-renders
+const ClientRow = React.memo(ClientRowComponent, (prevProps, nextProps) => {
+  // Only re-render if these props actually changed
+  return (
+    prevProps.client?.id === nextProps.client?.id &&
+    prevProps.client?.firstName === nextProps.client?.firstName &&
+    prevProps.client?.lastName === nextProps.client?.lastName &&
+    prevProps.client?.status === nextProps.client?.status &&
+    prevProps.client?.result === nextProps.client?.result &&
+    prevProps.client?.followUp === nextProps.client?.followUp &&
+    prevProps.client?.assignedTo === nextProps.client?.assignedTo &&
+    prevProps.client?.priority === nextProps.client?.priority &&
+    prevProps.client?.isPinned === nextProps.client?.isPinned &&
+    prevProps.client?.isArchived === nextProps.client?.isArchived &&
+    prevProps.client?.lastActivity === nextProps.client?.lastActivity &&
+    prevProps.client?.angebot === nextProps.client?.angebot &&
+    prevProps.client?.note === nextProps.client?.note &&
+    prevProps.client?.contactPhone === nextProps.client?.contactPhone &&
+    prevProps.client?.contactSms === nextProps.client?.contactSms &&
+    prevProps.client?.contactEmail === nextProps.client?.contactEmail &&
+    prevProps.client?.contactProxy === nextProps.client?.contactProxy &&
+    prevProps.client?._decodeError === nextProps.client?._decodeError &&
+    prevProps.selected === nextProps.selected &&
+    prevProps.gridTemplate === nextProps.gridTemplate &&
+    prevProps.visibleColumns?.length === nextProps.visibleColumns?.length &&
+    prevProps.users === nextProps.users
+  );
+});
+
+export { ClientRow };
 export default ClientRow;

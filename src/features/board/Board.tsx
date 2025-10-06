@@ -1,4 +1,30 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+// Throttle helper for scroll events
+function throttleScroll<T extends (...args: any[]) => void>(func: T, wait: number): T {
+  let timeout: number | null = null;
+  let lastRan = 0;
+
+  return ((...args: Parameters<T>) => {
+    const now = Date.now();
+    const remaining = wait - (now - lastRan);
+
+    if (remaining <= 0) {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      lastRan = now;
+      func(...args);
+    } else if (!timeout) {
+      timeout = window.setTimeout(() => {
+        lastRan = Date.now();
+        timeout = null;
+        func(...args);
+      }, remaining);
+    }
+  }) as T;
+}
 import { countNotes } from './utils/notes';
 import { perfMark, perfMeasure } from '../../lib/perf/timer';
 import { useRenderCount } from '../../lib/perf/useRenderCount';
@@ -39,10 +65,21 @@ function ClassicClientList({
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scrollTop, setScrollTop] = useState(0);
-  
-  const onScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    setScrollTop((e.target as HTMLDivElement).scrollTop);
-  };
+  const lastScrollTopRef = useRef(0);
+
+  const onScroll = useMemo(
+    () =>
+      throttleScroll((e: React.UIEvent<HTMLDivElement>) => {
+        const newScrollTop = (e.target as HTMLDivElement).scrollTop;
+        const delta = Math.abs(newScrollTop - lastScrollTopRef.current);
+
+        if (delta > 5) {
+          lastScrollTopRef.current = newScrollTop;
+          setScrollTop(newScrollTop);
+        }
+      }, 16),
+    []
+  );
   
   const ROW_HEIGHT = 44;
   const viewportHeight = 520;

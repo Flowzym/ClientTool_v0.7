@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Settings, RefreshCw, ArrowUpDown, Search, X } from 'lucide-react';
 import { Button } from '../../../components/Button';
 import ColumnPicker from './ColumnPicker';
@@ -42,19 +42,32 @@ function BoardHeader({
 }) {
   const [openCsv, setOpenCsv] = useState(false);
   const [showColumnPicker, setShowColumnPicker] = useState(false);
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [localSearch, setLocalSearch] = useState(searchQuery || '');
+  const debounceTimeoutRef = useRef<number | null>(null);
 
-  React.useEffect(() => {
-    setDebouncedSearch(searchQuery || '');
+  useEffect(() => {
+    setLocalSearch(searchQuery || '');
   }, [searchQuery]);
 
   const handleSearchChange = useCallback((value: string) => {
-    setDebouncedSearch(value);
-    const timeoutId = setTimeout(() => {
+    setLocalSearch(value);
+
+    if (debounceTimeoutRef.current !== null) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+
+    debounceTimeoutRef.current = window.setTimeout(() => {
       onSearchChange?.(value);
-    }, 300);
-    return () => clearTimeout(timeoutId);
+    }, 150);
   }, [onSearchChange]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current !== null) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="mb-3 space-y-3">
@@ -66,12 +79,12 @@ function BoardHeader({
           </div>
           <input
             type="text"
-            value={debouncedSearch}
+            value={localSearch}
             onChange={(e) => handleSearchChange(e.target.value)}
             placeholder="Suchen nach Name, Email, Telefon, AMS-ID, Notizen..."
             className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
-          {debouncedSearch && (
+          {localSearch && (
             <button
               onClick={() => handleSearchChange('')}
               className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600"

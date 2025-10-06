@@ -11,6 +11,39 @@ import type { Client, User } from '../../../domain/models';
 // Performance counters (Dev-only)
 const overscanCounter = createCounter('overscan');
 
+// Lazy-load ClientRow for code-splitting
+const ClientRowLazy = React.lazy(() =>
+  import('./ClientRow').then((m) => ({
+    default: m.default ?? m.ClientRow,
+  }))
+);
+
+// Throttle helper for scroll events
+function throttle<T extends (...args: any[]) => void>(func: T, wait: number): T {
+  let timeout: number | null = null;
+  let lastRan = 0;
+
+  return ((...args: Parameters<T>) => {
+    const now = Date.now();
+    const remaining = wait - (now - lastRan);
+
+    if (remaining <= 0) {
+      if (timeout) {
+        clearTimeout(timeout);
+        timeout = null;
+      }
+      lastRan = now;
+      func(...args);
+    } else if (!timeout) {
+      timeout = window.setTimeout(() => {
+        lastRan = Date.now();
+        timeout = null;
+        func(...args);
+      }, remaining);
+    }
+  }) as T;
+}
+
 interface VirtualizedBoardListProps {
   clients: Client[];
   users: User[];
@@ -45,6 +78,7 @@ function VirtualizedBoardList({
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [containerHeight, setContainerHeight] = useState(600);
+  const lastScrollTopRef = useRef(0);
 
   // Track virtualization lifecycle
   useEffect(() => {
@@ -54,8 +88,8 @@ function VirtualizedBoardList({
     };
   }, []);
 
-  // Calculate visible range with improved buffering
-  const { virtualItems, totalSize } = useMemo(() => {
+  // Calculate visible range with improved buffering (memoized)
+  const virtualItems = useMemo(() => {
     const itemCount = clients.length;
     const visibleStart = Math.floor(scrollTop / rowHeight);
     const visibleEnd = Math.ceil((scrollTop + containerHeight) / rowHeight);
@@ -64,11 +98,12 @@ function VirtualizedBoardList({
 
     const items: VirtualItem[] = [];
     for (let i = startIndex; i <= endIndex; i++) {
-      // Count overscan renders
-      if (i < Math.floor(scrollTop / rowHeight) || i > Math.ceil((scrollTop + containerHeight) / rowHeight)) {
-        overscanCounter.inc();
+      if (import.meta.env.DEV) {
+        if (i < visibleStart || i > visibleEnd) {
+          overscanCounter.inc();
+        }
       }
-      
+
       items.push({
         index: i,
         start: i * rowHeight,
@@ -76,32 +111,48 @@ function VirtualizedBoardList({
       });
     }
 
-    return {
-      virtualItems: items,
-      totalSize: itemCount * rowHeight
-    };
+    return items;
   }, [clients.length, scrollTop, containerHeight, rowHeight, overscan]);
 
-  // Handle scroll events
-  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
-    const scrollTop = e.currentTarget.scrollTop;
-    setScrollTop(scrollTop);
-  }, []);
+  const totalSize = useMemo(() => clients.length * rowHeight, [clients.length, rowHeight]);
 
-  // Measure container height
+  // Handle scroll events with throttling (60fps = ~16ms)
+  const handleScroll = useMemo(
+    () =>
+      throttle((e: React.UIEvent<HTMLDivElement>) => {
+        const newScrollTop = e.currentTarget.scrollTop;
+        const delta = Math.abs(newScrollTop - lastScrollTopRef.current);
+
+        // Only update if scroll delta is significant (> 5px)
+        if (delta > 5) {
+          lastScrollTopRef.current = newScrollTop;
+          setScrollTop(newScrollTop);
+        }
+      }, 16),
+    []
+  );
+
+  // Measure container height with debouncing
   useEffect(() => {
     const element = scrollElementRef.current;
     if (!element) return;
 
+    let resizeTimeout: number | null = null;
     const resizeObserver = new ResizeObserver(entries => {
       const entry = entries[0];
       if (entry) {
-        setContainerHeight(entry.contentRect.height);
+        if (resizeTimeout) clearTimeout(resizeTimeout);
+        resizeTimeout = window.setTimeout(() => {
+          setContainerHeight(entry.contentRect.height);
+        }, 100);
       }
     });
 
     resizeObserver.observe(element);
-    return () => resizeObserver.disconnect();
+    return () => {
+      resizeObserver.disconnect();
+      if (resizeTimeout) clearTimeout(resizeTimeout);
+    };
   }, []);
 
   // Scroll to index (for auto-scroll on selection)
@@ -231,18 +282,9 @@ function VirtualizedBoardList({
 
 // Wrapper component for ClientRow to handle virtualization context
 function ClientRowVirtualized(props: any) {
-  // Import ClientRow dynamically with robust lazy mapping
-  const ClientRow = React.useMemo(() => 
-    React.lazy(() =>
-      import('./ClientRow').then((m) => ({
-        default: m.default ?? m.ClientRow,
-      }))
-    ), []
-  );
-  
   return (
     <React.Suspense fallback={<div className="h-12 bg-gray-50 animate-pulse" />}>
-      <ClientRow {...props} />
+      <ClientRowLazy {...props} />
     </React.Suspense>
   );
 }
