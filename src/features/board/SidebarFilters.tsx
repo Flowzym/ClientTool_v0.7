@@ -72,7 +72,13 @@ export function SidebarFilters() {
     { key: 'priority-high', label: 'Hohe Priorität' },
     { key: 'unreachable-3plus', label: '≥3 Kontaktversuche' },
     { key: 'entfernt-vom-tas', label: 'Entfernt vom TAS' },
-    { key: 'assigned-me', label: 'Ich' }
+    { key: 'assigned-me', label: 'Ich' },
+    { key: 'ueberfaellig', label: 'Überfällig' },
+    { key: 'erledigt', label: 'Erledigt' },
+    { key: 'termin-vereinbart', label: 'Termin vereinbart' },
+    { key: 'termin-nicht-eingehalten', label: 'Termin nicht eingehalten' },
+    { key: 'kein-interesse', label: 'Kein Interesse' },
+    { key: 'kontrollmeldung', label: 'Kontrollmeldung' }
   ];
 
   return (

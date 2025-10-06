@@ -268,6 +268,28 @@ export function useBoardData() {
         case 'assigned-to':
           // Wird durch separates Popup gehandhabt
           break;
+        case 'ueberfaellig':
+          // Überfällig: Zubuchungsdatum vor mehr als 3 Wochen (21 Tage)
+          const threeWeeksAgo = new Date();
+          threeWeeksAgo.setDate(threeWeeksAgo.getDate() - 21);
+          filtered = filtered.filter(c => {
+            if (!c.amsBookingDate) return false;
+            const bookingDate = new Date(c.amsBookingDate);
+            return bookingDate < threeWeeksAgo;
+          });
+          break;
+        case 'erledigt':
+          filtered = filtered.filter(c => c.status === 'erledigt');
+          break;
+        case 'termin-nicht-eingehalten':
+          filtered = filtered.filter(c => c.result === 'terminNichtEingehalten');
+          break;
+        case 'kein-interesse':
+          filtered = filtered.filter(c => c.result === 'ablehnung');
+          break;
+        case 'kontrollmeldung':
+          filtered = filtered.filter(c => c.status === 'KM');
+          break;
       }
     });
 

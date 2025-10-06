@@ -14,19 +14,24 @@ export default function ContactAttemptsCell({
 }) {
   const payload = { phone, sms, email, proxy };
   
-  const ContactButton = ({ 
-    label, 
-    count, 
-    icon 
-  }: { 
-    label: 'phone' | 'sms' | 'email' | 'proxy'; 
-    count: number; 
-    icon: React.ReactNode; 
+  const ContactButton = ({
+    label,
+    count,
+    icon
+  }: {
+    label: 'phone' | 'sms' | 'email' | 'proxy';
+    count: number;
+    icon: React.ReactNode;
   }) => (
     <button
       className="relative p-2 rounded border hover:bg-gray-50 flex items-center justify-center"
       title={`${label} +1`}
-      onClick={() => onAdd(label, payload)}
+      onClick={(e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        onAdd(label, payload);
+      }}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <div className="w-5 h-5 flex items-center justify-center">
         {icon}

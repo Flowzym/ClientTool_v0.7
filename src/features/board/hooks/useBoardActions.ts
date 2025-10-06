@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { bulkApply, updateById, undoLast, redoLast, getUndoRedoStatus } from '../services/BoardService';
 import { build } from '../services/PatchBuilder';
 import { isValidISO } from '../utils/date';
+import { shouldSetKMStatus } from '../utils/kmDetection';
 import type { OfferValue } from '../types';
 import type { Priority } from '../../../domain/models';
 import type { Patch } from '../../../types/patch';
@@ -22,6 +23,14 @@ export function useBoardActions() {
   }, []);
 
   const update = useCallback(async (id: string, changes: any) => {
+    // Auto-detect KM status if note field is being updated
+    if (changes.note !== undefined) {
+      const needsKM = shouldSetKMStatus(changes.note);
+      if (needsKM) {
+        changes = { ...changes, status: 'KM' };
+      }
+    }
+
     const patches = applyOptimistic([id], changes);
     try {
       await updateById<any>(id, changes);

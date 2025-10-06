@@ -6,7 +6,7 @@ export type OfferValue = 'BAM' | 'LL/B+' | 'BwB' | 'NB';
 
 export type PriorityValue = 'niedrig' | 'normal' | 'hoch' | 'dringend';
 
-export type StatusValue = 
+export type StatusValue =
   | 'offen'
   | 'inBearbeitung'
   | 'terminVereinbart'
@@ -17,4 +17,5 @@ export type StatusValue =
   | 'ruht'
   | 'erledigt'
   | 'nichtErreichbar'
-  | 'abgebrochen';
+  | 'abgebrochen'
+  | 'KM';

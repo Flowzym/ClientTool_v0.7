@@ -14,7 +14,12 @@ export type FilterChip =
   | 'unreachable-3plus'
   | 'entfernt-vom-tas'
   | 'assigned-me'
-  | 'assigned-to';
+  | 'assigned-to'
+  | 'ueberfaellig'
+  | 'erledigt'
+  | 'termin-nicht-eingehalten'
+  | 'kein-interesse'
+  | 'kontrollmeldung';
 
 export type SortKey = 'name' | 'offer' | 'status' | 'result' | 'followUp' | 'assignedTo' | 'contacts' | 'notes' | 'priority' | 'activity' | null;
 export type SortDirection = 'asc' | 'desc' | null;

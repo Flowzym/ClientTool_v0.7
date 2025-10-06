@@ -5,6 +5,7 @@ import { useRenderCount } from '../../lib/perf/useRenderCount';
 import { useBoardData } from './useBoardData';
 import { useBoardActions } from './hooks/useBoardActions';
 import { useColumnOrder } from './hooks/useColumnOrder';
+import { useKMAutoStatus } from './hooks/useKMAutoStatus';
 import ColumnHeader from './components/ColumnHeader';
 import { ClientInfoDialog } from './components';
 import { ClientRow } from './components/ClientRow';
@@ -164,6 +165,9 @@ function Board() {
   // All hooks must be called before any early returns
   const { clients, users, isLoading, view, toggleSort, searchQuery, setSearchQuery } = useBoardData();
   const actions = useBoardActions();
+
+  // Auto-detect and set KM status based on notes content
+  useKMAutoStatus(clients);
 
   // Start performance measurement
   perfMark('board:render:start');

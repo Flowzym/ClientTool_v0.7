@@ -350,7 +350,7 @@ export function applyMapping(
     const headerIndex = headers.findIndex(h => h === customField.name);
     if (headerIndex >= 0 && row[headerIndex] !== undefined) {
       const value = row[headerIndex];
-      
+
       switch (customField.type) {
         case 'number': {
           const num = parseFloat(value.toString());
@@ -375,6 +375,19 @@ export function applyMapping(
       }
     }
   });
+
+  // Auto-copy 'planned' field to 'followUp' if followUp is not set
+  const plannedIndex = headers.findIndex(h =>
+    h.toLowerCase().includes('geplant') ||
+    h.toLowerCase() === 'planned'
+  );
+  if (plannedIndex >= 0 && row[plannedIndex] && !record.followUp) {
+    const plannedValue = row[plannedIndex];
+    const parsedDate = parseDate(plannedValue);
+    if (parsedDate) {
+      record.followUp = parsedDate;
+    }
+  }
 
   return record;
 }

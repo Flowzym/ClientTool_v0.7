@@ -14,7 +14,8 @@ export type Status =
   | 'ruht'
   | 'erledigt'
   | 'nichtErreichbar'
-  | 'abgebrochen';
+  | 'abgebrochen'
+  | 'KM';
 
 export type Result =
   | 'infogespraech'

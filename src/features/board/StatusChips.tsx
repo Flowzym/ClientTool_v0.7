@@ -11,7 +11,8 @@ const statusOptions: Array<{ key: Status; label: string; variant: 'default' | 's
   { key: 'inBearbeitung',   label: 'Gebucht / Bearbeitung',   variant: 'default', className: 'bg-blue-100 text-blue-800 border-blue-200' },
   { key: 'erledigt',        label: 'Abgebucht / Erledigt',    variant: 'success' },
   { key: 'ruht',            label: 'Ruht',                    variant: 'default' },
-  { key: 'abgebrochen',     label: 'Vom TAS entfernt',        variant: 'error' }
+  { key: 'abgebrochen',     label: 'Vom TAS entfernt',        variant: 'error' },
+  { key: 'KM',              label: 'Kontrollmeldung',         variant: 'warning', className: 'bg-orange-100 text-orange-800 border-orange-200' }
 ];
 
 // Ergebnis-Optionen (gruppiert dargestellt)
