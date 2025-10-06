@@ -1,15 +1,15 @@
-export type Role = 'admin' | 'editor' | 'user';
+export type Role = 'admin' | 'sb';
 
-export type Permission = 
-  | 'view_board' 
-  | 'update_status' 
-  | 'assign' 
-  | 'edit_followup' 
-  | 'import_data' 
-  | 'export_data' 
-  | 'view_stats' 
-  | 'view_security' 
-  | 'run_migration' 
+export type Permission =
+  | 'view_board'
+  | 'update_status'
+  | 'assign'
+  | 'edit_followup'
+  | 'import_data'
+  | 'export_data'
+  | 'view_stats'
+  | 'view_security'
+  | 'run_migration'
   | 'manage_users';
 
 export const ROLE_PERMS: Record<Role, Permission[]> = {
@@ -25,7 +25,7 @@ export const ROLE_PERMS: Record<Role, Permission[]> = {
     'run_migration',
     'manage_users'
   ],
-  editor: [
+  sb: [
     'view_board',
     'update_status',
     'assign',
@@ -33,15 +33,12 @@ export const ROLE_PERMS: Record<Role, Permission[]> = {
     'import_data',
     'export_data',
     'view_stats'
-  ],
-  user: [
-    'view_board',
-    'view_stats'
   ]
 };
 
 export function hasPerm(role: Role, perm: Permission): boolean {
-  return ROLE_PERMS[role].includes(perm);
+  const perms = ROLE_PERMS[role];
+  return perms ? perms.includes(perm) : false;
 }
 
 export function hasAny(role: Role, perms: Permission[]): boolean {

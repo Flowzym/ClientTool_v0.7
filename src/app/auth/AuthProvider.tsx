@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const params = new URLSearchParams(window.location.search);
         const asRole = params.get('as');
         const asUser = params.get('user');
-        if (asRole === 'admin' || asRole === 'editor' || asRole === 'user') {
+        if (asRole === 'admin' || asRole === 'sb') {
           await impersonateRole(asRole as Role);
           return;
         }

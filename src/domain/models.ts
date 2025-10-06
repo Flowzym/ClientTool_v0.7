@@ -148,9 +148,6 @@ export type Client = {
 
 export type Role = 'admin' | 'sb';
 
-// Role type erweitert um editor und user
-export type Role = 'admin' | 'editor' | 'user';
-
 export type User = {
   id: string;
   name: string;

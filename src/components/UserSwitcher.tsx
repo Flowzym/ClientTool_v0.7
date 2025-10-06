@@ -6,8 +6,8 @@ import { ensureDemoUsersIfEmpty } from '../data/seed';
 import type { User as UserType } from '../domain/models';
 
 const FALLBACK_USERS: UserType[] = [
-  { id: 'admin@local', name: 'Admin (Demo)', role: 'admin', active: true, createdAt: Date.now(), updatedAt: Date.now() },
-  { id: 'sb@local', name: 'Sachbearbeiter (Demo)', role: 'sb', active: true, createdAt: Date.now(), updatedAt: Date.now() },
+  { id: 'admin@local', name: 'Admin (Demo)', role: 'admin', active: true },
+  { id: 'sb@local', name: 'Sachbearbeiter (Demo)', role: 'sb', active: true },
 ];
 
 export function UserSwitcher() {

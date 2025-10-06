@@ -4,19 +4,19 @@ import type { Role } from '../domain/auth';
 
 /**
  * DEV-Helfer (bestehendes Verhalten beibehalten):
- * Legt in Development drei Demo-User an (admin/editor/user), wenn noch keine existieren.
+ * Legt in Development Demo-User an (admin/sb), wenn noch keine existieren.
  */
 export async function ensureDemoUsersTrio(): Promise<number> {
   if (import.meta.env.MODE !== 'development') return 0;
   const count = await db.users.count();
-  if (count >= 3) return 0;
+  if (count >= 2) return 0;
   const demo = buildDemoUsers();
   await db.users.bulkPut(demo as any);
   return demo.length;
 }
 
 /**
- * NEU: Legt die drei Demo-User an, wenn noch keine User existieren – unabhängig von der Umgebung.
+ * NEU: Legt die Demo-User an, wenn noch keine User existieren – unabhängig von der Umgebung.
  * Idempotent. Wird beim App-Start und vom UserSwitcher verwendet.
  */
 export async function ensureDemoUsersIfEmpty(): Promise<number> {
@@ -30,9 +30,8 @@ export async function ensureDemoUsersIfEmpty(): Promise<number> {
 /** Gemeinsamer Demo-User-Baukasten */
 export function buildDemoUsers(): User[] {
   const demoUsers: User[] = [
-    { id: 'admin@local',  name: 'Admin (Demo)',  role: 'admin' as Role,  active: true },
-    { id: 'editor@local', name: 'Editor (Demo)', role: 'editor' as Role, active: true },
-    { id: 'user@local',   name: 'User (Demo)',   role: 'user' as Role,   active: true },
+    { id: 'admin@local', name: 'Admin (Demo)', role: 'admin' as Role, active: true },
+    { id: 'sb@local', name: 'Sachbearbeiter (Demo)', role: 'sb' as Role, active: true },
   ];
   return demoUsers;
 }
